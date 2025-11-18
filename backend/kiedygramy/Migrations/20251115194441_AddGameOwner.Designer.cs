@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using kiedygramy.Data;
@@ -11,9 +12,11 @@ using kiedygramy.Data;
 namespace kiedygramy.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251115194441_AddGameOwner")]
+    partial class AddGameOwner
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -154,6 +157,21 @@ namespace kiedygramy.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
+            modelBuilder.Entity("SessionUser", b =>
+                {
+                    b.Property<int>("ParticipantsId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("SessionsId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("ParticipantsId", "SessionsId");
+
+                    b.HasIndex("SessionsId");
+
+                    b.ToTable("UserSessions", (string)null);
+                });
+
             modelBuilder.Entity("kiedygramy.Domain.Game", b =>
                 {
                     b.Property<int>("Id")
@@ -194,20 +212,15 @@ namespace kiedygramy.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
-                    b.Property<DateTime?>("Date")
+                    b.Property<DateTime>("Date")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<string>("Description")
-                        .HasColumnType("text");
-
-                    b.Property<int?>("GameId")
+                    b.Property<int>("GameId")
                         .HasColumnType("integer");
 
                     b.Property<string>("Location")
+                        .IsRequired()
                         .HasColumnType("text");
-
-                    b.Property<int>("OwnerId")
-                        .HasColumnType("integer");
 
                     b.Property<string>("Title")
                         .IsRequired()
@@ -217,41 +230,7 @@ namespace kiedygramy.Migrations
 
                     b.HasIndex("GameId");
 
-                    b.HasIndex("OwnerId");
-
                     b.ToTable("Sessions");
-                });
-
-            modelBuilder.Entity("kiedygramy.Domain.SessionParticipant", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("Role")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<int>("SessionId")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<int>("UserId")
-                        .HasColumnType("integer");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("UserId");
-
-                    b.HasIndex("SessionId", "UserId")
-                        .IsUnique();
-
-                    b.ToTable("SessionParticipants");
                 });
 
             modelBuilder.Entity("kiedygramy.Domain.User", b =>
@@ -382,6 +361,21 @@ namespace kiedygramy.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("SessionUser", b =>
+                {
+                    b.HasOne("kiedygramy.Domain.User", null)
+                        .WithMany()
+                        .HasForeignKey("ParticipantsId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("kiedygramy.Domain.Session", null)
+                        .WithMany()
+                        .HasForeignKey("SessionsId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("kiedygramy.Domain.Game", b =>
                 {
                     b.HasOne("kiedygramy.Domain.User", "Owner")
@@ -396,57 +390,17 @@ namespace kiedygramy.Migrations
             modelBuilder.Entity("kiedygramy.Domain.Session", b =>
                 {
                     b.HasOne("kiedygramy.Domain.Game", "Game")
-                        .WithMany("Sessions")
+                        .WithMany()
                         .HasForeignKey("GameId")
-                        .OnDelete(DeleteBehavior.SetNull);
-
-                    b.HasOne("kiedygramy.Domain.User", "Owner")
-                        .WithMany("OwnedSessions")
-                        .HasForeignKey("OwnerId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("Game");
-
-                    b.Navigation("Owner");
-                });
-
-            modelBuilder.Entity("kiedygramy.Domain.SessionParticipant", b =>
-                {
-                    b.HasOne("kiedygramy.Domain.Session", "Session")
-                        .WithMany("Participants")
-                        .HasForeignKey("SessionId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("kiedygramy.Domain.User", "User")
-                        .WithMany("SessionParticipants")
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Session");
-
-                    b.Navigation("User");
-                });
-
-            modelBuilder.Entity("kiedygramy.Domain.Game", b =>
-                {
-                    b.Navigation("Sessions");
-                });
-
-            modelBuilder.Entity("kiedygramy.Domain.Session", b =>
-                {
-                    b.Navigation("Participants");
                 });
 
             modelBuilder.Entity("kiedygramy.Domain.User", b =>
                 {
                     b.Navigation("Games");
-
-                    b.Navigation("OwnedSessions");
-
-                    b.Navigation("SessionParticipants");
                 });
 #pragma warning restore 612, 618
         }

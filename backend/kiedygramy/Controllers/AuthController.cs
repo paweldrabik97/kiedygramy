@@ -1,5 +1,5 @@
 ﻿using kiedygramy.Domain;
-using kiedygramy.DTO;
+using kiedygramy.DTO.Auth;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -21,6 +21,12 @@ namespace kiedygramy.Controllers
         [AllowAnonymous]
         public async Task<IActionResult> Register([FromBody] RegisterDto dto)
         {
+            if(await _userManager.FindByNameAsync(dto.Username) is not null)
+                return BadRequest("Ta nazwa użytkownika jest już zajęta");
+
+            if(!string.IsNullOrWhiteSpace(dto.Email) && await _userManager.FindByEmailAsync(dto.Email) is not null)
+                return BadRequest("Ten email jest już zajęty");
+
             var user = new User
             {
                 UserName = dto.Username,

@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using kiedygramy.Data;
@@ -11,9 +12,11 @@ using kiedygramy.Data;
 namespace kiedygramy.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251116102617_AddSessionModel")]
+    partial class AddSessionModel
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -198,12 +201,14 @@ namespace kiedygramy.Migrations
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("Description")
+                        .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<int?>("GameId")
+                    b.Property<int>("GameId")
                         .HasColumnType("integer");
 
                     b.Property<string>("Location")
+                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<int>("OwnerId")
@@ -251,7 +256,7 @@ namespace kiedygramy.Migrations
                     b.HasIndex("SessionId", "UserId")
                         .IsUnique();
 
-                    b.ToTable("SessionParticipants");
+                    b.ToTable("SesionParticipants");
                 });
 
             modelBuilder.Entity("kiedygramy.Domain.User", b =>
@@ -398,7 +403,8 @@ namespace kiedygramy.Migrations
                     b.HasOne("kiedygramy.Domain.Game", "Game")
                         .WithMany("Sessions")
                         .HasForeignKey("GameId")
-                        .OnDelete(DeleteBehavior.SetNull);
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .IsRequired();
 
                     b.HasOne("kiedygramy.Domain.User", "Owner")
                         .WithMany("OwnedSessions")

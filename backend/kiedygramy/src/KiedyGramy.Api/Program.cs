@@ -26,6 +26,7 @@ namespace kiedygramy.src.KiedyGramy.Api
                     options.Password.RequireNonAlphanumeric = false;
                     options.Password.RequireUppercase = false;
                     options.Password.RequiredLength = 6;
+                    options.User.RequireUniqueEmail = true;
                 })
                 .AddRoles<IdentityRole<int>>()
                 .AddEntityFrameworkStores<AppDbContext>()
