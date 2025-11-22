@@ -1,8 +1,13 @@
 using kiedygramy.Data;
 using kiedygramy.Domain;
+using kiedygramy.Services.Auth;
+using kiedygramy.Services.Games;
+using kiedygramy.Services.Sessions;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using System;
+
+
 
 
 namespace kiedygramy.src.KiedyGramy.Api
@@ -17,6 +22,10 @@ namespace kiedygramy.src.KiedyGramy.Api
             builder.Services.AddDbContext<AppDbContext>(options =>
             options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
+            builder.Services.AddScoped<IAuthService, AuthService>();
+            builder.Services.AddScoped<IGameService, GameService>();
+            builder.Services.AddScoped<ISessionService, SessionService>();
+            
 
             builder.Services.
                 AddIdentityCore<User>(options => 

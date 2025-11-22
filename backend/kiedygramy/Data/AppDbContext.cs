@@ -56,6 +56,14 @@ namespace kiedygramy.Data
                 .IsUnique();    
 
             modelBuilder.Entity<Game>()
+                .HasIndex(g => g.Title)
+                .IsUnique();
+
+            modelBuilder.Entity<Game>()
+                .HasIndex(g => new { g.OwnerId, g.Title })
+                .IsUnique();
+
+            modelBuilder.Entity<Game>()
                 .HasOne(g => g.Owner)
                 .WithMany(u => u.Games)
                 .HasForeignKey(g => g.OwnerId)

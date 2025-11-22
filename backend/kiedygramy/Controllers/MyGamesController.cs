@@ -1,24 +1,26 @@
-﻿using kiedygramy.Data;
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using kiedygramy.Domain;
-using Microsoft.EntityFrameworkCore;
 using kiedygramy.DTO.Game;
+using kiedygramy.Controllers.Base;
+using kiedygramy.Services.Games;
+
 
 namespace kiedygramy.Controllers
 {
     [Authorize]
     [ApiController]
     [Route("api/my/games")]
-    public class MyGamesController : ControllerBase
+    public class MyGamesController : ApiControllerBase
     {
-        private readonly AppDbContext _db;
+      
         private readonly UserManager<User> _userManager;
+        private readonly IGameService _gameService;
 
-        public MyGamesController(AppDbContext db, UserManager<User> userManager)
-        {
-            _db = db;
+        public MyGamesController(IGameService gameService, UserManager<User> userManager)
+        { 
+            _gameService = gameService;
             _userManager = userManager;
         }
 
@@ -32,33 +34,12 @@ namespace kiedygramy.Controllers
             if (me is null)
                 return Unauthorized();
 
-            if (string.IsNullOrWhiteSpace(dto.Title))
-                return BadRequest("Tytuł jest wymagany.");
+            var (game, error) = await _gameService.CreateAsync(dto, me.Id);
 
-            if (dto.MinPlayers <= 0)
-                return BadRequest("Minimalna liczba graczy musi być większa od zera.");
+            if (error is not null)
+                return BadRequest(error);
 
-            if (dto.MaxPlayers < dto.MinPlayers)
-                return BadRequest("Maksymalna liczba graczy musi być większa lub równa minimalnej liczbie graczy.");
-
-            bool exists = await _db.Games
-                .AnyAsync(g => g.OwnerId == me.Id && g.Title == dto.Title);
-            if (exists)
-                return BadRequest("Masz już grę o takim tytule");
-
-            var game = new Game
-            {
-                OwnerId = me.Id,
-                Title = dto.Title.Trim(),
-                Genre = String.IsNullOrWhiteSpace(dto.Genre) ? null : dto.Genre.Trim(),
-                MinPlayers = dto.MinPlayers,
-                MaxPlayers = dto.MaxPlayers
-            };
-
-            _db.Games.Add(game);
-            await _db.SaveChangesAsync();
-
-            return CreatedAtAction(nameof(GetById), new { id = game.Id }, new
+            return CreatedAtAction(nameof(GetById), new { id = game!.Id }, new
             {
                 game.Id,
                 game.Title,
@@ -66,6 +47,8 @@ namespace kiedygramy.Controllers
                 game.MinPlayers,
                 game.MaxPlayers
             });
+
+
         }
 
         [HttpGet]
@@ -75,103 +58,63 @@ namespace kiedygramy.Controllers
             if (me is null)
                 return Unauthorized();
 
-            var games = await _db.Games
-                .Where(g => g.OwnerId == me.Id)
-                .Select(g => new
-                {
-                    g.Id,
-                    g.Title,
-                    g.Genre,
-                    g.MinPlayers,
-                    g.MaxPlayers
-                })
-                .ToListAsync();
-
+            var games = await _gameService.GetAllAsync(me.Id);
             return Ok(games);
         }
 
-        [HttpGet("{id:int}")]
 
+        [HttpGet("{id:int}")]
         public async Task<IActionResult> GetById(int id)
         {
             var me = await _userManager.GetUserAsync(User);
-
             if (me is null)
                 return Unauthorized();
 
-            var game = await _db.Games
-                .Where(g => g.OwnerId == me.Id && g.Id == id)
-                .Select(g => new
-                {
-                    g.Id,
-                    g.Title,
-                    g.Genre,
-                    g.MinPlayers,
-                    g.MaxPlayers
-                })
-                .FirstOrDefaultAsync();
+            var game = await _gameService.GetByIdAsync(id, me.Id);
 
             if (game is null)
                 return NotFound();
 
             return Ok(game);
-
-
         }
+
 
         [HttpPut("{id:int}")]
-
         public async Task<IActionResult> Update(int id, [FromBody] UpdateGameDto dto)
-        { 
-            var me = await _userManager.GetUserAsync(User);
-            if(me is null)
-                return Unauthorized();
-
-            var game = await _db.Games.FirstOrDefaultAsync(g => g.OwnerId == me.Id && g.Id == id);
-            if(game is null)
-                return NotFound();
-
-            if(string.IsNullOrWhiteSpace(dto.Title))
-                return BadRequest("Tytuł jest wymagany.");
-
-            if (dto.MinPlayers <= 0)
-                return BadRequest("Minimalna liczba graczy musi być większa od zera.");
-
-            if (dto.MaxPlayers < dto.MinPlayers)
-                return BadRequest("Maksymalna liczba graczy musi być większa lub równa minimalnej liczbie graczy.");
-
-            bool exists = await _db.Games
-                .AnyAsync(g => g.OwnerId == me.Id && g.Title == dto.Title);
-            if (exists)
-                return BadRequest("Masz już grę o takim tytule");
-
-            game.Title = dto.Title.Trim();
-            game.Genre = String.IsNullOrWhiteSpace(dto.Genre) ? null : dto.Genre.Trim();
-            game.MinPlayers = dto.MinPlayers;
-            game.MaxPlayers = dto.MaxPlayers;
-            
-            await _db.SaveChangesAsync();
-            return NoContent(); 
-        }
-
-        [HttpDelete("{id:int}")]
-
-        public async Task<IActionResult> Delete(int id)
         {
             var me = await _userManager.GetUserAsync(User);
-
             if (me is null)
                 return Unauthorized();
 
-            var game = await _db.Games.FirstOrDefaultAsync(g => g.OwnerId == me.Id && g.Id == id);
+            var error = await _gameService.UpdateAsync(id, dto, me.Id);
 
-            if (game is null)
-                return NotFound();
+            if (error is null)
+                return NoContent();
 
-            _db.Games.Remove(game);
+            if (error.status == 404)
+                return NotFound(error);
 
-            await _db.SaveChangesAsync();
-            return NoContent();
+            return BadRequest(error);
         }
+
+
+        [HttpDelete("{id:int}")]
+        public async Task<IActionResult> Delete(int id)
+        {
+            var me = await _userManager.GetUserAsync(User);
+            if (me is null)
+                return Unauthorized();
+
+            var error = await _gameService.DeleteAsync(id, me.Id);
+
+            if (error is null)
+                return NoContent();
+
+            if (error.status == 404)
+                return NotFound(error);
+
+            return BadRequest(error);
+        }
+
     }
 }

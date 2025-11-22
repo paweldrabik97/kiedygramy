@@ -5,6 +5,6 @@
         string Title,
        string Genre,
        int MinPlayers,
-       int MaxPlayers,
-       int OwnerId);
+       int MaxPlayers
+       );
 }
