@@ -18,11 +18,11 @@ namespace kiedygramy.Services.Sessions
 
         public async Task<(SessionDetailsDto? Session, ErrorResponseDto? Error)> CreateAsync(CreateSessionDto dto, int userId)
         {   
-            var title = dto.Title.Trim();
+            var title = dto.Title?.Trim() ?? string.Empty;
 
-            var ValidationError = validateSesion(title);
-            if (ValidationError is not null)         
-                return (null, ValidationError);
+            var validationError = ValidateSessionTitle(title);
+            if (validationError is not null)         
+                return (null, validationError);
                       
             if (dto.GameId is not null)
             {
@@ -61,8 +61,8 @@ namespace kiedygramy.Services.Sessions
             {
                 Session = session,
                 UserId = userId,
-                Role = "Host",
-                Status = "Confirmed"
+                Role = SessionParticipantRole.Host,
+                Status = SessionParticipantStatus.Confirmed
             };
 
             _db.Sessions.Add(session);
@@ -93,6 +93,7 @@ namespace kiedygramy.Services.Sessions
         public async Task<SessionDetailsDto?> GetByIdAsync(int id, int userId)
         {
             var session = await _db.Sessions
+                .AsNoTracking()
                 .Include(s => s.Owner)
                 .Include(s => s.Game)
                 .FirstOrDefaultAsync(s => s.Id == id && s.OwnerId == userId);
@@ -116,6 +117,7 @@ namespace kiedygramy.Services.Sessions
         public async Task<IEnumerable<SessionListItemDto>> GetMineAsync(int userId)
         {
             return await _db.Sessions
+                .AsNoTracking()
                 .Where(s => s.OwnerId == userId)
                 .OrderByDescending(s => s.Date ?? DateTime.MaxValue)
                 .Select(s => new SessionListItemDto(
@@ -123,11 +125,102 @@ namespace kiedygramy.Services.Sessions
                     s.Title,
                     s.Date,
                     s.Location,
-                    s.Participants.Count(p => p.Status == "Confirmed")
+                    s.Participants.Count(p => p.Status == SessionParticipantStatus.Confirmed)
                 ))
                 .ToListAsync();
         }
-        private ErrorResponseDto? validateSesion (string title)
+        public async Task<ErrorResponseDto?> InviteAsync(int sessionId, int invitedUserId, int currentUser)
+        { 
+            var session = await _db.Sessions
+                .AsNoTracking()
+                .Include(s => s.Participants)
+                .FirstOrDefaultAsync(s => s.Id == sessionId && s.OwnerId == currentUser);
+
+            if (session is null)
+                return SessionNotFoundError();
+
+            var alreadyParticipant = session.Participants.Any(p => p.UserId == invitedUserId);
+
+            if (alreadyParticipant)
+                return AlreadyParticipantError();
+            
+            var participant = new SessionParticipant
+            {
+                SessionId = sessionId,
+                UserId = invitedUserId,
+                Role = SessionParticipantRole.Player,
+                Status = SessionParticipantStatus.Invited
+            };
+
+            _db.SessionParticipants.Add(participant);
+            await _db.SaveChangesAsync();
+
+            return null;
+        }
+        
+        public async Task<ErrorResponseDto?> RespondToInviteAsync(int sessionId, int userId, bool accept)
+        { 
+            var participant = await _db.SessionParticipants
+                .FirstOrDefaultAsync(p => p.SessionId == sessionId && p.UserId == userId);
+
+            if (participant is null)
+                return InvitationNotFoundError();
+
+            if (participant.Status != SessionParticipantStatus.Invited)
+                return InvalidInvitationStatusError();
+
+            participant.Status = accept
+                ? SessionParticipantStatus.Confirmed
+                : SessionParticipantStatus.Declined;
+
+            await _db.SaveChangesAsync();
+
+            return null;
+        }
+
+        public async Task<IEnumerable<SessionListItemDto>> GetInvitedAsync(int userId)
+        { 
+            return await _db.Sessions
+                .AsNoTracking()
+                .Where(s => s.Participants.Any
+                (p => p.UserId == userId && p.Status == SessionParticipantStatus.Invited))
+                .OrderByDescending(s => s.Date ?? DateTime.MaxValue)
+                .Select(s => new SessionListItemDto(
+                    s.Id,
+                    s.Title,
+                    s.Date,
+                    s.Location,
+                    s.Participants.Count(p => p.Status == SessionParticipantStatus.Confirmed)
+                ))
+                .ToListAsync();
+        }
+
+        public async Task<(IEnumerable<SessionParticipantDto> Participants, ErrorResponseDto? Error)> GetParticipantsAsync(int sessionId, int userId)
+        {
+            var sessionExists = await _db.Sessions
+                .AsNoTracking()
+                .AnyAsync(s => s.Id == sessionId && s.OwnerId == userId);
+
+            if (!sessionExists)
+                return (Enumerable.Empty<SessionParticipantDto>(), SessionNotFoundError());
+             
+
+            var participants =  await _db.SessionParticipants
+                .AsNoTracking()
+                .Where(p => p.SessionId == sessionId)
+                .Include(p => p.User)
+                .Select(p => new SessionParticipantDto(
+                     p.UserId,
+                     p.User.UserName!,
+                     p.Role,
+                     p.Status
+                ))
+                .ToListAsync(); 
+            
+            return (participants, null);
+        }
+
+        private ErrorResponseDto? ValidateSessionTitle (string title)
         {   
            
 
@@ -148,6 +241,59 @@ namespace kiedygramy.Services.Sessions
             }
 
             return null;
+        }
+
+        private ErrorResponseDto SessionNotFoundError()
+        {
+            return new ErrorResponseDto(
+                status: 404,
+                title: "Not Found",
+                detail: "Sesja nie została znaleziona.",
+                instance: null,
+                errors: null
+            );
+        }
+
+        private ErrorResponseDto AlreadyParticipantError()
+        {
+            var errors = new Dictionary<string, string[]>
+            {
+                { "Participant", new[] { "Użytkownik jest już uczestnikiem sesji." } }
+            };
+            return new ErrorResponseDto(
+                status: 400,
+                title: "Validation Failed",
+                detail: "Użytkownik jest już uczestnikiem sesji.",
+                instance: null,
+                errors: errors
+            );
+        }
+
+        private ErrorResponseDto InvitationNotFoundError()
+        {
+            return new ErrorResponseDto(
+                status: 404,
+                title: "Not Found",
+                detail: "Zaproszenie nie zostało znalezione.",
+                instance: null,
+                errors: null
+            );
+        }
+
+        private ErrorResponseDto InvalidInvitationStatusError()
+        { 
+            var errors = new Dictionary<string, string[]>
+            {
+                { "Status", new[] { "Nieprawidłowy status zaproszenia." } }
+            };
+
+            return new ErrorResponseDto(
+                status: 400,
+                title: "Validation Failed",
+                detail: "Nieprawidłowy status zaproszenia.",
+                instance: null,
+                errors: errors
+            );
         }
     }
 

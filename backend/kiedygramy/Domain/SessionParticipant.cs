@@ -10,8 +10,8 @@
         public int UserId { get; set; }
         public User User { get; set; } = default!;
 
-        public string Role { get; set; } = "Gracz";
+        public SessionParticipantRole Role { get; set; } = SessionParticipantRole.Player;
 
-        public string Status { get; set; } = "Zaproszony";
+        public SessionParticipantStatus Status { get; set; } = SessionParticipantStatus.Invited;
     }
 }

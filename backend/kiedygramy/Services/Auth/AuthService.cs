@@ -30,7 +30,7 @@ namespace kiedygramy.Services.Auth
                 };
 
                 return (null, new ErrorResponseDto(
-                    status: 400,
+                    status: 401,
                     title: "Validation Failed",
                     detail: $"Użytkownik o nazwie {dto.Username} już istnieje.",
                     instance: null,
@@ -48,7 +48,7 @@ namespace kiedygramy.Services.Auth
                 };
 
                 return (null, new ErrorResponseDto(
-                    status: 400,
+                    status: 401,
                     title: "Validation Failed",
                     detail: $"Adres e-mail {dto.Email} jest już zajęty.",
                     instance: null,
@@ -77,7 +77,7 @@ namespace kiedygramy.Services.Auth
                     );
 
                 var errorResponse = new ErrorResponseDto(
-                    status: 400,
+                    status: 401,
                     title: "Validation Failed",
                     detail: "Rejestracja nie powiodła się.",
                     instance: null,

@@ -14,11 +14,11 @@ namespace kiedygramy.Controllers.Base
             { 
                 return new ErrorResponseDto(
                 
-                    status = status,
-                    title = title,
-                    detail = detail,
-                    instance = HttpContext.Request.Path,
-                    errors = errors
+                    status: status,
+                    title: title,
+                    detail: detail,
+                    instance: HttpContext.Request.Path,
+                    errors: errors
                 
                 );
             }

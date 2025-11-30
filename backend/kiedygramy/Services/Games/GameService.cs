@@ -132,6 +132,21 @@ namespace kiedygramy.Services.Games
                     errors: errors);
             }
 
+            if (title.Length < 2 || title.Length > 100)
+            {
+                var errors = new Dictionary<string, string[]>
+                {
+                    { "Title", new[] { "Tytuł gry musi mieć od 2 do 100 znaków." } }
+                };
+
+                return new ErrorResponseDto(
+                    status: 400,
+                    title: "Validation Failed",
+                    detail: "Tytuł gry ma nieprawidłową długość.",
+                    instance: null,
+                    errors: errors);
+            }
+
             if (minPlayers <= 0)
             {
                 var errors = new Dictionary<string, string[]>

@@ -5,10 +5,10 @@ using kiedygramy.Services.Games;
 using kiedygramy.Services.Sessions;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using System.Text.Json.Serialization;
 using System;
-
-
-
+using kiedygramy.Services.Chat;
+using kiedygramy.Hubs;
 
 namespace kiedygramy.src.KiedyGramy.Api
 {
@@ -25,6 +25,7 @@ namespace kiedygramy.src.KiedyGramy.Api
             builder.Services.AddScoped<IAuthService, AuthService>();
             builder.Services.AddScoped<IGameService, GameService>();
             builder.Services.AddScoped<ISessionService, SessionService>();
+            builder.Services.AddScoped<ISessionChatService, SessionChatService>();
             
 
             builder.Services.
@@ -56,7 +57,14 @@ namespace kiedygramy.src.KiedyGramy.Api
 
             builder.Services.AddAuthorization();
 
-            builder.Services.AddControllers();
+            builder.Services.AddControllers()
+                .AddJsonOptions(options =>
+                {
+                    options.JsonSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
+                });
+
+            builder.Services.AddSignalR();
+
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
 
@@ -79,6 +87,8 @@ namespace kiedygramy.src.KiedyGramy.Api
             app.UseAuthorization();
 
             app.MapControllers();
+
+            app.MapHub<SessionChatHub>("/chatHub");
 
             await app.RunAsync();
         }

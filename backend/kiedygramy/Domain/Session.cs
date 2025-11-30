@@ -16,5 +16,7 @@
         public Game Game { get; set; } = default!;
 
         public ICollection<SessionParticipant> Participants { get; set; } = new List<SessionParticipant>();
+
+        public ICollection<SessionMessage> Messages { get; set; } = new List<SessionMessage>();
     }
 }

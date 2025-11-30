@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using kiedygramy.Data;
@@ -11,9 +12,11 @@ using kiedygramy.Data;
 namespace kiedygramy.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251129090313_SessionMessages")]
+    partial class SessionMessages
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -226,36 +229,6 @@ namespace kiedygramy.Migrations
                     b.ToTable("Sessions");
                 });
 
-            modelBuilder.Entity("kiedygramy.Domain.SessionMessage", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<int>("SessionId")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("Text")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<int>("UserId")
-                        .HasColumnType("integer");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("SessionId");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("SessionMessages");
-                });
-
             modelBuilder.Entity("kiedygramy.Domain.SessionParticipant", b =>
                 {
                     b.Property<int>("Id")
@@ -445,25 +418,6 @@ namespace kiedygramy.Migrations
                     b.Navigation("Owner");
                 });
 
-            modelBuilder.Entity("kiedygramy.Domain.SessionMessage", b =>
-                {
-                    b.HasOne("kiedygramy.Domain.Session", "Session")
-                        .WithMany("Messages")
-                        .HasForeignKey("SessionId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("kiedygramy.Domain.User", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Session");
-
-                    b.Navigation("User");
-                });
-
             modelBuilder.Entity("kiedygramy.Domain.SessionParticipant", b =>
                 {
                     b.HasOne("kiedygramy.Domain.Session", "Session")
@@ -490,8 +444,6 @@ namespace kiedygramy.Migrations
 
             modelBuilder.Entity("kiedygramy.Domain.Session", b =>
                 {
-                    b.Navigation("Messages");
-
                     b.Navigation("Participants");
                 });
 

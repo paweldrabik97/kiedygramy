@@ -15,8 +15,8 @@ namespace kiedygramy.Data
       
         public DbSet<Game> Games => Set<Game>();
         public DbSet<Session> Sessions => Set<Session>();
-
         public DbSet<SessionParticipant> SessionParticipants => Set<SessionParticipant>();
+        public DbSet<SessionMessage> SessionMessages { get; set; } = default!;
 
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -40,6 +40,14 @@ namespace kiedygramy.Data
                 .OnDelete(DeleteBehavior.SetNull);
 
             modelBuilder.Entity<SessionParticipant>()
+                .Property(sp => sp.Role)
+                .HasConversion<string>();
+
+            modelBuilder.Entity<SessionParticipant>()
+                .Property(sp => sp.Status)
+                .HasConversion<string>();
+
+            modelBuilder.Entity<SessionParticipant>()
                 .HasOne(sp => sp.Session)
                 .WithMany(s => s.Participants)
                 .HasForeignKey(sp => sp.SessionId)
@@ -54,11 +62,7 @@ namespace kiedygramy.Data
             modelBuilder.Entity<SessionParticipant>()
                 .HasIndex(sp => new { sp.SessionId, sp.UserId })
                 .IsUnique();    
-
-            modelBuilder.Entity<Game>()
-                .HasIndex(g => g.Title)
-                .IsUnique();
-
+       
             modelBuilder.Entity<Game>()
                 .HasIndex(g => new { g.OwnerId, g.Title })
                 .IsUnique();
@@ -68,6 +72,18 @@ namespace kiedygramy.Data
                 .WithMany(u => u.Games)
                 .HasForeignKey(g => g.OwnerId)
                 .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<SessionMessage>()
+                .HasOne(sm => sm.Session)
+                .WithMany(s => s.Messages)
+                .HasForeignKey(sm => sm.SessionId);
+
+            modelBuilder.Entity<SessionMessage>()
+                .HasOne(sm => sm.User)
+                .WithMany()
+                .HasForeignKey(sm => sm.UserId);
+
+
 
 
 
