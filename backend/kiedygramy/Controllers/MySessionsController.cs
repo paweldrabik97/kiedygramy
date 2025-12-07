@@ -212,7 +212,95 @@ namespace kiedygramy.Controllers
             return Ok(message);
         }
 
+        [HttpPost("{id:int}/availability/window")]
+        public async Task<IActionResult> SetAvailabilityWindow(int id, [FromBody] SetAvailabilityWindowDto dto)
+        { 
+            var me = await _userManager.GetUserAsync(User);
 
+            if (me is null)
+                return Unauthorized();
+
+            var error = await _sessionService.SetAvailabilityWindowAsync(id, me.Id, dto);
+
+            if (error is not null)
+            { 
+                if(error.status == 404)
+                    return NotFound(error);
+
+                if(error.status == 403)
+                    return Forbid();
+            }   
+            return BadRequest(error);
+        }
+
+        [HttpPut("{id:int}/availability")]
+        public async Task<IActionResult> UpdateAvailability(int id, [FromBody] UpdateAvailabilityDto dto)
+        { 
+            var me = await _userManager.GetUserAsync(User);
+
+            if (me is null)
+                return Unauthorized();
+
+            var error = await _sessionService.UpdateAvailabilityAsync(id, me.Id, dto);
+
+            if (error is null)
+          
+
+            if (error.status == 404)
+                return NotFound(error);
+
+            if (error.status == 403)
+                return Forbid();
+
+            return BadRequest(error);  
+        }
+
+        [HttpGet("{id:int}/availability/me")]
+        public async Task<IActionResult> GetMyAvailability(int id)
+        {
+            var me = await _userManager.GetUserAsync(User);
+
+            if (me is null)
+                return Unauthorized();
+
+            var (availability, error) = await _sessionService.GetMyAvailabilityAsync(id, me.Id);
+
+            if (error is not null)
+            {
+                if (error.status == 404)
+                    return NotFound(error);
+
+                if (error.status == 403)
+                    return Forbid();
+
+                return BadRequest(error);
+            }
+
+            return Ok(availability ?? new MyAvailabilityDto(new List<DateTime>()));
+        }
+
+        [HttpGet("{id:int}/availability/summary")]
+        public async Task<IActionResult> GetAvailabilitySummary(int id)
+        {
+            var me = await _userManager.GetUserAsync(User);
+
+            if (me is null)
+                return Unauthorized();
+
+            var (summary, error) = await _sessionService.GetAvailabilitySummaryAsync(id, me.Id);
+            
+            if (error is not null)
+            {
+                if (error.status == 404)
+                    return NotFound(error);
+
+                if (error.status == 403)
+                    return Forbid();
+
+                return BadRequest(error);
+            }
+            return Ok(summary);
+        }
     }
 
 }

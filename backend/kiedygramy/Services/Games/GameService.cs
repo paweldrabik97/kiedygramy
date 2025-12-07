@@ -56,6 +56,7 @@ namespace kiedygramy.Services.Games
             return NotExistError();
 
             var validationError = ValidateGame(title, dto.MinPlayers, dto.MaxPlayers);
+            
             if (validationError is not null)
                 return validationError;
 
@@ -161,7 +162,6 @@ namespace kiedygramy.Services.Games
                     instance: null,
                     errors: errors);
             }
-
             
             if (maxPlayers < minPlayers)
             {

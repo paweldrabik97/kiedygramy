@@ -11,12 +11,12 @@ namespace kiedygramy.Data
     {
         public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
         
-
-      
+     
         public DbSet<Game> Games => Set<Game>();
         public DbSet<Session> Sessions => Set<Session>();
         public DbSet<SessionParticipant> SessionParticipants => Set<SessionParticipant>();
         public DbSet<SessionMessage> SessionMessages { get; set; } = default!;
+        public DbSet<SessionAvailability> SessionAvailabilities => Set<SessionAvailability>();
 
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -83,6 +83,21 @@ namespace kiedygramy.Data
                 .WithMany()
                 .HasForeignKey(sm => sm.UserId);
 
+            modelBuilder.Entity<SessionAvailability>()
+               .HasOne(a => a.Session)
+               .WithMany(s => s.Availabilities)
+               .HasForeignKey(a => a.SessionId)
+               .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<SessionAvailability>()
+                .HasOne(a => a.User)
+                .WithMany()
+                .HasForeignKey(a => a.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<SessionAvailability>()
+                .HasIndex(a => new { a.SessionId, a.UserId, a.Date })
+                .IsUnique();
 
 
 

@@ -2,7 +2,6 @@
 using kiedygramy.Domain;
 using kiedygramy.DTO.Common;
 using kiedygramy.DTO.Session;
-using kiedygramy.Services.Sessions;
 using Microsoft.EntityFrameworkCore;
 
 namespace kiedygramy.Services.Sessions
@@ -17,34 +16,21 @@ namespace kiedygramy.Services.Sessions
         }
 
         public async Task<(SessionDetailsDto? Session, ErrorResponseDto? Error)> CreateAsync(CreateSessionDto dto, int userId)
-        {   
+        {
             var title = dto.Title?.Trim() ?? string.Empty;
 
             var validationError = ValidateSessionTitle(title);
-            if (validationError is not null)         
+            
+            if (validationError is not null)
                 return (null, validationError);
-                      
+
             if (dto.GameId is not null)
             {
                 var gameExists = await _db.Games.AnyAsync(g => g.Id == dto.GameId && g.OwnerId == userId);
 
                 if (!gameExists)
-                {
-                    var errors = new Dictionary<string, string[]>
-                    {
-                        { "GameId", new[] { "Podana gra nie istnieje." } }
-                    };
-
-                    return (null, new ErrorResponseDto(
-                        status: 400,
-                        title: "Validation Failed",
-                        detail: "Podana gra nie istnieje.",
-                        instance: null,
-                        errors: errors
-                    ));
-                }
+                    return (null, GameNotExistError());
             }
-
 
             var session = new Session
             {
@@ -55,7 +41,6 @@ namespace kiedygramy.Services.Sessions
                 OwnerId = userId,
                 GameId = dto.GameId
             };
-
 
             var ownerParticipant = new SessionParticipant
             {
@@ -70,10 +55,8 @@ namespace kiedygramy.Services.Sessions
 
             await _db.SaveChangesAsync();
 
-
             var owner = await _db.Users.FindAsync(userId);
 
-            // Mapowanie do SessionDetailsDto
             var details = new SessionDetailsDto(
                 Id: session.Id,
                 Title: session.Title,
@@ -88,7 +71,6 @@ namespace kiedygramy.Services.Sessions
 
             return (details, null);
         }
-
 
         public async Task<SessionDetailsDto?> GetByIdAsync(int id, int userId)
         {
@@ -130,7 +112,7 @@ namespace kiedygramy.Services.Sessions
                 .ToListAsync();
         }
         public async Task<ErrorResponseDto?> InviteAsync(int sessionId, int invitedUserId, int currentUser)
-        { 
+        {
             var session = await _db.Sessions
                 .AsNoTracking()
                 .Include(s => s.Participants)
@@ -143,7 +125,7 @@ namespace kiedygramy.Services.Sessions
 
             if (alreadyParticipant)
                 return AlreadyParticipantError();
-            
+
             var participant = new SessionParticipant
             {
                 SessionId = sessionId,
@@ -157,9 +139,9 @@ namespace kiedygramy.Services.Sessions
 
             return null;
         }
-        
+
         public async Task<ErrorResponseDto?> RespondToInviteAsync(int sessionId, int userId, bool accept)
-        { 
+        {
             var participant = await _db.SessionParticipants
                 .FirstOrDefaultAsync(p => p.SessionId == sessionId && p.UserId == userId);
 
@@ -179,7 +161,7 @@ namespace kiedygramy.Services.Sessions
         }
 
         public async Task<IEnumerable<SessionListItemDto>> GetInvitedAsync(int userId)
-        { 
+        {
             return await _db.Sessions
                 .AsNoTracking()
                 .Where(s => s.Participants.Any
@@ -203,9 +185,8 @@ namespace kiedygramy.Services.Sessions
 
             if (!sessionExists)
                 return (Enumerable.Empty<SessionParticipantDto>(), SessionNotFoundError());
-             
 
-            var participants =  await _db.SessionParticipants
+            var participants = await _db.SessionParticipants
                 .AsNoTracking()
                 .Where(p => p.SessionId == sessionId)
                 .Include(p => p.User)
@@ -215,14 +196,161 @@ namespace kiedygramy.Services.Sessions
                      p.Role,
                      p.Status
                 ))
-                .ToListAsync(); 
-            
+                .ToListAsync();
+
             return (participants, null);
         }
 
-        private ErrorResponseDto? ValidateSessionTitle (string title)
-        {   
-           
+        public async Task<ErrorResponseDto?> SetAvailabilityWindowAsync(int sessionId, int userId, SetAvailabilityWindowDto dto)
+        {
+            var session = await _db.Sessions.FirstOrDefaultAsync(s => s.Id == sessionId && s.OwnerId == userId);
+
+            if (session is null)
+                return SessionNotFoundError();
+
+            var fromDate = dto.From.Date;
+            var toDate = dto.To.Date;
+
+            if (fromDate > toDate)
+                return InvalidAvailabilityRangeError();
+
+            if (dto.Deadline <= DateTime.UtcNow)
+                return InvalidAvailabilityDeadlineErorr();
+
+            session.AvailabilityFrom = fromDate;
+            session.AvailabilityTo = toDate;
+            session.AvailabilityDeadline = dto.Deadline;
+
+            var existingAvailabilites = _db.SessionAvailabilities
+                .Where(a => a.SessionId == sessionId);
+
+            _db.SessionAvailabilities.RemoveRange(existingAvailabilites);
+
+            await _db.SaveChangesAsync();
+            return null;
+        }
+
+        public async Task<ErrorResponseDto?> UpdateAvailabilityAsync(int sessionId, int userId, UpdateAvailabilityDto dto)
+        {
+            var session = await _db.Sessions
+                .Include(s => s.Availabilities)
+                .FirstOrDefaultAsync(s => s.Id == sessionId);
+
+            if (session is null)
+                return SessionNotFoundError();
+
+            var isOwner = session.OwnerId == userId;
+
+            var isConfirmedParticipant = await _db.SessionParticipants
+                .AnyAsync(p =>
+                p.SessionId == sessionId &&
+                p.UserId == userId &&
+                p.Status == SessionParticipantStatus.Confirmed);
+
+            if (!isOwner && !isConfirmedParticipant)
+                return InvalidParticipantError("urzytkownik nie ma uprawnień");
+
+            if (session.AvailabilityFrom is null ||
+                session.AvailabilityTo is null ||
+                session.AvailabilityDeadline is null)
+                return AvailabilityNotConfiguredError();
+
+            if (session.AvailabilityDeadline <= DateTime.UtcNow)
+                return InvalidAvailabilityDeadlineErorr();
+
+            var fromDate = session.AvailabilityFrom.Value.Date;
+            var toDate = session.AvailabilityTo.Value.Date;
+
+            var normalizedDates = dto.Dates
+                .Select(d => d.Date)
+                .Where(d => d >= fromDate && d <= toDate)
+                .Distinct()
+                .OrderBy(d => d)
+                .ToList();
+
+            var existing = await _db.SessionAvailabilities
+                .Where(a => a.SessionId == sessionId && a.UserId == userId)
+                .ToListAsync();
+
+            _db.SessionAvailabilities.RemoveRange(existing);
+
+            if (normalizedDates.Count > 0)
+            {
+                var newAvailabilities = normalizedDates
+                    .Select(date => new SessionAvailability
+                    {
+                        SessionId = sessionId,
+                        UserId = userId,
+                        Date = date
+                    });
+
+                await _db.SessionAvailabilities.AddRangeAsync(newAvailabilities);
+            }
+
+            await _db.SaveChangesAsync();
+            return null;
+        }
+
+        public async Task<(MyAvailabilityDto? Availability, ErrorResponseDto? Error)> GetMyAvailabilityAsync(int sessionId, int userId)
+        {
+            var session = await _db.Sessions
+                .AsNoTracking()
+                .FirstOrDefaultAsync(s => s.Id == sessionId);
+
+            if (session is null)
+                return (null, SessionNotFoundError());
+
+            var isOwner = session.OwnerId == userId;
+            var isConfirmedParticipant = await _db.SessionParticipants
+                .AsNoTracking()
+                .AnyAsync(p =>
+                p.SessionId == sessionId &&
+                p.UserId == userId &&
+                p.Status == SessionParticipantStatus.Confirmed);
+
+            if (!isOwner && !isConfirmedParticipant)
+                return (null, InvalidParticipantError("urzytkownik nie ma uprawnień"));
+
+            var dates = await _db.SessionAvailabilities
+                .AsNoTracking()
+                .Where(a => a.SessionId == sessionId && a.UserId == userId)
+                .Select(a => a.Date)
+                .OrderBy(d => d.Date)
+                .ToListAsync();
+
+            var dto = new MyAvailabilityDto(dates);
+            return (dto, null);
+        }
+
+        public async Task<(AvailabilitySummaryDto Summary, ErrorResponseDto? Error)> GetAvailabilitySummaryAsync(int sessionId, int userId)
+        {
+            var session = await _db.Sessions
+                .AsNoTracking()
+                .FirstOrDefaultAsync(s => s.Id == sessionId);
+
+            if (session is null)
+                return (null, SessionNotFoundError());
+
+            if (session.OwnerId != userId)
+                return (null, NotOwnerError());
+
+            var dayList = await _db.SessionAvailabilities
+                .AsNoTracking()
+                .Where(a => a.SessionId == sessionId)
+                .GroupBy(a => a.Date)
+                .Select(g => new AvailabilitySummaryDayDto(
+                    g.Key,
+                    g.Count()))
+                .OrderBy(d => d.Date)
+                .ToListAsync();
+
+            var dto = new AvailabilitySummaryDto(dayList);
+            return (dto, null);
+        }
+
+        private ErrorResponseDto? ValidateSessionTitle(string title)
+        {
+
 
             if (string.IsNullOrWhiteSpace(title))
             {
@@ -231,7 +359,7 @@ namespace kiedygramy.Services.Sessions
                     { "Title", new[] { "Tytuł jest wymagany." } }
                 };
 
-                return  new ErrorResponseDto(
+                return new ErrorResponseDto(
                     status: 400,
                     title: "Validation Failed",
                     detail: "Tytuł jest wymagany.",
@@ -239,7 +367,6 @@ namespace kiedygramy.Services.Sessions
                     errors: errors
                 );
             }
-
             return null;
         }
 
@@ -269,6 +396,22 @@ namespace kiedygramy.Services.Sessions
             );
         }
 
+        private ErrorResponseDto GameNotExistError()
+        {
+            var errors = new Dictionary<string, string[]>
+                    {
+                        { "GameId", new[] { "Podana gra nie istnieje." } }
+                    };
+
+            return  new ErrorResponseDto(
+                status: 400,
+                title: "Validation Failed",
+                detail: "Podana gra nie istnieje.",
+                instance: null,
+                errors: errors
+            );
+        }
+
         private ErrorResponseDto InvitationNotFoundError()
         {
             return new ErrorResponseDto(
@@ -281,7 +424,7 @@ namespace kiedygramy.Services.Sessions
         }
 
         private ErrorResponseDto InvalidInvitationStatusError()
-        { 
+        {
             var errors = new Dictionary<string, string[]>
             {
                 { "Status", new[] { "Nieprawidłowy status zaproszenia." } }
@@ -293,6 +436,71 @@ namespace kiedygramy.Services.Sessions
                 detail: "Nieprawidłowy status zaproszenia.",
                 instance: null,
                 errors: errors
+            );
+        }
+
+        private ErrorResponseDto InvalidAvailabilityRangeError()
+        {
+            var errors = new Dictionary<string, string[]>
+            {
+                { "From", new[] { "Data początkowa nie może być późniejsza niż końcowa"}},
+                { "To", new[] { "Data końcowa nie może być wcześniejsza niż początkowa"}}
+            };
+
+            return new ErrorResponseDto(
+                status: 400,
+                title: "Validation Failed",
+                detail: "Nieprawidłowy zakres dostępności.",
+                instance: null,
+                errors: errors
+            );
+        }
+
+        private ErrorResponseDto InvalidAvailabilityDeadlineErorr()
+        {
+            var errors = new Dictionary<string, string[]>
+            {
+                { "Deadline", new[] { "Termin na zgłaszanie dostępności musi być w przyszłości"}}
+               
+            };
+
+            return new ErrorResponseDto(
+                status: 400,
+                title: "Validation Failed",
+                detail: "Nieprawidłowy termin na zgłaszanie dostępności.",
+                instance: null,
+                errors: errors
+            );
+        }
+
+        private ErrorResponseDto AvailabilityNotConfiguredError()
+        {
+            return new ErrorResponseDto(
+                status: 400,
+                title: "Validation Failed",
+                detail: "Okno dostępności nie zostało skonfigurowane dla tej sesji.",
+                instance: null,
+                errors: null
+            );
+        }
+        private ErrorResponseDto NotOwnerError()
+        { 
+            return new ErrorResponseDto(
+                status: 403,
+                title: "Forbidden",
+                detail: "Tylko właściciel sesji może wykonać tę operację.",
+                instance: null,
+                errors: null
+            );
+        }
+        private ErrorResponseDto InvalidParticipantError(string detail)
+        { 
+            return new ErrorResponseDto(
+                status: 403,
+                title: "Forbidden",
+                detail: detail,
+                instance: null,
+                errors: null
             );
         }
     }
