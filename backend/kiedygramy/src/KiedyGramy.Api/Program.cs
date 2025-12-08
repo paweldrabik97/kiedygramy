@@ -83,6 +83,25 @@ namespace kiedygramy.src.KiedyGramy.Api
                 app.UseSwaggerUI();
             }
 
+            // --- Poczatek bloku migracji ---
+            using (var scope = app.Services.CreateScope())
+            {
+                var services = scope.ServiceProvider;
+                try
+                {
+                    var context = services.GetRequiredService<AppDbContext>(); // Podstaw nazwę swojego DbContextu
+                    
+                    // Ta komenda robi to samo co "dotnet ef database update"
+                    context.Database.Migrate(); 
+                }
+                catch (Exception ex)
+                {
+                    var logger = services.GetRequiredService<ILogger<Program>>();
+                    logger.LogError(ex, "Wystąpił błąd podczas migracji bazy danych.");
+                }
+            }
+            // --- Koniec bloku migracji ---
+
             app.UseHttpsRedirection();
             app.UseAuthorization();
 
