@@ -77,11 +77,11 @@ namespace kiedygramy.src.KiedyGramy.Api
           
             }
           
-            if (app.Environment.IsDevelopment())
-            {
+            //if (app.Environment.IsDevelopment())
+            //{
                 app.UseSwagger();
                 app.UseSwaggerUI();
-            }
+            //}
 
             // --- Poczatek bloku migracji ---
             using (var scope = app.Services.CreateScope())
