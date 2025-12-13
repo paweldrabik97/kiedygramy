@@ -60,7 +60,7 @@ const AuthPage = () => {
         fullName: formData.fullName,
         city: formData.city,
       });
-      navigate("/welcome");
+      navigate("/dashboard");
     } catch (err) {
       setError("Registration failed. Please try again.");
     } finally {
