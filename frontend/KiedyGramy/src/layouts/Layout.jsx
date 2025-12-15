@@ -1,8 +1,12 @@
 import React, { useState } from 'react';
 import { Outlet, Link, useLocation } from 'react-router-dom';
 import useDarkMode from '../hooks/useDarkMode';
+import { logout } from '../features/auth/services/auth';
+import { useNavigate } from 'react-router-dom';
 
 const Layout = () => {
+
+  const navigate = useNavigate();
   // Stan paska bocznego (czy rozwinięty?)
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   
@@ -17,8 +21,8 @@ const Layout = () => {
 
   // Funkcja wylogowania (atrapa)
   const handleLogout = () => {
-    console.log("Wylogowano użytkownika");
-    // Tutaj dodasz logikę czyszczenia tokena i przekierowania
+    logout();
+    navigate('/');
   };
 
   // Funkcja przełączająca
@@ -28,8 +32,9 @@ const Layout = () => {
 
   // Lista linków nawigacyjnych
   const navItems = [
-    { name: 'Start', path: '/', icon: <HomeIcon /> },
+    { name: 'Start', path: '/dashboard', icon: <HomeIcon /> },
     { name: 'Moje Gry', path: '/games', icon: <GamepadIcon /> },
+    { name: 'Moje Sesje', path: '/sessions', icon: <GamepadIcon /> },
     { name: 'Statystyki', path: '/stats', icon: <ChartIcon /> }, // Przykładowa podstrona
   ];
 

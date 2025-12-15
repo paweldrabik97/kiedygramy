@@ -2,7 +2,7 @@ import React from 'react'
 import SubmitButton from '../components/ui/SubmitButton.jsx'
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { addGame } from '../services/games.js';
+import { addGame } from '../features/games/services/games.ts';
 
 
 const NewGamePage = () => {

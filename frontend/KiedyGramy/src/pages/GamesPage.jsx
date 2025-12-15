@@ -1,9 +1,9 @@
 import React from 'react'
 import { Route, Routes, useNavigate } from 'react-router-dom'
 import PrimaryButton from '../components/ui/PrimaryButton.jsx'
-import { getGames, deleteGame, updateGame } from '../services/games.ts'
+import { getGames, deleteGame, updateGame } from '../features/games/services/games.ts'
 import { useEffect, useState } from 'react';
-import GameModal from '../components/ui/GameModal.jsx';
+import GameModal from '../features/games/components/GameModal.jsx';
 
 
 
