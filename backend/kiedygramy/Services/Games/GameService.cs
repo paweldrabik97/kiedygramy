@@ -72,6 +72,7 @@ namespace kiedygramy.Services.Games
         public async Task<ErrorResponseDto?> UpdateAsync(int gameId, UpdateGameDto dto, int userId)
         {            
             var game = await _db.Games
+                .Include(g => g.GameGenres)
                 .FirstOrDefaultAsync(g => g.OwnerId == userId && g.Id == gameId);
 
             if (game is null)
@@ -98,6 +99,9 @@ namespace kiedygramy.Services.Games
             var generes = await _db.Genres
                 .Where(g => genreIds.Contains(g.Id))
                 .ToListAsync();
+
+            if (generes.Count != genreIds.Count)
+                return Errors.General.Validation("Wybrano nieistniejącą kategorię.", "GenreIds");
 
             game.Title = title;
 
@@ -224,7 +228,7 @@ namespace kiedygramy.Services.Games
 
                 if (genre is null)
                 {
-                    genre = new Genre { Name = name };
+                    genre = new Domain.Genre { Name = name }; // do poprawy na później narazie fast fix
                     _db.Genres.Add(genre);
                     existingGenres.Add(genre);
                 }

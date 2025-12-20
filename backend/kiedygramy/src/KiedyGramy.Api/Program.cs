@@ -95,16 +95,14 @@ namespace kiedygramy.src.KiedyGramy.Api
                 app.UseSwagger();
                 app.UseSwaggerUI();
             //}
-
-          
+    
             using (var scope = app.Services.CreateScope())
             {
                 var services = scope.ServiceProvider;
                 try
                 {
                     var context = services.GetRequiredService<AppDbContext>(); 
-                    
-                   
+    
                     context.Database.Migrate(); 
                 }
                 catch (Exception ex)
@@ -114,12 +112,9 @@ namespace kiedygramy.src.KiedyGramy.Api
                 }
             }
             
-
             app.UseHttpsRedirection();
-
             app.UseAuthentication();
             app.UseAuthorization();
-
             app.MapControllers();
 
             app.MapHub<SessionChatHub>("/chatHub");
