@@ -1,4 +1,4 @@
-﻿using kiedygramy.Domain;
+﻿using kiedygramy.Domain.Enums;
 
 namespace kiedygramy.DTO.Session
 {

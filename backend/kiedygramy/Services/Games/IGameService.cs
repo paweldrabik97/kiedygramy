@@ -3,7 +3,6 @@ using kiedygramy.DTO.Common;
 using kiedygramy.DTO.Game;
 
 namespace kiedygramy.Services.Games
-
 {
     public interface IGameService
     {
@@ -12,5 +11,6 @@ namespace kiedygramy.Services.Games
         Task<ErrorResponseDto?> DeleteAsync(int gameId, int userId);
         Task<IEnumerable<GameListItemDto>> GetAllAsync(int userId);
         Task<GameListItemDto?> GetByIdAsync(int gameId, int userId);
+        Task<(Game? Game, ErrorResponseDto? Error)> ImportFromExternalAsync( string sourceId, int userId, CancellationToken cancellationToken = default);
     }
 }

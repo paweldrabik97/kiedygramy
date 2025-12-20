@@ -1,9 +1,22 @@
-﻿namespace kiedygramy.DTO.Game
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace kiedygramy.DTO.Game
 {
-    public record UpdateGameDto( 
-       
+    public record UpdateGameDto(
+
+       [Required(ErrorMessage ="Tytuł jest wymagany")]
+       [MaxLength(100, ErrorMessage ="Tytuł może mieć max 100 znaków")]
         string Title,
-       string Genre,
+
+       List<int> GenreIds,
+
+       [Range(1, 20, ErrorMessage = "Liczba graczy musi być między 1 - 20")]
        int MinPlayers,
-       int MaxPlayers);
+
+         [Range(1, 20, ErrorMessage = "Liczba graczy musi być między 1 - 20")]
+       int MaxPlayers,
+
+        string? ImageUrl,
+         string? PlayTime
+    );
 }

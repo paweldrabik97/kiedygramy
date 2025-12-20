@@ -5,6 +5,9 @@ using kiedygramy.DTO.Session;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.SignalR;
 using kiedygramy.Hubs;
+using System.Xml;
+using kiedygramy.Application.Errors;
+using kiedygramy.Domain.Enums;
 
 
 namespace kiedygramy.Services.Chat
@@ -23,30 +26,32 @@ namespace kiedygramy.Services.Chat
         public async Task<(SessionMessageDto? Message, ErrorResponseDto? Error)> AddMessageAsync(int sessionId, int userId, CreateSessionMessageDto dto)
         {
             var session = await _db.Sessions
+                .AsNoTracking()
                 .Include(s => s.Participants)
                 .FirstOrDefaultAsync(s => s.Id == sessionId);
 
             if (session is null)
-                return (null, SessionNotFoundError());
+                return (null, Errors.Chat.NotFound());
 
             var isParticipant = session.OwnerId == userId ||
                 session.Participants.Any(p => p.UserId == userId &&
                 p.Status == SessionParticipantStatus.Confirmed);
 
             if (!isParticipant)
-                return (null, NotParticipantError());
-
-            var validationError = ValidateChatMessage(dto.Text);
-            if(validationError is not null)
-                return (null, validationError);
+                return (null, Errors.Chat.InvalidParticipant());
 
             var now = DateTime.UtcNow;
+
+            var text = dto.Text.Trim();
+
+            if(text.Length == 0)
+                return (null, Errors.Chat.EmptyMessage());
 
             var message = new SessionMessage
             {
                 SessionId = sessionId,
                 UserId = userId,
-                Text = dto.Text,
+                Text = text,
                 CreatedAt = now
             };
 
@@ -67,118 +72,54 @@ namespace kiedygramy.Services.Chat
             );
 
             await _hubContext.Clients
-                .Group($"Session_{sessionId}")
+                .Group($"session-{sessionId}")
                 .SendAsync("NewSessionMessage", messageDto);
 
             return (messageDto, null);
         }
         
         public async Task<(IEnumerable<SessionMessageDto> Messages, ErrorResponseDto? Error)>GetMessagesAsync(int sessionId, int userId, int? limit, int? beforeMessageId)
-        { 
-           var session = await _db.Sessions
-                .Include(s => s.Participants)
-                .FirstOrDefaultAsync(s => s.Id == sessionId);
+        {
+            var session = await _db.Sessions
+             .AsNoTracking()
+             .Include(s => s.Participants)
+             .FirstOrDefaultAsync(s => s.Id == sessionId);
 
             if (session is null)
-                return (Enumerable.Empty<SessionMessageDto>(), SessionNotFoundError());
+                return (Enumerable.Empty<SessionMessageDto>(), Errors.Chat.NotFound());
 
-            var isParticipant = session.OwnerId == userId || 
+            var isParticipant = session.OwnerId == userId ||
                 session.Participants.Any(p => p.UserId == userId && p.Status == SessionParticipantStatus.Confirmed);
 
             if (!isParticipant)
-                return (Enumerable.Empty<SessionMessageDto>(), NotParticipantError());
+                return (Enumerable.Empty<SessionMessageDto>(), Errors.Chat.InvalidParticipant());
 
-            var query = _db.SessionMessages
+            var take = limit ?? 50;
+                if (take < 1 || take > 200)
+                    return (Enumerable.Empty<SessionMessageDto>(), Errors.Chat.InvalidLimit());
+            
+            IQueryable<SessionMessage> query = _db.SessionMessages
                 .AsNoTracking()
-                .Where(m => m.SessionId == sessionId)
-                .Include(m => m.User)
-                .OrderByDescending(m => m.Id);
+                .Where(m => m.SessionId == sessionId);
 
             if (beforeMessageId is int beforeId)
-            {
-                query = query
-                    .Where(m => m.Id < beforeId)
-                    .OrderByDescending(m => m.Id);
-            }
-
-            var take = limit .GetValueOrDefault(50);
-            if (take <= 0) take = 50;
-            if (take > 200) take = 200;
-
+                query = query.Where(m => m.Id < beforeId);
+           
             var messages = await query
+                .OrderByDescending(m => m.Id)
                 .Take(take)
+                .Select(m => new SessionMessageDto(
+                    m.Id,
+                    m.UserId,
+                    m.Text,
+                    m.User!.UserName!,
+                    m.CreatedAt
+                ))
                 .ToListAsync();
 
             messages.Reverse();
 
-            var dtoList = messages.Select(m => new SessionMessageDto(
-                m.Id,
-                m.UserId,
-                m.User!.UserName!,
-                m.Text,
-                m.CreatedAt
-            ));
-
-            return (dtoList, null);
-        }
-
-        private ErrorResponseDto ValidateChatMessage(string text)
-        {
-            if (string.IsNullOrWhiteSpace(text))
-            {
-                var errors = new Dictionary<string, string[]>
-                {
-                    { "Text", new[] { "Message text cannot be empty." } }
-                };
-                return new ErrorResponseDto(
-
-                    status: 400,
-                    title: "Invalid Message",
-                    detail: "The message text is invalid.",
-                    errors: errors
-                );
-            }
-
-            if (text.Length > 500)
-            {
-                var errors = new Dictionary<string, string[]>
-                {
-                    { "Text", new[] { "Wiadomość nie może być dłuższa" } }
-                };
-                return new ErrorResponseDto(
-
-                    status: 400,
-                    title: "Invalid Message",
-                    detail: "The message it to long",
-                    errors: errors
-                );
-            }
-
-            return null;
-        }
-
-        private ErrorResponseDto SessionNotFoundError()
-        {
-            return new ErrorResponseDto(
-                status: 404,
-                title: "Session Not Found",
-                detail: "The specified session does not exist.",
-                instance: null,
-                errors: null
-            );
-        }
-
-        private ErrorResponseDto NotParticipantError()
-        {
-            return new ErrorResponseDto(
-                status: 403,
-                title: "Forbidden",
-                detail: "You are not a participant of this session.",
-                instance: null,
-                errors: null
-                );
-        }
-    }
-
-    
+            return (messages, null);
+        } 
+    }   
 }

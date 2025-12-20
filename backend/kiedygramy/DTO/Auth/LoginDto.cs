@@ -1,4 +1,12 @@
-﻿namespace kiedygramy.DTO.Auth
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace kiedygramy.DTO.Auth
 {
-    public record LoginDto(string UsernameOrEmail, string Password);
+    public record LoginDto(
+
+        [Required]
+        string UsernameOrEmail,
+
+        [Required]
+        string Password);
 }

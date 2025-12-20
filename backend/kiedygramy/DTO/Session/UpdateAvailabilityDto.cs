@@ -1,7 +1,9 @@
-﻿namespace kiedygramy.DTO.Session
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace kiedygramy.DTO.Session
 {
     public record UpdateAvailabilityDto(
-      List<DateTime> Dates  );
-    
-    
+        [Required(ErrorMessage ="Lista dat jest wymagana")]
+        List<DateTime> Dates  
+    );   
 }

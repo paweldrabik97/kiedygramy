@@ -1,4 +1,26 @@
-﻿namespace kiedygramy.DTO.Auth
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace kiedygramy.DTO.Auth
 {
-    public record RegisterDto(string Username, string Email, string Password, string? FullName, string? City);
+    public record RegisterDto(
+
+        [Required]
+        [MaxLength(30)]
+        string Username,
+
+        [Required]
+        [EmailAddress]
+        [MaxLength(256)]
+        string Email,
+
+        [Required]
+        [MinLength(6)]
+        string Password,
+
+        [MaxLength(200)]
+        string? FullName,
+
+        [MaxLength(100)]
+        string? City
+    );
 }

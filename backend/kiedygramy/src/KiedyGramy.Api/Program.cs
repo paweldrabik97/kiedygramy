@@ -5,10 +5,9 @@ using kiedygramy.Services.Games;
 using kiedygramy.Services.Sessions;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using System.Text.Json.Serialization;
-using System;
 using kiedygramy.Services.Chat;
 using kiedygramy.Hubs;
+using kiedygramy.Services.External;
 
 namespace kiedygramy.src.KiedyGramy.Api
 {
@@ -26,7 +25,21 @@ namespace kiedygramy.src.KiedyGramy.Api
             builder.Services.AddScoped<IGameService, GameService>();
             builder.Services.AddScoped<ISessionService, SessionService>();
             builder.Services.AddScoped<ISessionChatService, SessionChatService>();
-            
+            builder.Services.AddHttpClient<IBoardGameGeekClientService, BoardGameGeekClientService> ((sp, client) =>
+            {
+                var config = sp.GetRequiredService<IConfiguration>();
+
+                client.BaseAddress = new Uri(config["BGG:BaseUrl"]!);
+
+                client.DefaultRequestHeaders.Authorization = 
+                new System.Net.Http.Headers.AuthenticationHeaderValue(
+                    "Bearer",
+                    config["BGG:Token"]
+                );
+
+                client.Timeout = TimeSpan.FromSeconds(10);
+            });
+
 
             builder.Services.
                 AddIdentityCore<User>(options => 
@@ -36,7 +49,7 @@ namespace kiedygramy.src.KiedyGramy.Api
                     options.Password.RequireNonAlphanumeric = false;
                     options.Password.RequireUppercase = false;
                     options.Password.RequiredLength = 6;
-                    options.User.RequireUniqueEmail = true;
+                    options.User.RequireUniqueEmail = true;                   
                 })
                 .AddRoles<IdentityRole<int>>()
                 .AddEntityFrameworkStores<AppDbContext>()
@@ -83,15 +96,15 @@ namespace kiedygramy.src.KiedyGramy.Api
                 app.UseSwaggerUI();
             //}
 
-            // --- Poczatek bloku migracji ---
+          
             using (var scope = app.Services.CreateScope())
             {
                 var services = scope.ServiceProvider;
                 try
                 {
-                    var context = services.GetRequiredService<AppDbContext>(); // Podstaw nazwę swojego DbContextu
+                    var context = services.GetRequiredService<AppDbContext>(); 
                     
-                    // Ta komenda robi to samo co "dotnet ef database update"
+                   
                     context.Database.Migrate(); 
                 }
                 catch (Exception ex)
@@ -100,9 +113,11 @@ namespace kiedygramy.src.KiedyGramy.Api
                     logger.LogError(ex, "Wystąpił błąd podczas migracji bazy danych.");
                 }
             }
-            // --- Koniec bloku migracji ---
+            
 
             app.UseHttpsRedirection();
+
+            app.UseAuthentication();
             app.UseAuthorization();
 
             app.MapControllers();

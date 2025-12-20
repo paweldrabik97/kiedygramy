@@ -1,9 +1,10 @@
 ﻿namespace kiedygramy.DTO.Game
 {
-    public record GameListItemDto(
+    public record GameDetailsDto(
+    
         int Id,
         string Title,
-        List<string> Genre,
+        List<string> Genres,
         int MinPlayers,
         int MaxPlayers,
         string? ImageUrl,

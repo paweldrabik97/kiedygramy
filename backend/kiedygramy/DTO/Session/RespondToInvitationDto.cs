@@ -1,5 +1,11 @@
-﻿namespace kiedygramy.DTO.Session
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace kiedygramy.DTO.Session
 {
-    public record RespondToInvitationDto(bool Accept);
+    public record RespondToInvitationDto(
+
+        [Required]
+        bool? Accept
+    );
    
 }

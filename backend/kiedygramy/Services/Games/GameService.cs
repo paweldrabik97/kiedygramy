@@ -1,42 +1,66 @@
-﻿using kiedygramy.Data;
+﻿using kiedygramy.Application.Errors;
+using kiedygramy.Data;
 using kiedygramy.Domain;
 using kiedygramy.DTO.Common;
 using kiedygramy.DTO.Game;
+using kiedygramy.Services.External;
 using Microsoft.EntityFrameworkCore;
+
+
 
 namespace kiedygramy.Services.Games
 {
     public class GameService : IGameService
     {
         private readonly AppDbContext _db;
+        private readonly IBoardGameGeekClientService _bgg;
 
-        public GameService(AppDbContext db)
+        public GameService(AppDbContext db, IBoardGameGeekClientService bgg)
         {
             _db = db;
+            _bgg = bgg;
         }
 
         public async Task<(Game? game, ErrorResponseDto? error)> CreateAsync(CreateGameDto dto, int userId)
-        {   
-            var title = dto.Title?.Trim();  
-
-            var validationError = ValidateGame(title, dto.MinPlayers, dto.MaxPlayers);
-            if (validationError is not null)
-                return (null, validationError);
-
+        {             
+            var title = dto.Title.Trim(); 
             
             bool exists = await _db.Games
                 .AnyAsync(g => g.OwnerId == userId && g.Title.ToLower() == title.ToLower());
 
             if (exists)
-            return (null, DuplicateTitleError());
+                return (null, Errors.Game.DuplicateTitle());
+
+            if (dto.MaxPlayers < dto.MinPlayers)
+                return (null, Errors.Game.MaxPlayersMustBeGreaterOrEqualMin());
+
+            if (dto.MinPlayers <= 0)
+                return (null, Errors.Game.MinPlayersMustBeGreaterThanZero());
+
+            var genreIds = (dto.GenreIds ?? new List<int>())
+                .Distinct()
+                .ToList();
+
+            var genre = await _db.Genres
+                .Where(g => genreIds.Contains(g.Id))
+                .ToListAsync();
+
+            if (genre.Count != genreIds.Count)
+                return (null, Errors.General.Validation("Wybrano nieistniejącą kategorię.", "GenreIds"));
 
             var game = new Game
             {
                 OwnerId = userId,
                 Title = title,
-                Genre = string.IsNullOrWhiteSpace(dto.Genre) ? null : dto.Genre.Trim(),
+                
+                GameGenres = genre
+                    .Select(g => new GameGenre { GenreId = g.Id })
+                    .ToList(),
+
                 MinPlayers = dto.MinPlayers,
-                MaxPlayers = dto.MaxPlayers
+                MaxPlayers = dto.MaxPlayers,
+                ImageUrl = dto.ImageUrl,
+                PlayTime = dto.PlayTime
             };
 
             _db.Games.Add(game);
@@ -46,28 +70,44 @@ namespace kiedygramy.Services.Games
         }
 
         public async Task<ErrorResponseDto?> UpdateAsync(int gameId, UpdateGameDto dto, int userId)
-        {
-            var title = dto.Title?.Trim();
-
+        {            
             var game = await _db.Games
                 .FirstOrDefaultAsync(g => g.OwnerId == userId && g.Id == gameId);
 
             if (game is null)
-            return NotExistError();
+            return Errors.Game.NotFound();
 
-            var validationError = ValidateGame(title, dto.MinPlayers, dto.MaxPlayers);
-            
-            if (validationError is not null)
-                return validationError;
+            var title = dto.Title.Trim();
 
             bool exists = await _db.Games
                 .AnyAsync(g => g.OwnerId == userId && g.Title.ToLower() == title.ToLower() && g.Id != gameId);
 
             if (exists)
-            return DuplicateTitleError();
+                return Errors.Game.DuplicateTitle();
+
+            if (dto.MaxPlayers < dto.MinPlayers)
+                return Errors.Game.MaxPlayersMustBeGreaterOrEqualMin();
+
+            if(dto.MinPlayers <= 0)
+                return Errors.Game.MinPlayersMustBeGreaterThanZero();
+
+            var genreIds = (dto.GenreIds ?? new List<int>())
+                .Distinct()
+                .ToList();
+
+            var generes = await _db.Genres
+                .Where(g => genreIds.Contains(g.Id))
+                .ToListAsync();
 
             game.Title = title;
-            game.Genre = string.IsNullOrWhiteSpace(dto.Genre) ? null : dto.Genre.Trim();
+
+            game.GameGenres.Clear();
+
+            foreach (var genre in generes)
+            {
+                game.GameGenres.Add(new GameGenre { GameId = game.Id, GenreId = genre.Id });
+            }
+
             game.MinPlayers = dto.MinPlayers;
             game.MaxPlayers = dto.MaxPlayers;
 
@@ -81,7 +121,7 @@ namespace kiedygramy.Services.Games
                 .FirstOrDefaultAsync(g => g.OwnerId == userId && g.Id == gameId);
 
             if (game is null)
-            return NotExistError();
+            return Errors.Game.NotFound();
 
             _db.Games.Remove(game);
             await _db.SaveChangesAsync();
@@ -93,12 +133,16 @@ namespace kiedygramy.Services.Games
             return await _db.Games
                 .AsNoTracking()
                 .Where(g => g.OwnerId == userId)
+                .Include(g => g.GameGenres)
+                    .ThenInclude(gg => gg.Genre)
                 .Select(g => new GameListItemDto(
                     g.Id,
                     g.Title,
-                    g.Genre,
+                    g.GameGenres.Select(x => x.Genre.Name).ToList(),
                     g.MinPlayers,
-                    g.MaxPlayers))
+                    g.MaxPlayers,
+                    g.ImageUrl,
+                    g.PlayTime))
                 .ToListAsync();
         }
 
@@ -107,102 +151,95 @@ namespace kiedygramy.Services.Games
             return await _db.Games
                 .AsNoTracking()
                 .Where(g => g.OwnerId == userId && g.Id == gameId)
+                .Include(g => g.GameGenres)
+                    .ThenInclude(gg => gg.Genre)
                 .Select(g => new GameListItemDto(
                     g.Id,
                     g.Title,
-                    g.Genre,
+                    g.GameGenres.Select(x => x.Genre.Name).ToList(),
                     g.MinPlayers,
-                    g.MaxPlayers))
+                    g.MaxPlayers,
+                    g.ImageUrl,
+                    g.PlayTime))
                 .FirstOrDefaultAsync();
         }
 
-        private ErrorResponseDto? ValidateGame(string title, int minPlayers, int maxPlayers)
+        public async Task<(Game? Game, ErrorResponseDto? Error)> ImportFromExternalAsync( string sourceId, int userId, CancellationToken ct = default)
         {
-            if (string.IsNullOrWhiteSpace(title))
-            {
-                var errors = new Dictionary<string, string[]>
-                {
-                    { "Title", new[] { "Tytuł jest wymagany." } }
-                };
+            if (string.IsNullOrWhiteSpace(sourceId))
+                return (null, Errors.General.Validation("SourceId jest wymagane.", "SourceId"));
 
-                return new ErrorResponseDto(
-                    status: 400,
-                    title: "Validation Failed",
-                    detail: "Tytuł jest wymagany.",
-                    instance: null,
-                    errors: errors);
-            }
+            var external = await _bgg.GetGameByIdAsync(sourceId, ct);
 
-            if (title.Length < 2 || title.Length > 100)
-            {
-                var errors = new Dictionary<string, string[]>
-                {
-                    { "Title", new[] { "Tytuł gry musi mieć od 2 do 100 znaków." } }
-                };
+            if (external is null)
+                return (null, Errors.Game.ExternalNotFound()); 
+         
+            var title = (external.Title ?? string.Empty).Trim();
+            if (title.Length == 0)
+                return (null, Errors.Game.ExternalInvalidData()); 
+          
+            var exists = await _db.Games
+                .AnyAsync(g => g.OwnerId == userId && g.Title.ToLower() == title.ToLower(), ct);
 
-                return new ErrorResponseDto(
-                    status: 400,
-                    title: "Validation Failed",
-                    detail: "Tytuł gry ma nieprawidłową długość.",
-                    instance: null,
-                    errors: errors);
-            }
+            if (exists)
+                return (null, Errors.Game.DuplicateTitle());
+            
+            var minPlayers = external.MinPlayers;
+            var maxPlayers = external.MaxPlayers;
 
             if (minPlayers <= 0)
+                minPlayers = 1;
+
+            if (maxPlayers <= minPlayers)
+                maxPlayers = minPlayers;
+
+            var genreNames = (external.Genres ?? new List<string>())
+                .Where(n => !string.IsNullOrWhiteSpace(n))
+                .Select(n => n.Trim())
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .ToList();
+
+            var lowered = genreNames
+                .Select(n => n.ToLower())
+                .ToList();
+
+            var existingGenres = await _db.Genres
+                .Where(g => lowered.Contains(g.Name.ToLower()))
+                .ToListAsync(ct);
+
+            var game = new Game
             {
-                var errors = new Dictionary<string, string[]>
-                {
-                    { "MinPlayers", new[] { "Minimalna liczba graczy musi być większa niż 0." } }
-                };
-
-                return  new ErrorResponseDto(
-                    status: 400,
-                    title: "Validation Failed",
-                    detail: "Minimalna liczba graczy musi być większa od 0.",
-                    instance: null,
-                    errors: errors);
-            }
-            
-            if (maxPlayers < minPlayers)
-            {
-                var errors = new Dictionary<string, string[]>
-                {
-                    { "MaxPlayers", new[] { "Maksymalna liczba graczy musi być większa lub równa minimalnej liczbie graczy." } }
-                };
-
-                return new ErrorResponseDto(
-                    status: 400,
-                    title: "Validation Failed",
-                    detail: "Maksymalna liczba graczy musi być większa lub równa minimalnej liczbie graczy.",
-                    instance: null,
-                    errors: errors);
-            }
-
-            return null;
-        }
-
-        private ErrorResponseDto DuplicateTitleError()
-        {
-            var errors = new Dictionary<string, string[]>
-            {
-                { "Title", new[] { "Masz już grę o takim tytule." } }
+                OwnerId = userId,
+                Title = title,                
+                MinPlayers = minPlayers,
+                MaxPlayers = maxPlayers,
+                ImageUrl = external.ImageUrl,
+                PlayTime = external.PlayTime
             };
-            return new ErrorResponseDto(
-                status: 400,
-                title: "Validation Failed",
-                detail: "Masz już grę o takim tytule.",
-                instance: null,
-                errors: errors);
+
+            foreach (var name in genreNames)
+            {
+                var genre = existingGenres.FirstOrDefault(g =>
+                    string.Equals(g.Name, name, StringComparison.OrdinalIgnoreCase));
+
+                if (genre is null)
+                {
+                    genre = new Genre { Name = name };
+                    _db.Genres.Add(genre);
+                    existingGenres.Add(genre);
+                }
+
+                game.GameGenres.Add(new GameGenre
+                {
+                    Genre = genre
+                });
+            }
+
+            _db.Games.Add(game);
+            await _db.SaveChangesAsync(ct);
+
+            return (game, null);
         }
 
-        private ErrorResponseDto NotExistError()
-        {
-            return new ErrorResponseDto(
-                   status: 404,
-                   title: "Not Found",
-                   detail: "Gra nie została znaleziona.",
-                   instance: null,
-                   errors: null);
-        }
     }
 }

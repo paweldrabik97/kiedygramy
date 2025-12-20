@@ -17,15 +17,19 @@ namespace kiedygramy.Data
         public DbSet<SessionParticipant> SessionParticipants => Set<SessionParticipant>();
         public DbSet<SessionMessage> SessionMessages { get; set; } = default!;
         public DbSet<SessionAvailability> SessionAvailabilities => Set<SessionAvailability>();
+        public DbSet<Genre> Genres => Set<Genre>();
+        public DbSet<GameGenre> GameGenres => Set<GameGenre>();
 
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         { 
             base.OnModelCreating(modelBuilder);
 
-            modelBuilder.Entity<User>()
-                .HasIndex(u => u.NormalizedEmail)
-                .IsUnique();
+            modelBuilder.Entity<User>(b =>
+            {
+                b.Property(u => u.FullName).HasMaxLength(200).IsUnicode();
+                b.Property(u => u.City).HasMaxLength(100).IsUnicode();               
+            });
 
             modelBuilder.Entity<Session>()
                 .HasOne(s => s.Owner)
@@ -51,13 +55,13 @@ namespace kiedygramy.Data
                 .HasOne(sp => sp.Session)
                 .WithMany(s => s.Participants)
                 .HasForeignKey(sp => sp.SessionId)
-                .OnDelete(DeleteBehavior.Cascade);
+                .OnDelete(DeleteBehavior.Restrict);
 
             modelBuilder.Entity<SessionParticipant>()
                 .HasOne(sp => sp.User)
                 .WithMany(u => u.SessionParticipants)
                 .HasForeignKey(sp => sp.UserId)
-                .OnDelete(DeleteBehavior.Cascade);
+                .OnDelete(DeleteBehavior.Restrict);
 
             modelBuilder.Entity<SessionParticipant>()
                 .HasIndex(sp => new { sp.SessionId, sp.UserId })
@@ -98,6 +102,25 @@ namespace kiedygramy.Data
             modelBuilder.Entity<SessionAvailability>()
                 .HasIndex(a => new { a.SessionId, a.UserId, a.Date })
                 .IsUnique();
+
+            modelBuilder.Entity<Genre>(e =>
+            {
+                e.Property(x => x.Name).IsRequired().HasMaxLength(80);
+                e.HasIndex(x => x.Name).IsUnique();
+            });
+
+            modelBuilder.Entity<GameGenre>(e =>
+            { 
+                e.HasKey(x => new { x.GameId, x.GenreId });
+
+                e.HasOne(x => x.Game)
+                 .WithMany(x => x.GameGenres)
+                 .HasForeignKey(x => x.GameId);
+
+                e.HasOne(x => x.Genre)
+                    .WithMany(x => x.GameGenres)
+                    .HasForeignKey(x => x.GenreId);
+            });
 
 
 

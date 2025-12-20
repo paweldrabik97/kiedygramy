@@ -2,7 +2,7 @@
 using kiedygramy.DTO.Common;
 using kiedygramy.DTO.Auth;
 using Microsoft.AspNetCore.Identity;
-using kiedygramy.Services.Auth;
+using kiedygramy.Application.Errors;    
 
 
 namespace kiedygramy.Services.Auth
@@ -21,42 +21,15 @@ namespace kiedygramy.Services.Auth
 
         public async Task<(MeDto? User, ErrorResponseDto? Error)> RegisterAsync(RegisterDto dto)
         {
-            
-            if (await _userManager.FindByNameAsync(dto.Username) is not null)
-            {
-                var errors = new Dictionary<string, string[]>
-                {
-                    { "Username", new[] { "Nazwa użytkownika jest już zajęta." } }
-                };
 
-                return (null, new ErrorResponseDto(
-                    status: 401,
-                    title: "Validation Failed",
-                    detail: $"Użytkownik o nazwie {dto.Username} już istnieje.",
-                    instance: null,
-                    errors: errors
-                ));
-            }
+            if (await _userManager.FindByNameAsync(dto.Username) is not null)
+                return (null, Errors.Auth.UsernameTaken());
 
             
             if (!string.IsNullOrWhiteSpace(dto.Email) &&
                 await _userManager.FindByEmailAsync(dto.Email) is not null)
-            {
-                var errors = new Dictionary<string, string[]>
-                {
-                    { "Email", new[] { "Ten adres e-mail jest już zajęty." } }
-                };
+                    return (null, Errors.Auth.EmailTaken());
 
-                return (null, new ErrorResponseDto(
-                    status: 401,
-                    title: "Validation Failed",
-                    detail: $"Adres e-mail {dto.Email} jest już zajęty.",
-                    instance: null,
-                    errors: errors
-                ));
-            }
-
-            
             var user = new User
             {
                 UserName = dto.Username,
@@ -68,24 +41,7 @@ namespace kiedygramy.Services.Auth
             var result = await _userManager.CreateAsync(user, dto.Password);
 
             if (!result.Succeeded)
-            {
-                var errorsDict = result.Errors
-                    .GroupBy(e => MapIdentityCodeToField(e.Code))
-                    .ToDictionary(
-                        g => g.Key,
-                        g => g.Select(e => e.Description).ToArray()
-                    );
-
-                var errorResponse = new ErrorResponseDto(
-                    status: 401,
-                    title: "Validation Failed",
-                    detail: "Rejestracja nie powiodła się.",
-                    instance: null,
-                    errors: errorsDict
-                );
-
-                return (null, errorResponse);
-            }
+                return (null, Errors.Auth.IdentityValidation(result.Errors));
 
             var meDto = new MeDto(
                 Id: user.Id,
@@ -104,36 +60,21 @@ namespace kiedygramy.Services.Auth
                        ?? await _userManager.FindByEmailAsync(dto.UsernameOrEmail);
 
             if (user is null)
-            {
-                return new ErrorResponseDto(
-                    status: 401,
-                    title: "Validation Failed",
-                    detail: "Podano nieprawidłowy login lub hasło.",
-                    instance: null,
-                    errors: null
-                );
-            }
+                return Errors.Auth.InvalidCredentials();
 
             var result = await _signInManager.PasswordSignInAsync(
                 user,
                 dto.Password,
                 isPersistent: true,
-                lockoutOnFailure: true);
+                lockoutOnFailure: true
+            );
 
             if (!result.Succeeded)
-            {
-                return new ErrorResponseDto(
-                    status: 401,
-                    title: "Validation Failed",
-                    detail: "Podano nieprawidłowy login lub hasło.",
-                    instance: null,
-                    errors: null
-                );
-            }
+                return Errors.Auth.InvalidCredentials();
 
             return null; 
         }
-
+        // Przyda się do zmiany hasła itp.
         private static string MapIdentityCodeToField(string code)
         {
             if (code.StartsWith("Password", StringComparison.OrdinalIgnoreCase))

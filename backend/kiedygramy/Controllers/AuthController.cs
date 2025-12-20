@@ -30,10 +30,13 @@ namespace kiedygramy.Controllers
         [AllowAnonymous]
         public async Task<IActionResult> Register([FromBody] RegisterDto dto)
         {
+            if(!ModelState.IsValid)
+                return ValidationProblemFromModelState();
+
             var (user, error) = await _authService.RegisterAsync(dto);
 
             if (error is not null)
-                return BadRequest(error);
+                return Problem(error);
 
             return Ok(user); 
         }
@@ -42,15 +45,13 @@ namespace kiedygramy.Controllers
         [AllowAnonymous]
         public async Task<IActionResult> Login([FromBody] LoginDto dto)
         {
+            if (!ModelState.IsValid)
+                return ValidationProblemFromModelState();
+
             var error = await _authService.LoginAsync(dto);
 
             if (error is not null)
-            {
-                if (error.status == 401)
-                    return Unauthorized(error);
-
-                return BadRequest(error);
-            }
+                return Problem(error);
 
             return NoContent();
         }

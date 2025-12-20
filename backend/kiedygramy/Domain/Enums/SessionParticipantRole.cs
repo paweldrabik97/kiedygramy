@@ -1,4 +1,4 @@
-﻿namespace kiedygramy.Domain
+﻿namespace kiedygramy.Domain.Enums
 {
     public enum SessionParticipantRole
     { 

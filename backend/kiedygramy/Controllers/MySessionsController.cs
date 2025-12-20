@@ -1,12 +1,12 @@
 ﻿using kiedygramy.Controllers.Base;
 using kiedygramy.Domain;
-using kiedygramy.DTO.Common;
 using kiedygramy.DTO.Session;
 using kiedygramy.Services.Sessions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using kiedygramy.Services.Chat;
+using kiedygramy.Application.Errors;
 
 
 
@@ -34,73 +34,53 @@ namespace kiedygramy.Controllers
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] CreateSessionDto dto)
         {
-            var me = await _userManager.GetUserAsync(User);
-            if (me is null)
-                return Unauthorized();
+            if (!ModelState.IsValid)
+                return ValidationProblemFromModelState();
 
-            var (session, error) = await _sessionService.CreateAsync(dto, me.Id);
+            var userId = GetRequiredUserId();
+
+            var (session, error) = await _sessionService.CreateAsync(dto, userId);
 
             if (error is not null)
-                return BadRequest(error);
+                return Problem(error);
 
             return CreatedAtAction(nameof(GetById), new { id = session!.Id }, session);
         }
 
-        
-
         [HttpPost("{id:int}/respond")]
-
         public async Task<IActionResult> Respond(int id, [FromBody] RespondToInvitationDto dto)
-        { 
-            var me = await _userManager.GetUserAsync(User);
+        {
+            if (!ModelState.IsValid)
+                return ValidationProblemFromModelState();
 
-            if (me is null)
-                return Unauthorized();
+            var userId = GetRequiredUserId();
+            
+            var error = await _sessionService.RespondToInviteAsync(id, userId, dto.Accept!.Value);
 
-            var serviceError = await _sessionService.RespondToInviteAsync(id, me.Id, dto.Accept);
+            if (error is not null)
+                return Problem(error);
 
-            if (serviceError is null)
-                return NoContent();
-
-            if(serviceError.status == 404)
-                return NotFound(serviceError);
-
-            return BadRequest(serviceError);
+            return NoContent();
         }
+
         [HttpPost("{id:int}/invite")]
         public async Task<IActionResult> Invite(int id, [FromBody] InviteUserToSessionDto dto)
         {
-            var me = await _userManager.GetUserAsync(User);
-            if (me is null)
-                return Unauthorized();
+            if (!ModelState.IsValid)
+                return ValidationProblemFromModelState();
+
+            var userId = GetRequiredUserId();
 
             var invited = await _userManager.FindByNameAsync(dto.UsernameOrEmail)
                 ?? await _userManager.FindByEmailAsync(dto.UsernameOrEmail);
 
             if (invited is null)
-            {
-                var error = new ErrorResponseDto(
-                    status: 400,
-                    title: "User not found",
-                    detail: "The user you are trying to invite does not exist.",
-                    instance: null,
-                    errors: new Dictionary<string, string[]>
-                    {
-                        { "UsernameOrEmail", new[] { "Użytkownik nie istnieje" } }
-                    });
+                return Problem(Errors.Session.InvitedUserNotFound());
 
-                return BadRequest(error);
-            }
+            var errorFromService = await _sessionService.InviteAsync(id, invited.Id, userId);
 
-            var ErrorFromService = await _sessionService.InviteAsync(id, invited.Id, me.Id);
-
-            if (ErrorFromService is not null)
-            { 
-                if(ErrorFromService.status == 404)
-                    return NotFound(ErrorFromService);
-                
-                return BadRequest(ErrorFromService);
-            }
+            if (errorFromService is not null)
+               return Problem(errorFromService);
 
             return NoContent();
         }
@@ -108,11 +88,9 @@ namespace kiedygramy.Controllers
         [HttpGet("{id:int}")]
         public async Task<IActionResult> GetById(int id)
         {
-            var me = await _userManager.GetUserAsync(User);
-            if (me is null)
-                return Unauthorized();
+            var userId = GetRequiredUserId();
 
-            var session = await _sessionService.GetByIdAsync(id, me.Id);
+            var session = await _sessionService.GetByIdAsync(id, userId);
 
             if (session is null)
                 return NotFound();
@@ -123,32 +101,22 @@ namespace kiedygramy.Controllers
         [HttpGet("{id:int}/participants")]
         public async Task<IActionResult> GetParticipants(int id)
         {
-            var me = await _userManager.GetUserAsync(User);
+            var userId = GetRequiredUserId();
 
-            if (me is null)
-                return Unauthorized();
+            var (participants, error) = await _sessionService.GetParticipantsAsync(id, userId);
 
-            var (participants, error) = await _sessionService.GetParticipantsAsync(id, me.Id);
-
-            if (error is not null)
-            { 
-                if(error.status == 404)
-                    return NotFound(error); 
-
-                return BadRequest(error);
-            }
+            if (error is not null)            
+                return Problem(error);
+            
             return Ok(participants);
         }
 
         [HttpGet("invited")]
         public async Task<ActionResult<IEnumerable<SessionListItemDto>>> GetInvited()
-        { 
-            var me = await _userManager.GetUserAsync(User);
-
-            if (me is null)
-                return Unauthorized();
-
-            var list = await _sessionService.GetInvitedAsync(me.Id);
+        {
+            var userId = GetRequiredUserId();
+           
+            var list = await _sessionService.GetInvitedAsync(userId);
 
             return Ok(list);
         }
@@ -156,125 +124,84 @@ namespace kiedygramy.Controllers
         [HttpGet]
         public async Task<IActionResult> GetMine()
         {
-            var me = await _userManager.GetUserAsync(User);
-            if (me is null)
-                return Unauthorized();
+            var userId = GetRequiredUserId();
 
-            var list = await _sessionService.GetMineAsync(me.Id);
+            var list = await _sessionService.GetMineAsync(userId);
 
             return Ok(list);
         }
         [HttpGet("{id:int}/chat/messages")]
         public async Task<IActionResult> GetMessages(int id, [FromQuery] int? limit, [FromQuery] int? beforeMessageId)
         {
-            var me = await _userManager.GetUserAsync(User);
+            var userId = GetRequiredUserId();
 
-            if (me is null)
-                return Unauthorized();
+            var (messages, error) = await _sessionChatService.GetMessagesAsync(id, userId, limit, beforeMessageId);
 
-            var (messages, error) = await _sessionChatService.GetMessagesAsync(id, me.Id, limit, beforeMessageId);
-            
-            if (error is not null)
-            {
-                if (error.status == 404)
-                    return NotFound(error);
-
-                if (error.status == 403)
-                    return Forbid();
-
-                return BadRequest(error);
-
-
-            }
+            if (error is not null)                         
+                return Problem(error);
+   
             return Ok(messages);
         }
 
         [HttpPost("{id:int}/chat/messages")]
         public async Task<IActionResult> SendMessage(int id, [FromBody] CreateSessionMessageDto dto)
         {
-            var me = await _userManager.GetUserAsync(User);
-            if (me is null)
-                return Unauthorized();
+            if(!ModelState.IsValid)
+                return ValidationProblemFromModelState();
 
-            var (message, error) = await _sessionChatService.AddMessageAsync(id, me.Id, dto);
+            var userId = GetRequiredUserId();
+
+            var (message, error) = await _sessionChatService.AddMessageAsync(id, userId, dto);
 
             if (error is not null)
-            {
-                if (error.status == 404)
-                    return NotFound(error);
-
-                if (error.status == 403)
-                    return Forbid();
-
-                return BadRequest(error);
-            }
+                return Problem(error);
+            
 
             return Ok(message);
         }
 
         [HttpPost("{id:int}/availability/window")]
         public async Task<IActionResult> SetAvailabilityWindow(int id, [FromBody] SetAvailabilityWindowDto dto)
-        { 
-            var me = await _userManager.GetUserAsync(User);
+        {
+            if (!ModelState.IsValid)
+                return ValidationProblemFromModelState();
 
-            if (me is null)
-                return Unauthorized();
+            var userId = GetRequiredUserId();
 
-            var error = await _sessionService.SetAvailabilityWindowAsync(id, me.Id, dto);
+            var error = await _sessionService.SetAvailabilityWindowAsync(id, userId, dto);
 
-            if (error is not null)
-            { 
-                if(error.status == 404)
-                    return NotFound(error);
+            if (error is not null)           
+                return Problem(error);
 
-                if(error.status == 403)
-                    return Forbid();
-            }   
-            return BadRequest(error);
+            return NoContent();
         }
 
         [HttpPut("{id:int}/availability")]
         public async Task<IActionResult> UpdateAvailability(int id, [FromBody] UpdateAvailabilityDto dto)
-        { 
-            var me = await _userManager.GetUserAsync(User);
+        {
+            if (!ModelState.IsValid)
+                return ValidationProblemFromModelState();
 
-            if (me is null)
-                return Unauthorized();
+            var userId = GetRequiredUserId();
 
-            var error = await _sessionService.UpdateAvailabilityAsync(id, me.Id, dto);
+            var error = await _sessionService.UpdateAvailabilityAsync(id, userId, dto);
 
-            if (error is null)
-          
+            if (error is not null)
+                return Problem(error);
 
-            if (error.status == 404)
-                return NotFound(error);
-
-            if (error.status == 403)
-                return Forbid();
-
-            return BadRequest(error);  
+            return NoContent();
         }
 
         [HttpGet("{id:int}/availability/me")]
         public async Task<IActionResult> GetMyAvailability(int id)
         {
-            var me = await _userManager.GetUserAsync(User);
+            var userId = GetRequiredUserId();
 
-            if (me is null)
-                return Unauthorized();
-
-            var (availability, error) = await _sessionService.GetMyAvailabilityAsync(id, me.Id);
+            var (availability, error) = await _sessionService.GetMyAvailabilityAsync(id, userId);
 
             if (error is not null)
-            {
-                if (error.status == 404)
-                    return NotFound(error);
-
-                if (error.status == 403)
-                    return Forbid();
-
-                return BadRequest(error);
-            }
+                return Problem(error);
+            
 
             return Ok(availability ?? new MyAvailabilityDto(new List<DateTime>()));
         }
@@ -282,25 +209,29 @@ namespace kiedygramy.Controllers
         [HttpGet("{id:int}/availability/summary")]
         public async Task<IActionResult> GetAvailabilitySummary(int id)
         {
-            var me = await _userManager.GetUserAsync(User);
+            var userId = GetRequiredUserId();
 
-            if (me is null)
-                return Unauthorized();
+            var (summary, error) = await _sessionService.GetAvailabilitySummaryAsync(id, userId);
 
-            var (summary, error) = await _sessionService.GetAvailabilitySummaryAsync(id, me.Id);
-            
             if (error is not null)
-            {
-                if (error.status == 404)
-                    return NotFound(error);
-
-                if (error.status == 403)
-                    return Forbid();
-
-                return BadRequest(error);
-            }
+                return Problem(error);
+            
             return Ok(summary);
         }
-    }
+        [HttpPost("{id:int}/final-date")]
+        public async Task<IActionResult> SetFinalDate(int id, [FromBody] SetFinalDateDto dto)
+        {
+            if (!ModelState.IsValid)
+                return ValidationProblemFromModelState();
+            
+            var userId = GetRequiredUserId();
 
+            var error = await _sessionService.SetFinalDateAsync(id, userId, dto);
+
+            if (error is not null)
+                return Problem(error);
+
+            return NoContent();
+        }
+    }
 }

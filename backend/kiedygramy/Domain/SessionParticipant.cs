@@ -1,4 +1,6 @@
-﻿namespace kiedygramy.Domain
+﻿using kiedygramy.Domain.Enums;
+
+namespace kiedygramy.Domain
 {
     public class SessionParticipant
     {
@@ -13,5 +15,7 @@
         public SessionParticipantRole Role { get; set; } = SessionParticipantRole.Player;
 
         public SessionParticipantStatus Status { get; set; } = SessionParticipantStatus.Invited;
+        
+        public AttendanceStatus AttendanceStatus { get; set; } = AttendanceStatus.None;
     }
 }

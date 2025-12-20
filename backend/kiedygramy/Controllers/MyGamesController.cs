@@ -13,64 +13,47 @@ namespace kiedygramy.Controllers
     [ApiController]
     [Route("api/my/games")]
     public class MyGamesController : ApiControllerBase
-    {
-      
-        private readonly UserManager<User> _userManager;
+    {            
         private readonly IGameService _gameService;
 
-        public MyGamesController(IGameService gameService, UserManager<User> userManager)
+        public MyGamesController(IGameService gameService)
         { 
-            _gameService = gameService;
-            _userManager = userManager;
+            _gameService = gameService;           
         }
-
-        
+      
         [HttpPost]
-
         public async Task<IActionResult> Create([FromBody] CreateGameDto dto)
         {
-            var me = await _userManager.GetUserAsync(User);
+            if(!ModelState.IsValid)
+                return ValidationProblemFromModelState();
 
-            if (me is null)
-                return Unauthorized();
+            var userId = GetRequiredUserId();
 
-            var (game, error) = await _gameService.CreateAsync(dto, me.Id);
+            var (game, error) = await _gameService.CreateAsync(dto, userId);
 
             if (error is not null)
-                return BadRequest(error);
+                return Problem(error);
 
-            return CreatedAtAction(nameof(GetById), new { id = game!.Id }, new
-            {
-                game.Id,
-                game.Title,
-                game.Genre,
-                game.MinPlayers,
-                game.MaxPlayers
-            });
+            var created = await _gameService.GetByIdAsync(game!.Id, userId);
 
-
+            return CreatedAtAction(nameof(GetById), new { id = game.Id }, created);
         }
 
         [HttpGet]
         public async Task<ActionResult<IEnumerable<GameListItemDto>>> GetAll()
         {
-            var me = await _userManager.GetUserAsync(User);
-            if (me is null)
-                return Unauthorized();
+            var userId = GetRequiredUserId();
 
-            var games = await _gameService.GetAllAsync(me.Id);
+            var games = await _gameService.GetAllAsync(userId);
             return Ok(games);
         }
-
 
         [HttpGet("{id:int}")]
         public async Task<IActionResult> GetById(int id)
         {
-            var me = await _userManager.GetUserAsync(User);
-            if (me is null)
-                return Unauthorized();
+            var userId = GetRequiredUserId();
 
-            var game = await _gameService.GetByIdAsync(id, me.Id);
+            var game = await _gameService.GetByIdAsync(id, userId);
 
             if (game is null)
                 return NotFound();
@@ -78,43 +61,51 @@ namespace kiedygramy.Controllers
             return Ok(game);
         }
 
-
         [HttpPut("{id:int}")]
         public async Task<IActionResult> Update(int id, [FromBody] UpdateGameDto dto)
         {
-            var me = await _userManager.GetUserAsync(User);
-            if (me is null)
-                return Unauthorized();
+            if (!ModelState.IsValid)
+                return ValidationProblemFromModelState();
 
-            var error = await _gameService.UpdateAsync(id, dto, me.Id);
+            var userId = GetRequiredUserId();
 
-            if (error is null)
-                return NoContent();
+            var error = await _gameService.UpdateAsync(id, dto, userId);
 
-            if (error.status == 404)
-                return NotFound(error);
+            if (error is not null)
+                return Problem(error);
 
-            return BadRequest(error);
+            return NoContent();
         }
-
 
         [HttpDelete("{id:int}")]
         public async Task<IActionResult> Delete(int id)
         {
-            var me = await _userManager.GetUserAsync(User);
-            if (me is null)
-                return Unauthorized();
+            var userId = GetRequiredUserId();
 
-            var error = await _gameService.DeleteAsync(id, me.Id);
+            var error = await _gameService.DeleteAsync(id, userId);
 
             if (error is null)
                 return NoContent();
-
-            if (error.status == 404)
-                return NotFound(error);
-
-            return BadRequest(error);
+            
+            return Problem(error);
         }
 
+        [HttpPost("from-external")]
+        public async Task<IActionResult> ImportFromExternal( [FromBody] ImportGameFromExternalDto dto, CancellationToken cancellationToken)
+        {
+            if (!ModelState.IsValid)
+                return ValidationProblemFromModelState();
+
+            var userId = GetRequiredUserId();
+
+            var (game, error) = await _gameService.ImportFromExternalAsync(dto.SourceId, userId, cancellationToken);
+
+            if (error is not null)
+                return Problem(error);
+
+            var created = await _gameService.GetByIdAsync(game!.Id, userId);
+
+            return CreatedAtAction(nameof(GetById), new { id = game.Id }, created);
+        }
     }
 }

@@ -25,6 +25,7 @@ namespace kiedygramy.Domain
         public DateTime? AvailabilityFrom { get; set; }
         public DateTime? AvailabilityTo { get; set; }
         public DateTime? AvailabilityDeadline { get; set; }
+
         public ICollection<SessionAvailability> Availabilities { get; set; } = new List<SessionAvailability>();
 
     }

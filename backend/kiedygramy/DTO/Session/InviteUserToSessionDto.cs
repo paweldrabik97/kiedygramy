@@ -1,4 +1,11 @@
-﻿namespace kiedygramy.DTO.Session
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace kiedygramy.DTO.Session
 {
-    public record InviteUserToSessionDto(string UsernameOrEmail);
+    
+    public record InviteUserToSessionDto(
+        
+        [Required]
+        string UsernameOrEmail
+    );
 }

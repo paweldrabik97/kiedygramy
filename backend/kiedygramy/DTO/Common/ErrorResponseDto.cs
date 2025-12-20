@@ -6,8 +6,5 @@
         string detail,
         string? instance = null,
         IDictionary<string, string[]>? errors = null
-
-
-
         );
 }

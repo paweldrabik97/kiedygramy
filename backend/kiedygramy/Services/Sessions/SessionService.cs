@@ -1,5 +1,7 @@
-﻿using kiedygramy.Data;
+﻿using kiedygramy.Application.Errors;
+using kiedygramy.Data;
 using kiedygramy.Domain;
+using kiedygramy.Domain.Enums;
 using kiedygramy.DTO.Common;
 using kiedygramy.DTO.Session;
 using Microsoft.EntityFrameworkCore;
@@ -17,22 +19,17 @@ namespace kiedygramy.Services.Sessions
 
         public async Task<(SessionDetailsDto? Session, ErrorResponseDto? Error)> CreateAsync(CreateSessionDto dto, int userId)
         {
-            var title = dto.Title?.Trim() ?? string.Empty;
-
-            var validationError = ValidateSessionTitle(title);
-            
-            if (validationError is not null)
-                return (null, validationError);
+            var title = dto.Title?.Trim() ?? string.Empty;          
 
             if (dto.GameId is not null)
             {
                 var gameExists = await _db.Games.AnyAsync(g => g.Id == dto.GameId && g.OwnerId == userId);
 
                 if (!gameExists)
-                    return (null, GameNotExistError());
+                    return (null, Errors.Session.GameNotFound());
             }
 
-            var session = new Session
+            var session = new Session 
             {
                 Title = title,
                 Date = dto.Date,
@@ -119,12 +116,12 @@ namespace kiedygramy.Services.Sessions
                 .FirstOrDefaultAsync(s => s.Id == sessionId && s.OwnerId == currentUser);
 
             if (session is null)
-                return SessionNotFoundError();
+                return Errors.Session.NotFound();
 
             var alreadyParticipant = session.Participants.Any(p => p.UserId == invitedUserId);
 
             if (alreadyParticipant)
-                return AlreadyParticipantError();
+                return Errors.Session.AlreadyParticipant();
 
             var participant = new SessionParticipant
             {
@@ -146,10 +143,10 @@ namespace kiedygramy.Services.Sessions
                 .FirstOrDefaultAsync(p => p.SessionId == sessionId && p.UserId == userId);
 
             if (participant is null)
-                return InvitationNotFoundError();
+                return Errors.Session.InvitationNotFound();
 
             if (participant.Status != SessionParticipantStatus.Invited)
-                return InvalidInvitationStatusError();
+                return Errors.Session.InvalidInvitationStatus();
 
             participant.Status = accept
                 ? SessionParticipantStatus.Confirmed
@@ -179,12 +176,12 @@ namespace kiedygramy.Services.Sessions
 
         public async Task<(IEnumerable<SessionParticipantDto> Participants, ErrorResponseDto? Error)> GetParticipantsAsync(int sessionId, int userId)
         {
-            var sessionExists = await _db.Sessions
+            var session = await _db.Sessions
                 .AsNoTracking()
                 .AnyAsync(s => s.Id == sessionId && s.OwnerId == userId);
 
-            if (!sessionExists)
-                return (Enumerable.Empty<SessionParticipantDto>(), SessionNotFoundError());
+            if (!session)
+                return (Enumerable.Empty<SessionParticipantDto>(), Errors.Session.NotFound());
 
             var participants = await _db.SessionParticipants
                 .AsNoTracking()
@@ -206,16 +203,16 @@ namespace kiedygramy.Services.Sessions
             var session = await _db.Sessions.FirstOrDefaultAsync(s => s.Id == sessionId && s.OwnerId == userId);
 
             if (session is null)
-                return SessionNotFoundError();
+                return Errors.Session.NotFound();
 
             var fromDate = dto.From.Date;
             var toDate = dto.To.Date;
 
             if (fromDate > toDate)
-                return InvalidAvailabilityRangeError();
+                return Errors.Session.InvalidAvailabilityRange();
 
             if (dto.Deadline <= DateTime.UtcNow)
-                return InvalidAvailabilityDeadlineErorr();
+                return Errors.Session.InvalidAvailabilityDeadline();
 
             session.AvailabilityFrom = fromDate;
             session.AvailabilityTo = toDate;
@@ -232,12 +229,11 @@ namespace kiedygramy.Services.Sessions
 
         public async Task<ErrorResponseDto?> UpdateAvailabilityAsync(int sessionId, int userId, UpdateAvailabilityDto dto)
         {
-            var session = await _db.Sessions
-                .Include(s => s.Availabilities)
+            var session = await _db.Sessions               
                 .FirstOrDefaultAsync(s => s.Id == sessionId);
 
             if (session is null)
-                return SessionNotFoundError();
+                return Errors.Session.NotFound();
 
             var isOwner = session.OwnerId == userId;
 
@@ -248,15 +244,15 @@ namespace kiedygramy.Services.Sessions
                 p.Status == SessionParticipantStatus.Confirmed);
 
             if (!isOwner && !isConfirmedParticipant)
-                return InvalidParticipantError("urzytkownik nie ma uprawnień");
+                return Errors.Session.InvalidParticipant();
 
             if (session.AvailabilityFrom is null ||
                 session.AvailabilityTo is null ||
                 session.AvailabilityDeadline is null)
-                return AvailabilityNotConfiguredError();
+                return Errors.Session.AvailabilityNotConfigured();
 
             if (session.AvailabilityDeadline <= DateTime.UtcNow)
-                return InvalidAvailabilityDeadlineErorr();
+                return Errors.Session.InvalidAvailabilityDeadline();
 
             var fromDate = session.AvailabilityFrom.Value.Date;
             var toDate = session.AvailabilityTo.Value.Date;
@@ -298,7 +294,7 @@ namespace kiedygramy.Services.Sessions
                 .FirstOrDefaultAsync(s => s.Id == sessionId);
 
             if (session is null)
-                return (null, SessionNotFoundError());
+                return (null, Errors.Session.NotFound());
 
             var isOwner = session.OwnerId == userId;
             var isConfirmedParticipant = await _db.SessionParticipants
@@ -309,7 +305,7 @@ namespace kiedygramy.Services.Sessions
                 p.Status == SessionParticipantStatus.Confirmed);
 
             if (!isOwner && !isConfirmedParticipant)
-                return (null, InvalidParticipantError("urzytkownik nie ma uprawnień"));
+                return (null, Errors.Session.InvalidParticipant());
 
             var dates = await _db.SessionAvailabilities
                 .AsNoTracking()
@@ -322,17 +318,17 @@ namespace kiedygramy.Services.Sessions
             return (dto, null);
         }
 
-        public async Task<(AvailabilitySummaryDto Summary, ErrorResponseDto? Error)> GetAvailabilitySummaryAsync(int sessionId, int userId)
+        public async Task<(AvailabilitySummaryDto? Summary, ErrorResponseDto? Error)> GetAvailabilitySummaryAsync(int sessionId, int userId)
         {
             var session = await _db.Sessions
                 .AsNoTracking()
                 .FirstOrDefaultAsync(s => s.Id == sessionId);
 
             if (session is null)
-                return (null, SessionNotFoundError());
+                return (null, Errors.Session.NotFound());
 
             if (session.OwnerId != userId)
-                return (null, NotOwnerError());
+                return (null, Errors.Session.NotOwner());
 
             var dayList = await _db.SessionAvailabilities
                 .AsNoTracking()
@@ -348,162 +344,93 @@ namespace kiedygramy.Services.Sessions
             return (dto, null);
         }
 
-        private ErrorResponseDto? ValidateSessionTitle(string title)
+        public async Task<ErrorResponseDto?> SetFinalDateAsync(int sessionId, int userId, SetFinalDateDto dto)
         {
+            
+            var session = await _db.Sessions
+                .AsNoTracking()
+                .FirstOrDefaultAsync(s => s.Id == sessionId);
 
+            if (session is null)
+                return Errors.Session.NotFound();
 
-            if (string.IsNullOrWhiteSpace(title))
-            {
-                var errors = new Dictionary<string, string[]>
-                {
-                    { "Title", new[] { "Tytuł jest wymagany." } }
-                };
+            if (session.OwnerId != userId)
+                return Errors.Session.NotOwner();
 
-                return new ErrorResponseDto(
-                    status: 400,
-                    title: "Validation Failed",
-                    detail: "Tytuł jest wymagany.",
-                    instance: null,
-                    errors: errors
-                );
+            if(session.AvailabilityFrom is null ||
+                session.AvailabilityTo is null ||
+                session.AvailabilityDeadline is null)
+                return Errors.Session.AvailabilityNotConfigured();
+
+            if(DateTime.UtcNow < session.AvailabilityDeadline.Value)
+                return Errors.Session.AvailabilityStillOpen();
+
+            var finalDate = dto.DateTime;
+
+            if (finalDate <= DateTime.UtcNow)
+                return Errors.Session.FinalDateInPast();
+
+            if (session.AvailabilityFrom is not null && session.AvailabilityTo is not null)
+            { 
+                var from = session.AvailabilityFrom.Value.Date;
+                var to = session.AvailabilityTo.Value.Date;
+                var day = finalDate.Date;
+
+                if(day < from || day > to)
+                    return Errors.Session.FinalDateOutsideAvailability();
             }
+
+            session.Date = finalDate;
+            await _db.SaveChangesAsync();
+
             return null;
         }
 
-        private ErrorResponseDto SessionNotFoundError()
+        public async Task<ErrorResponseDto?> UpdateAttendanceAsync(int sessionId, int userId, UpdateAttendanceDto dto)
         {
-            return new ErrorResponseDto(
-                status: 404,
-                title: "Not Found",
-                detail: "Sesja nie została znaleziona.",
-                instance: null,
-                errors: null
-            );
+            var session = await _db.Sessions
+                .FirstOrDefaultAsync(s => s.Id == sessionId);
+
+            if (session is null)
+                return Errors.Session.NotFound();
+
+            if (session.Date is null)
+                return Errors.Session.FinalDateNotSet();
+
+            if(session.Date.Value <=  DateTime.UtcNow)
+                return Errors.Session.SessionAlreadyHappend();
+
+            var isOwner = session.OwnerId == userId;
+
+            var isConfirmedParticipant = await _db.SessionParticipants
+                .AnyAsync(p =>
+                p.SessionId == sessionId &&
+                p.UserId == userId &&
+                p.Status == SessionParticipantStatus.Confirmed);
+            
+            if(!isOwner && !isConfirmedParticipant)
+                return Errors.Session.InvalidParticipant();
+
+            if(dto.Status == AttendanceStatus.None)
+               return Errors.Session.InvalidAttendanceStatus();
+
+            var participant = await _db.SessionParticipants
+                .FirstOrDefaultAsync(p => p.SessionId == sessionId && p.UserId == userId);
+
+            if(participant is null)
+                return Errors.Session.InvalidParticipant();
+
+            participant.AttendanceStatus = isOwner
+                ? AttendanceStatus.Yes
+                : dto.Status;
+
+            await _db.SaveChangesAsync();
+            return null;
+
+           
         }
 
-        private ErrorResponseDto AlreadyParticipantError()
-        {
-            var errors = new Dictionary<string, string[]>
-            {
-                { "Participant", new[] { "Użytkownik jest już uczestnikiem sesji." } }
-            };
-            return new ErrorResponseDto(
-                status: 400,
-                title: "Validation Failed",
-                detail: "Użytkownik jest już uczestnikiem sesji.",
-                instance: null,
-                errors: errors
-            );
-        }
 
-        private ErrorResponseDto GameNotExistError()
-        {
-            var errors = new Dictionary<string, string[]>
-                    {
-                        { "GameId", new[] { "Podana gra nie istnieje." } }
-                    };
-
-            return  new ErrorResponseDto(
-                status: 400,
-                title: "Validation Failed",
-                detail: "Podana gra nie istnieje.",
-                instance: null,
-                errors: errors
-            );
-        }
-
-        private ErrorResponseDto InvitationNotFoundError()
-        {
-            return new ErrorResponseDto(
-                status: 404,
-                title: "Not Found",
-                detail: "Zaproszenie nie zostało znalezione.",
-                instance: null,
-                errors: null
-            );
-        }
-
-        private ErrorResponseDto InvalidInvitationStatusError()
-        {
-            var errors = new Dictionary<string, string[]>
-            {
-                { "Status", new[] { "Nieprawidłowy status zaproszenia." } }
-            };
-
-            return new ErrorResponseDto(
-                status: 400,
-                title: "Validation Failed",
-                detail: "Nieprawidłowy status zaproszenia.",
-                instance: null,
-                errors: errors
-            );
-        }
-
-        private ErrorResponseDto InvalidAvailabilityRangeError()
-        {
-            var errors = new Dictionary<string, string[]>
-            {
-                { "From", new[] { "Data początkowa nie może być późniejsza niż końcowa"}},
-                { "To", new[] { "Data końcowa nie może być wcześniejsza niż początkowa"}}
-            };
-
-            return new ErrorResponseDto(
-                status: 400,
-                title: "Validation Failed",
-                detail: "Nieprawidłowy zakres dostępności.",
-                instance: null,
-                errors: errors
-            );
-        }
-
-        private ErrorResponseDto InvalidAvailabilityDeadlineErorr()
-        {
-            var errors = new Dictionary<string, string[]>
-            {
-                { "Deadline", new[] { "Termin na zgłaszanie dostępności musi być w przyszłości"}}
-               
-            };
-
-            return new ErrorResponseDto(
-                status: 400,
-                title: "Validation Failed",
-                detail: "Nieprawidłowy termin na zgłaszanie dostępności.",
-                instance: null,
-                errors: errors
-            );
-        }
-
-        private ErrorResponseDto AvailabilityNotConfiguredError()
-        {
-            return new ErrorResponseDto(
-                status: 400,
-                title: "Validation Failed",
-                detail: "Okno dostępności nie zostało skonfigurowane dla tej sesji.",
-                instance: null,
-                errors: null
-            );
-        }
-        private ErrorResponseDto NotOwnerError()
-        { 
-            return new ErrorResponseDto(
-                status: 403,
-                title: "Forbidden",
-                detail: "Tylko właściciel sesji może wykonać tę operację.",
-                instance: null,
-                errors: null
-            );
-        }
-        private ErrorResponseDto InvalidParticipantError(string detail)
-        { 
-            return new ErrorResponseDto(
-                status: 403,
-                title: "Forbidden",
-                detail: detail,
-                instance: null,
-                errors: null
-            );
-        }
     }
-
-    
+  
 }
