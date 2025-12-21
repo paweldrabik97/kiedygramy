@@ -2,6 +2,8 @@ import React, { useState } from "react";
 import { register, login, me } from "../features/auth/services/auth.js";
 import { useNavigate } from "react-router-dom";
 import SubmitButton from "../components/ui/SubmitButton";
+import { useTheme } from "../context/ThemeContext.jsx";
+import { Button } from "../components/ui/Button.jsx";
 
 const AuthPage = () => {
   // State for switching between panels

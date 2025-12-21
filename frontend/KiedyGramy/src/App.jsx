@@ -9,9 +9,12 @@ import DashboardPage from "./pages/DashboardPage.jsx";
 import Layout from "./layouts/Layout.jsx";
 import { Routes, Route } from "react-router";
 import LandingPage from "./pages/LandingPage.jsx";
+import { ThemeProvider } from "./context/ThemeContext.jsx";
 
 function App() {
   return (
+    
+    
     <div className="App position-relative min-vh-100">
       
       <Routes>
@@ -27,7 +30,6 @@ function App() {
         </Route>
       </Routes>
     </div>
-
   );
 }
 

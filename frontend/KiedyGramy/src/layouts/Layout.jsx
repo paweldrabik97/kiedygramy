@@ -1,11 +1,9 @@
 import React, { useState } from 'react';
-import { Outlet, Link, useLocation } from 'react-router-dom';
-import useDarkMode from '../hooks/useDarkMode';
+import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
 import { logout } from '../features/auth/services/auth';
-import { useNavigate } from 'react-router-dom';
+import { useTheme } from '../context/ThemeContext';
 
 const Layout = () => {
-
   const navigate = useNavigate();
   // Stan paska bocznego (czy rozwinięty?)
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
@@ -13,21 +11,15 @@ const Layout = () => {
   // Stan menu użytkownika (czy rozwinięte?)
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
 
-  // Dark mode state
-  const [theme, setTheme] = useDarkMode();
+  // Dark mode state z Contextu
+  const { theme, toggleTheme } = useTheme();
 
-  // Hook do sprawdzania, na której stronie jesteśmy (do podświetlania linków)
+  // Hook do sprawdzania, na której stronie jesteśmy
   const location = useLocation();
 
-  // Funkcja wylogowania (atrapa)
   const handleLogout = () => {
     logout();
     navigate('/');
-  };
-
-  // Funkcja przełączająca
-  const toggleTheme = () => {
-    setTheme(theme === 'light' ? 'dark' : 'light');
   };
 
   // Lista linków nawigacyjnych
@@ -35,33 +27,45 @@ const Layout = () => {
     { name: 'Start', path: '/dashboard', icon: <HomeIcon /> },
     { name: 'Moje Gry', path: '/games', icon: <GamepadIcon /> },
     { name: 'Moje Sesje', path: '/sessions', icon: <GamepadIcon /> },
-    { name: 'Statystyki', path: '/stats', icon: <ChartIcon /> }, // Przykładowa podstrona
+    { name: 'Statystyki', path: '/stats', icon: <ChartIcon /> },
   ];
 
   return (
-    <div className="flex h-screen bg-gray-50 dark:bg-gray-900 overflow-hidden transition-colors duration-300">      
+    // ZMIANA: font-sans (Outfit) dla całej aplikacji, kolory tła surface-light/dark
+    <div className="flex h-screen bg-surface-light dark:bg-surface-dark font-sans text-text-main dark:text-text-inverse overflow-hidden transition-colors duration-300">      
+      
       {/* --- SIDEBAR (LEWY PASEK) --- */}
       <aside 
         className={`${
           isSidebarOpen ? 'w-64' : 'w-20'
-        } bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 transition-all duration-300 ease-in-out flex flex-col relative z-20`}
+        } bg-white dark:bg-surface-card border-r border-gray-200 dark:border-gray-700 transition-all duration-300 ease-in-out flex flex-col relative z-20`}
       >
-        {/* Przycisk zwijania/rozwijania paska (Strzałka) */}
+        {/* Przycisk zwijania/rozwijania paska */}
         <button
             onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-            className="absolute -right-3 top-9 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-full p-1 shadow-sm hover:bg-gray-100 dark:hover:bg-gray-700 z-50 text-gray-500"
+            className="absolute -right-3 top-9 bg-white dark:bg-surface-card border border-gray-200 dark:border-gray-700 rounded-full p-1 shadow-sm hover:bg-gray-100 dark:hover:bg-gray-700 z-50 text-text-muted hover:text-primary transition-colors"
             title={isSidebarOpen ? "Zwiń" : "Rozwiń"}
         >
             {isSidebarOpen ? <ChevronLeftIcon /> : <ChevronRightIcon />}
         </button>
 
         {/* Logo w Sidebarze */}
-        <div className="h-16 flex items-center justify-center border-b border-gray-100">
-            {isSidebarOpen ? (
-                 <span className="text-xl font-bold text-blue-600">KiedyGramy</span>
-            ) : (
-                 <span className="text-xl font-bold text-blue-600">KG</span>
-            )}
+        <div className="h-16 flex items-center justify-center border-b border-gray-200 dark:border-gray-700 overflow-hidden">
+            <div className="flex items-center gap-3">
+                
+                {/* Logo (Kostka D20) - Zawsze widoczne */}
+                <MiniLogo />
+
+                {/* Tekst - Widoczny tylko gdy pasek otwarty */}
+                <span 
+                    className={`font-display font-bold text-xl tracking-tight text-text-main dark:text-text-inverse whitespace-nowrap transition-opacity duration-200 ${
+                        isSidebarOpen ? 'opacity-100' : 'opacity-0 hidden'
+                    }`}
+                >
+                    KiedyGramy<span className="text-primary">.</span>
+                </span>
+
+            </div>
         </div>
 
         {/* Linki nawigacyjne */}
@@ -72,19 +76,21 @@ const Layout = () => {
               <Link
                 key={item.path}
                 to={item.path}
-                className={`flex items-center px-3 py-3 rounded-lg transition-colors group ${
+                className={`flex items-center px-3 py-3 rounded-lg transition-all group ${
                     isActive 
-                    ? 'bg-blue-50 text-blue-600' 
-                    : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+                    ? 'bg-primary/10 text-primary font-semibold' // Aktywny: Lekki fiolet tła + mocny tekst
+                    : 'text-text-muted hover:bg-surface-light dark:hover:bg-gray-700 hover:text-primary' // Nieaktywny
                 }`}
                 title={!isSidebarOpen ? item.name : ''}
               >
                 {/* Ikona */}
-                <span className="shrink-0">{item.icon}</span>
+                <span className={`shrink-0 transition-colors ${isActive ? 'text-primary' : 'text-text-muted group-hover:text-primary'}`}>
+                    {item.icon}
+                </span>
                 
-                {/* Tekst (ukrywany gdy pasek zwinięty) */}
+                {/* Tekst */}
                 <span 
-                    className={`ml-3 font-medium transition-opacity duration-200 whitespace-nowrap ${
+                    className={`ml-3 transition-opacity duration-200 whitespace-nowrap ${
                         isSidebarOpen ? 'opacity-100' : 'opacity-0 hidden'
                     }`}
                 >
@@ -100,71 +106,76 @@ const Layout = () => {
       {/* --- GŁÓWNA ZAWARTOŚĆ (PRAWA STRONA) --- */}
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         
-        {/* --- TOPBAR (GÓRNY PASEK) --- */}
-        <header className="h-16 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between px-6 shadow-sm z-10">
+        {/* --- TOPBAR --- */}
+        <header className="h-16 bg-white dark:bg-surface-card border-b border-gray-200 dark:border-gray-700 flex items-center justify-between px-6 shadow-sm z-10 transition-colors">
           
-          {/* Lewa strona Topbara (np. Tytuł aktualnej strony lub Pustka) */}
-          <h2 className="text-lg font-semibold text-gray-700 dark:text-gray-200">
-             {/* Opcjonalnie: Wyświetl nazwę strony na podstawie URL */}
-                {navItems.find(item => item.path === location.pathname)?.name || 'Strona'}
+          {/* Tytuł strony */}
+          <h2 className="text-xl font-bold font-display text-text-main dark:text-text-inverse">
+             {navItems.find(item => item.path === location.pathname)?.name || 'Panel'}
           </h2>
 
-          {/* Prawa strona Topbara (Awatar + Menu) */}
-          <div className="relative">
+          {/* Prawa strona Topbara */}
+          <div className="relative flex items-center gap-4">
+            
+            
+
+            {/* Avatar */}
             <button 
                 onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
                 className="flex items-center space-x-2 focus:outline-none"
             >
-                <div className="w-10 h-10 rounded-full bg-blue-500 text-white flex items-center justify-center font-bold text-lg hover:ring-2 hover:ring-blue-300 transition-all">
-                    J {/* Pierwsza litera imienia */}
+                {/* ZMIANA: Tło avatara na primary */}
+                <div className="w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center font-bold text-lg font-display hover:ring-2 hover:ring-primary-light transition-all shadow-md">
+                    J
                 </div>
             </button>
 
-            {/* Dropdown Menu (Pojawia się po kliknięciu w awatar) */}
+            {/* Dropdown Menu */}
             {isUserMenuOpen && (
                 <>
-                    {/* Niewidzialna warstwa pod spodem, żeby zamknąć menu klikając gdziekolwiek */}
                     <div 
                         className="fixed inset-0 z-30" 
                         onClick={() => setIsUserMenuOpen(false)}
                     ></div>
                     
-                    {/* Właściwe menu */}
-                    <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-md shadow-lg z-40 py-1 animate-fade-in-down">
-                        <div className="px-4 py-2 border-b border-gray-100">
-                            <p className="text-sm font-medium text-gray-900">Jan Kowalski</p>
-                            <p className="text-xs text-gray-500">jan@example.com</p>
+                    <div className="absolute right-0 top-12 mt-2 w-56 bg-white dark:bg-surface-card border border-gray-200 dark:border-gray-700 rounded-xl shadow-xl z-40 py-2 animate-fade-in-down">
+                        <div className="px-4 py-3 border-b border-gray-100 dark:border-gray-700">
+                            <p className="text-sm font-bold text-text-main dark:text-text-inverse font-display">Jan Kowalski</p>
+                            <p className="text-xs text-text-muted">jan@example.com</p>
                         </div>
-                        <Link 
-                            to="/profile" 
-                            className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                            onClick={() => setIsUserMenuOpen(false)}
-                        >
-                            Ustawienia profilu
-                        </Link>
-                        <button 
-                onClick={toggleTheme}
-                className="p-2 rounded-full text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700 transition-colors"
-                title="Zmień motyw"
-            >
-                {theme === 'light' ? (
-                    // Ikona Księżyca (gdy jest jasno)
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
-                    </svg>
-                ) : (
-                    // Ikona Słońca (gdy jest ciemno)
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
-                    </svg>
-                )}
-            </button>
-                        <button 
-                            onClick={handleLogout}
-                            className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50"
-                        >
-                            Wyloguj się
-                        </button>
+                        
+                        <div className="py-1">
+                            <Link 
+                                to="/profile" 
+                                className="block px-4 py-2 text-sm text-text-main dark:text-text-inverse hover:bg-surface-light dark:hover:bg-gray-700 transition-colors"
+                                onClick={() => setIsUserMenuOpen(false)}
+                            >
+                                Ustawienia profilu
+                            </Link>
+                            {/* Przycisk zmiany motywu */}
+                            <button 
+                                onClick={toggleTheme}
+                                // ZMIANA: Używam koloru secondary (Gold) dla ikon słońca/księżyca
+                                className="p-2 rounded-full text-secondary hover:bg-primary/5 transition-colors"
+                                title="Zmień motyw"
+                            >
+                                {theme === 'light' ? (
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                                    </svg>
+                                ) : (
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+                                    </svg>
+                                )}
+                            </button>
+                            <button 
+                                onClick={handleLogout}
+                                className="block w-full text-left px-4 py-2 text-sm text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                            >
+                                Wyloguj się
+                            </button>
+                        </div>
                     </div>
                 </>
             )}
@@ -172,9 +183,8 @@ const Layout = () => {
         </header>
 
 
-        {/* --- TREŚĆ STRONY (OUTLET) --- */}
-        {/* Tutaj React Router wstrzykuje komponenty podstron (np. GamesPage) */}
-        <main className="flex-1 overflow-y-auto bg-gray-50 dark:bg-gray-900 p-6 transition-colors">
+        {/* --- TREŚĆ STRONY --- */}
+        <main className="flex-1 overflow-y-auto bg-surface-light dark:bg-surface-dark p-6 transition-colors">
             <Outlet /> 
         </main>
 
@@ -183,7 +193,7 @@ const Layout = () => {
   );
 };
 
-// --- Proste ikonki SVG (aby nie instalować dodatkowych bibliotek na razie) ---
+// Ikonki (bez zmian)
 const HomeIcon = () => (
   <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg>
 );
@@ -198,6 +208,22 @@ const ChevronLeftIcon = () => (
 );
 const ChevronRightIcon = () => (
     <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+);
+const MiniLogo = () => (
+  <>
+    <div className="w-8 h-8 shrink-0 bg-primary rounded-lg flex items-center justify-center text-white relative shadow-md">
+          {/* SVG D20 */}
+        <svg className="w-5 h-5" viewBox="0 0 100 100" fill="none" stroke="currentColor" strokeWidth="8" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M50 5 L93 28 V72 L50 95 L7 72 V28 Z" />
+            <path d="M50 5 L20 40 L80 40 Z" />
+            <path d="M20 40 L50 85 L80 40" />
+            <path d="M20 40 L7 72" />
+            <path d="M80 40 L93 72" />
+        </svg>
+        {/* Złota kropka (Secondary Color) */}
+        <div className="absolute -top-1 -right-1 w-3 h-3 bg-secondary rounded-full border-2 border-white dark:border-surface-card"></div>
+    </div>
+  </>
 );
 
 export default Layout;
