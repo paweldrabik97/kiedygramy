@@ -25,6 +25,7 @@ namespace kiedygramy.src.KiedyGramy.Api
             builder.Services.AddScoped<IGameService, GameService>();
             builder.Services.AddScoped<ISessionService, SessionService>();
             builder.Services.AddScoped<ISessionChatService, SessionChatService>();
+            builder.Services.AddScoped<IGenreService, GenreService>();
             builder.Services.AddHttpClient<IBoardGameGeekClientService, BoardGameGeekClientService> ((sp, client) =>
             {
                 var config = sp.GetRequiredService<IConfiguration>();
