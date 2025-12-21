@@ -2,6 +2,7 @@ using kiedygramy.Data;
 using kiedygramy.Domain;
 using kiedygramy.Services.Auth;
 using kiedygramy.Services.Games;
+using kiedygramy.Services.Genre;
 using kiedygramy.Services.Sessions;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
