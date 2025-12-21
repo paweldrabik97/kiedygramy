@@ -55,7 +55,7 @@ const CreateSessionModal = ({ onClose, onCreate, games }) => {
             <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Gra</label>
                 <select 
-                    name="gameId" required
+                    name="gameId"
                     value={formData.gameId} onChange={handleChange}
                     className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm p-2 border"
                 >
@@ -72,7 +72,7 @@ const CreateSessionModal = ({ onClose, onCreate, games }) => {
             <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Data i godzina</label>
                 <input 
-                    type="datetime-local" name="date" required
+                    type="datetime-local" name="date" 
                     value={formData.date} onChange={handleChange}
                     className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm p-2 border"
                 />
