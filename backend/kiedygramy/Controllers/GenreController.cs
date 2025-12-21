@@ -13,6 +13,11 @@ namespace kiedygramy.Controllers
     {
         private readonly IGenreService _genreService;
 
+        public GenreController(IGenreService genreService)
+        {
+            _genreService = genreService;
+        }
+
         [HttpGet]
         public async Task<ActionResult<List<GenreDto>>> GetAll([FromQuery] string? query, CancellationToken ct)
         {            
