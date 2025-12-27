@@ -5,16 +5,19 @@ using kiedygramy.Domain.Enums;
 using kiedygramy.DTO.Common;
 using kiedygramy.DTO.Session;
 using Microsoft.EntityFrameworkCore;
+using kiedygramy.Services.Notifications;
 
 namespace kiedygramy.Services.Sessions
 {
     public class SessionService : ISessionService
     {
         private readonly AppDbContext _db;
+        private readonly INotificationService _notificationService;
 
-        public SessionService(AppDbContext db)
+        public SessionService(AppDbContext db, INotificationService notificationService)
         {
             _db = db;
+            _notificationService = notificationService;
         }
 
         public async Task<(SessionDetailsDto? Session, ErrorResponseDto? Error)> CreateAsync(CreateSessionDto dto, int userId)
@@ -73,9 +76,12 @@ namespace kiedygramy.Services.Sessions
         {
             var session = await _db.Sessions
                 .AsNoTracking()
+                .Include(s => s.Participants)
                 .Include(s => s.Owner)
                 .Include(s => s.Game)
-                .FirstOrDefaultAsync(s => s.Id == id && s.OwnerId == userId);
+                .FirstOrDefaultAsync(s => s.Id == id && (s.OwnerId == userId ||
+                 s.Participants.Any(p => p.UserId == userId &&
+                 p.Status == SessionParticipantStatus.Confirmed)));
 
             if (session is null)
                 return null;
@@ -97,7 +103,10 @@ namespace kiedygramy.Services.Sessions
         {
             return await _db.Sessions
                 .AsNoTracking()
-                .Where(s => s.OwnerId == userId)
+                .Include(s => s.Participants)
+                .Where(s => s.OwnerId == userId ||
+                s.Participants.Any(p => p.UserId == userId &&
+                p.Status == SessionParticipantStatus.Confirmed))
                 .OrderByDescending(s => s.Date ?? DateTime.MaxValue)
                 .Select(s => new SessionListItemDto(
                     s.Id,
@@ -133,6 +142,28 @@ namespace kiedygramy.Services.Sessions
 
             _db.SessionParticipants.Add(participant);
             await _db.SaveChangesAsync();
+
+            try
+            {
+                var title = "Nowe zaproszenie do sesji";
+                var message = $"Zaproszono Cię do sesji: {session.Title}";
+                var url = $"/sessions/{sessionId}";
+
+                await _notificationService.CreateAsync(
+                    userId: invitedUserId,
+                    type: NotificationType.SessionInviteRecived,
+                    title: title,
+                    message: message,
+                    url: url,
+                    sessionId: sessionId,
+                    key: $"invite:{sessionId}",
+                    ct : CancellationToken.None
+                );
+            }
+            catch
+            {
+                // Ignore notification errors można kiedyś dodać loga 
+            }
 
             return null;
         }
@@ -425,12 +456,7 @@ namespace kiedygramy.Services.Sessions
                 : dto.Status;
 
             await _db.SaveChangesAsync();
-            return null;
-
-           
+            return null;           
         }
-
-
-    }
-  
+    }  
 }

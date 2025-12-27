@@ -1,14 +1,15 @@
 using kiedygramy.Data;
 using kiedygramy.Domain;
+using kiedygramy.Hubs;
 using kiedygramy.Services.Auth;
+using kiedygramy.Services.Chat;
+using kiedygramy.Services.External;
 using kiedygramy.Services.Games;
 using kiedygramy.Services.Genre;
+using kiedygramy.Services.Notifications;
 using kiedygramy.Services.Sessions;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using kiedygramy.Services.Chat;
-using kiedygramy.Hubs;
-using kiedygramy.Services.External;
 
 namespace kiedygramy.src.KiedyGramy.Api
 {
@@ -27,6 +28,9 @@ namespace kiedygramy.src.KiedyGramy.Api
             builder.Services.AddScoped<ISessionService, SessionService>();
             builder.Services.AddScoped<ISessionChatService, SessionChatService>();
             builder.Services.AddScoped<IGenreService, GenreService>();
+            builder.Services.AddScoped<ISessionChatHubService, SessionChatHubService>();
+            builder.Services.AddScoped<INotificationService, NotificationService>();
+            builder.Services.AddScoped<INotificationPublisher, SignalRNotificationPublisher>();
             builder.Services.AddHttpClient<IBoardGameGeekClientService, BoardGameGeekClientService> ((sp, client) =>
             {
                 var config = sp.GetRequiredService<IConfiguration>();
@@ -78,7 +82,11 @@ namespace kiedygramy.src.KiedyGramy.Api
                     options.JsonSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
                 });
 
-            builder.Services.AddSignalR();
+            builder.Services.AddSignalR()
+                .AddJsonProtocol(options => 
+                {
+                    options.PayloadSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());  
+                });
 
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
@@ -120,6 +128,7 @@ namespace kiedygramy.src.KiedyGramy.Api
             app.MapControllers();
 
             app.MapHub<SessionChatHub>("/chatHub");
+            app.MapHub<NotificationHub>("/notificationHub");
 
             await app.RunAsync();
         }

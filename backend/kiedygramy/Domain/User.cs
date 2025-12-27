@@ -10,5 +10,7 @@ namespace kiedygramy.Domain
         public ICollection<Game> Games { get; set; } = new List<Game>();
         public ICollection<Session> OwnedSessions { get; set; } = new List<Session>();
         public ICollection<SessionParticipant> SessionParticipants { get; set; } = new List<SessionParticipant>();
+
+        public ICollection<Notification> Notifications { get; set; } = new List<Notification>();
     }
 }

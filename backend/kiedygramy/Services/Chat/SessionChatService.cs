@@ -5,9 +5,9 @@ using kiedygramy.DTO.Session;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.SignalR;
 using kiedygramy.Hubs;
-using System.Xml;
 using kiedygramy.Application.Errors;
 using kiedygramy.Domain.Enums;
+using kiedygramy.Services.Notifications;
 
 
 namespace kiedygramy.Services.Chat
@@ -16,19 +16,23 @@ namespace kiedygramy.Services.Chat
     {
         private readonly AppDbContext _db;
         private readonly IHubContext<SessionChatHub> _hubContext;
+        private readonly INotificationService _notification;
+        private readonly ILogger<SessionChatService> _logger;
 
-        public SessionChatService(AppDbContext db, IHubContext<SessionChatHub> hubContext)
+        public SessionChatService(AppDbContext db, IHubContext<SessionChatHub> hubContext, INotificationService notification, ILogger<SessionChatService> logger)
         {
             _db = db;
             _hubContext = hubContext;
+            _notification = notification;
+            _logger = logger;
         }
 
-        public async Task<(SessionMessageDto? Message, ErrorResponseDto? Error)> AddMessageAsync(int sessionId, int userId, CreateSessionMessageDto dto)
+        public async Task<(SessionMessageDto? Message, ErrorResponseDto? Error)> AddMessageAsync(int sessionId, int userId, CreateSessionMessageDto dto, CancellationToken ct)
         {
             var session = await _db.Sessions
                 .AsNoTracking()
                 .Include(s => s.Participants)
-                .FirstOrDefaultAsync(s => s.Id == sessionId);
+                .FirstOrDefaultAsync(s => s.Id == sessionId, ct);
 
             if (session is null)
                 return (null, Errors.Chat.NotFound());
@@ -56,24 +60,54 @@ namespace kiedygramy.Services.Chat
             };
 
             _db.SessionMessages.Add(message);
-            await _db.SaveChangesAsync();
-
+            await _db.SaveChangesAsync(ct);
+            
             var user = await _db.Users
-                .AsNoTracking()
-                .FirstAsync(u => u.Id == userId);
+               .AsNoTracking()
+               .FirstAsync(u => u.Id == userId, ct);
 
             var messageDto = new SessionMessageDto(
-                message.Id,
-                message.UserId,
-                user.UserName!,
-                message.Text,
-                message.CreatedAt
+               message.Id,
+               message.UserId,
+               user.UserName!,
+               message.Text,
+               message.CreatedAt
 
-            );
+           );
 
             await _hubContext.Clients
-                .Group($"session-{sessionId}")
-                .SendAsync("NewSessionMessage", messageDto);
+               .Group($"session-{sessionId}")
+               .SendAsync("NewSessionMessage", messageDto, ct);
+
+            try
+            {
+                var recipientIds = session.Participants
+                   .Where(p => p.Status == SessionParticipantStatus.Confirmed)
+                   .Select(p => p.UserId)
+                   .Append(session.OwnerId)
+                   .Distinct()
+                   .Where(id => id != userId)
+                   .ToList();
+
+                var preview = text.Length <= 120 ? text : text[..120] + "...";
+                var sessionTitle = session.Title;
+
+                foreach (var recipient in recipientIds)
+                {
+                    await _notification.UpsertChatCounterAsync(
+                        userId: recipient,
+                        sessionId: sessionId,
+                        sessionTitle: sessionTitle,
+                        lastMessagePreview: preview,
+                        ct: CancellationToken.None
+                    );
+                }
+
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex,"Failed to create chat notification for sessionId={SessionId}, messageId={MessageId}, authorId={UserId}",sessionId, message.Id, userId);
+            }
 
             return (messageDto, null);
         }

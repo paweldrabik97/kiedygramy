@@ -15,13 +15,13 @@ namespace kiedygramy.Controllers
     [Authorize]
     [ApiController]
     [Route("api/my/sessions")]
-    public class MySessionsController : ApiControllerBase
+    public class SessionsController : ApiControllerBase
     {
         private readonly ISessionService _sessionService;
         private readonly UserManager<User> _userManager;
         private readonly ISessionChatService _sessionChatService;
 
-        public MySessionsController(
+        public SessionsController(
             ISessionService sessionService,
             UserManager<User> userManager,
             ISessionChatService sessionChatService)
@@ -130,6 +130,7 @@ namespace kiedygramy.Controllers
 
             return Ok(list);
         }
+
         [HttpGet("{id:int}/chat/messages")]
         public async Task<IActionResult> GetMessages(int id, [FromQuery] int? limit, [FromQuery] int? beforeMessageId)
         {
@@ -144,14 +145,14 @@ namespace kiedygramy.Controllers
         }
 
         [HttpPost("{id:int}/chat/messages")]
-        public async Task<IActionResult> SendMessage(int id, [FromBody] CreateSessionMessageDto dto)
+        public async Task<IActionResult> SendMessage(int id, [FromBody] CreateSessionMessageDto dto, CancellationToken ct)
         {
             if(!ModelState.IsValid)
                 return ValidationProblemFromModelState();
 
             var userId = GetRequiredUserId();
 
-            var (message, error) = await _sessionChatService.AddMessageAsync(id, userId, dto);
+            var (message, error) = await _sessionChatService.AddMessageAsync(id, userId, dto, ct);
 
             if (error is not null)
                 return Problem(error);

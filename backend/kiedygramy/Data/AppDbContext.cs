@@ -19,16 +19,17 @@ namespace kiedygramy.Data
         public DbSet<SessionAvailability> SessionAvailabilities => Set<SessionAvailability>();
         public DbSet<Genre> Genres => Set<Genre>();
         public DbSet<GameGenre> GameGenres => Set<GameGenre>();
+        public DbSet<Notification> Notifications => Set<Notification>();
 
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
-        { 
+        {
             base.OnModelCreating(modelBuilder);
 
             modelBuilder.Entity<User>(b =>
             {
                 b.Property(u => u.FullName).HasMaxLength(200).IsUnicode();
-                b.Property(u => u.City).HasMaxLength(100).IsUnicode();               
+                b.Property(u => u.City).HasMaxLength(100).IsUnicode();
             });
 
             modelBuilder.Entity<Session>()
@@ -65,8 +66,8 @@ namespace kiedygramy.Data
 
             modelBuilder.Entity<SessionParticipant>()
                 .HasIndex(sp => new { sp.SessionId, sp.UserId })
-                .IsUnique();    
-       
+                .IsUnique();
+
             modelBuilder.Entity<Game>()
                 .HasIndex(g => new { g.OwnerId, g.Title })
                 .IsUnique();
@@ -110,7 +111,7 @@ namespace kiedygramy.Data
             });
 
             modelBuilder.Entity<GameGenre>(e =>
-            { 
+            {
                 e.HasKey(x => new { x.GameId, x.GenreId });
 
                 e.HasOne(x => x.Game)
@@ -122,14 +123,30 @@ namespace kiedygramy.Data
                     .HasForeignKey(x => x.GenreId);
             });
 
+            modelBuilder.Entity<Notification>(b =>
+            {
+                b.Property(x => x.Title).IsRequired().HasMaxLength(200);
+                b.Property(x => x.Message).IsRequired().HasMaxLength(1000);
+                b.Property(x => x.Url).HasMaxLength(500);
+                b.Property(x => x.Key).HasMaxLength(200);
 
+                b.Property(x => x.CreatedAt).IsRequired();
+                b.Property(x => x.UpdatedAt).IsRequired();
 
+                b.HasOne(x => x.User)
+                 .WithMany(u => u.Notifications)
+                 .HasForeignKey(x => x.UserId)
+                 .OnDelete(DeleteBehavior.Cascade);
 
+                b.HasIndex(x => new { x.UserId, x.IsRead, x.UpdatedAt });
+
+                b.HasIndex(x => new { x.UserId, x.Key, x.IsRead });
+
+                b.HasIndex(x => new { x.UserId, x.Key }).IsUnique();
+
+            });
         }
-
     }
-
-
 }
     
         

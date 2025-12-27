@@ -3,6 +3,8 @@ using kiedygramy.DTO.Common;
 using kiedygramy.DTO.Auth;
 using Microsoft.AspNetCore.Identity;
 using kiedygramy.Application.Errors;    
+using kiedygramy.Services.Notifications;
+using kiedygramy.Domain.Enums;
 
 
 namespace kiedygramy.Services.Auth
@@ -11,11 +13,13 @@ namespace kiedygramy.Services.Auth
     {
         private readonly UserManager<User> _userManager;
         private readonly SignInManager<User> _signInManager;
+        private readonly INotificationService _notificationService;
 
-        public AuthService(UserManager<User> userManager, SignInManager<User> signInManager)
+        public AuthService(UserManager<User> userManager, SignInManager<User> signInManager, INotificationService notification)
         {
             _userManager = userManager;
             _signInManager = signInManager;
+            _notificationService = notification;
         }
 
 
@@ -42,6 +46,17 @@ namespace kiedygramy.Services.Auth
 
             if (!result.Succeeded)
                 return (null, Errors.Auth.IdentityValidation(result.Errors));
+
+            await _notificationService.CreateAsync(
+               userId: user.Id,
+                type: NotificationType.Welcome,
+                title: "Witamy na KiedyGramy!",
+                message: "Dziekujemy za Rejestracje... blblblbl",
+                url: "/welcome", // tutaj moze byc link do jakiegos welcome page
+                sessionId: null,
+                key: "welcome",
+                ct: CancellationToken.None
+            );
 
             var meDto = new MeDto(
                 Id: user.Id,

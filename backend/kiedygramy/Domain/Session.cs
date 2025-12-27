@@ -3,8 +3,7 @@
 namespace kiedygramy.Domain
 {
     public class Session
-    {
-        
+    {       
         public int Id { get; set; }      
         public string Title { get; set; } = default!;
         public DateTime? Date { get; set; }
@@ -13,7 +12,6 @@ namespace kiedygramy.Domain
 
         public int OwnerId { get; set; }
         public User Owner { get; set; } = default!; 
-
 
         public int? GameId { get; set; }
         public Game Game { get; set; } = default!;
@@ -27,6 +25,5 @@ namespace kiedygramy.Domain
         public DateTime? AvailabilityDeadline { get; set; }
 
         public ICollection<SessionAvailability> Availabilities { get; set; } = new List<SessionAvailability>();
-
     }
 }

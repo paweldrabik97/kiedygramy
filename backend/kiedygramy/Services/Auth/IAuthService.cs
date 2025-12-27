@@ -1,5 +1,6 @@
 ﻿using kiedygramy.DTO.Auth;
 using kiedygramy.DTO.Common;
+using kiedygramy.Domain;
 
 namespace kiedygramy.Services.Auth
 {

@@ -12,11 +12,11 @@ namespace kiedygramy.Controllers
     [Authorize]
     [ApiController]
     [Route("api/my/games")]
-    public class MyGamesController : ApiControllerBase
+    public class GamesController : ApiControllerBase
     {            
         private readonly IGameService _gameService;
 
-        public MyGamesController(IGameService gameService)
+        public GamesController(IGameService gameService)
         { 
             _gameService = gameService;           
         }

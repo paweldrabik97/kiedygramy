@@ -16,10 +16,7 @@ namespace kiedygramy.Controllers
         private readonly SignInManager<User> _signInManager;
         private readonly IAuthService _authService;
 
-        public AuthController(
-            UserManager<User> userManager,
-            SignInManager<User> signInManager,
-            IAuthService authService)
+        public AuthController( UserManager<User> userManager, SignInManager<User> signInManager, IAuthService authService)
         {
             _userManager = userManager;
             _signInManager = signInManager;
