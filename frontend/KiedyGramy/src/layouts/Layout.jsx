@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
 import { logout } from '../features/auth/services/auth';
 import { useTheme } from '../context/ThemeContext';
+import NotificationBell from '../features/notifications/components/NotificationBell';
 
 const Layout = () => {
   const navigate = useNavigate();
@@ -117,7 +118,9 @@ const Layout = () => {
           {/* Prawa strona Topbara */}
           <div className="relative flex items-center gap-4">
             
-            
+            <Link to="/notifications">
+              <NotificationBell />
+            </Link>
 
             {/* Avatar */}
             <button 

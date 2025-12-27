@@ -33,3 +33,5 @@ export async function updateGame(id: number, data: {
 }) {
     return api<Game>(`/api/my/games/${id}`, { method: "PUT", body: JSON.stringify(data) });
 }
+
+
