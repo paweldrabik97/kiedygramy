@@ -1,11 +1,11 @@
 import React, { useState } from "react";
-import { register, login } from "../features/auth/services/auth.js";
+import { useAuth } from "../features/auth/context/AuthContext.jsx";
 import { useNavigate, Link } from "react-router-dom";
-import SubmitButton from "../components/ui/SubmitButton";
 import { Button } from "../components/ui/Button.jsx";
 
 const AuthPage = () => {
   // --- STATE ---
+  const { login, register } = useAuth();
   const [isRegisterActive, setIsRegisterActive] = useState(false);
   const [formData, setFormData] = useState({
     username: "",
@@ -55,7 +55,7 @@ const AuthPage = () => {
     e.preventDefault();
     setError(null);
 
-    if (formData.password !== formData.confirmPassword) {
+    if (newFormData.newPassword !== newFormData.newConfirmPassword) {
       setError("Hasła nie są identyczne.");
       return;
     }
@@ -63,14 +63,14 @@ const AuthPage = () => {
     setLoading(true);
     try {
       await register({
-        username: formData.username,
-        email: formData.email,
-        password: formData.password,
-        fullName: formData.fullName,
-        city: formData.city,
+        username: newFormData.newUsername,
+        email: newFormData.newEmail,
+        password: newFormData.newPassword,
+        fullName: newFormData.newFullName,
+        city: newFormData.newCity,
       });
       // Po rejestracji możemy od razu przekierować lub kazać się zalogować
-      navigate("/dashboard");
+      //navigate("/dashboard");
     } catch (err) {
       setError("Rejestracja nieudana. Spróbuj ponownie.");
     } finally {

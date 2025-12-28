@@ -14,7 +14,7 @@ namespace kiedygramy.Services.External
             _httpClient = httpClient;
         }
 
-        public async Task<IEnumerable<ExternalGameDto>> SearchGamesAsync(string query, CancellationToken cancellationToken = default)
+        public async Task<IEnumerable<ExternalGameDto>> SearchGamesAsync(string query, int skip = 0, int take = 10, CancellationToken cancellationToken = default)
         {
 
             if (string.IsNullOrWhiteSpace(query) || query.Length < 3)
@@ -23,25 +23,24 @@ namespace kiedygramy.Services.External
 
             var encodedQuery = Uri.EscapeDataString(query);
             var searchUrl = $"search?query={encodedQuery}&type=boardgame";
-            var searchXml = await _httpClient.GetStringAsync(searchUrl, cancellationToken);
 
+            var searchXml = await _httpClient.GetStringAsync(searchUrl, cancellationToken);
             var searchDoc = XDocument.Parse(searchXml);
 
-            var items = searchDoc
-                .Descendants("item")
-                .Take(3)
+            var allItems = searchDoc.Descendants("item");
+
+            var pagedItems = allItems
+                .Skip(skip)
+                .Take(take)
                 .ToList();
 
-            if(!items.Any())
+            if (!pagedItems.Any())
                 return Enumerable.Empty<ExternalGameDto>();
-
-            var ids = items
+            
+            var ids = pagedItems
                 .Select(i => i.Attribute("id")?.Value)
-                .Where(id => id is not null)
+                .Where(id => !string.IsNullOrWhiteSpace(id))
                 .ToList();
-
-            if(!ids.Any())
-                return Enumerable.Empty<ExternalGameDto>();
 
             var idsString = string.Join(",", ids);
 

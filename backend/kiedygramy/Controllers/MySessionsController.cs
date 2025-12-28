@@ -209,15 +209,28 @@ namespace kiedygramy.Controllers
         [HttpGet("{id:int}/availability/summary")]
         public async Task<IActionResult> GetAvailabilitySummary(int id)
         {
-            var userId = GetRequiredUserId();
+            try
+            {
+                var userId = GetRequiredUserId();
 
-            var (summary, error) = await _sessionService.GetAvailabilitySummaryAsync(id, userId);
+                var (summary, error) = await _sessionService.GetAvailabilitySummaryAsync(id, userId);
 
-            if (error is not null)
-                return Problem(error);
-            
-            return Ok(summary);
+                if (error is not null)
+                    return Problem(error);
+
+                if (summary is null)
+                {
+                    return Ok(new AvailabilitySummaryDto(new List<AvailabilitySummaryDayDto>()));
+                }
+
+                return Ok(summary);
+            }
+            catch (Exception ex)
+            {
+                return Problem(title: "Błąd serwera", detail: ex.Message);
+            }
         }
+
         [HttpPost("{id:int}/final-date")]
         public async Task<IActionResult> SetFinalDate(int id, [FromBody] SetFinalDateDto dto)
         {

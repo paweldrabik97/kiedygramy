@@ -128,7 +128,7 @@ function Dice() {
 // --- Główna Scena (bez zmian) ---
 export default function DiceArena() {
   return (
-    <div style={{ width: '100vw', height: '100vh', background: '#e0e0e0' }}>
+    <div className='w-screen h-screen bg-gradient-to-b from-blue-200 via-white to-blue-200 dark:from-gray-800 dark:via-gray-900 dark:to-gray-800'>
       <Canvas shadows camera={{ position: [0, 15, 0], fov: 45 }}>
         <ambientLight intensity={0.5} />
         <directionalLight
