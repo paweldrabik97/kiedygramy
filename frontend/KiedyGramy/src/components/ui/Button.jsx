@@ -1,6 +1,6 @@
 import React from 'react';
 
-export const Button = ({ variant = 'primary', children, ...props }) => {
+export const Button = ({ variant = 'primary', children, className = '', ...props }) => {
   
   const baseStyles = "px-6 py-3 rounded-xl font-bold transition-all duration-300 flex items-center justify-center gap-2 active:scale-95";
   
@@ -23,7 +23,7 @@ export const Button = ({ variant = 'primary', children, ...props }) => {
   };
 
   return (
-    <button className={`${baseStyles} ${variants[variant]}`} {...props}>
+    <button className={`${baseStyles} ${variants[variant]} ${className}`} {...props}>
       {children}
     </button>
   );

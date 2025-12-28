@@ -5,19 +5,16 @@ using kiedygramy.Domain.Enums;
 using kiedygramy.DTO.Common;
 using kiedygramy.DTO.Session;
 using Microsoft.EntityFrameworkCore;
-using kiedygramy.Services.Notifications;
 
 namespace kiedygramy.Services.Sessions
 {
     public class SessionService : ISessionService
     {
         private readonly AppDbContext _db;
-        private readonly INotificationService _notificationService;
 
-        public SessionService(AppDbContext db, INotificationService notificationService)
+        public SessionService(AppDbContext db)
         {
             _db = db;
-            _notificationService = notificationService;
         }
 
         public async Task<(SessionDetailsDto? Session, ErrorResponseDto? Error)> CreateAsync(CreateSessionDto dto, int userId)
@@ -76,12 +73,10 @@ namespace kiedygramy.Services.Sessions
         {
             var session = await _db.Sessions
                 .AsNoTracking()
-                .Include(s => s.Participants)
                 .Include(s => s.Owner)
                 .Include(s => s.Game)
-                .FirstOrDefaultAsync(s => s.Id == id && (s.OwnerId == userId ||
-                 s.Participants.Any(p => p.UserId == userId &&
-                 p.Status == SessionParticipantStatus.Confirmed)));
+                .FirstOrDefaultAsync(s => s.Id == id &&
+                    (s.OwnerId == userId || s.Participants.Any(p => p.UserId == userId)));
 
             if (session is null)
                 return null;
@@ -95,7 +90,10 @@ namespace kiedygramy.Services.Sessions
                 session.OwnerId,
                 session.Owner.UserName!,
                 session.GameId,
-                session.Game?.Title
+                session.Game?.Title,
+                session.AvailabilityFrom,
+                session.AvailabilityTo,
+                session.AvailabilityDeadline
             );
         }
 
@@ -103,10 +101,7 @@ namespace kiedygramy.Services.Sessions
         {
             return await _db.Sessions
                 .AsNoTracking()
-                .Include(s => s.Participants)
-                .Where(s => s.OwnerId == userId ||
-                s.Participants.Any(p => p.UserId == userId &&
-                p.Status == SessionParticipantStatus.Confirmed))
+                .Where(s => s.OwnerId == userId || s.Participants.Any(p => p.UserId == userId && p.Status == SessionParticipantStatus.Confirmed))
                 .OrderByDescending(s => s.Date ?? DateTime.MaxValue)
                 .Select(s => new SessionListItemDto(
                     s.Id,
@@ -142,28 +137,6 @@ namespace kiedygramy.Services.Sessions
 
             _db.SessionParticipants.Add(participant);
             await _db.SaveChangesAsync();
-
-            try
-            {
-                var title = "Nowe zaproszenie do sesji";
-                var message = $"Zaproszono Cię do sesji: {session.Title}";
-                var url = $"/sessions/{sessionId}";
-
-                await _notificationService.CreateAsync(
-                    userId: invitedUserId,
-                    type: NotificationType.SessionInviteRecived,
-                    title: title,
-                    message: message,
-                    url: url,
-                    sessionId: sessionId,
-                    key: $"invite:{sessionId}",
-                    ct : CancellationToken.None
-                );
-            }
-            catch
-            {
-                // Ignore notification errors można kiedyś dodać loga 
-            }
 
             return null;
         }
@@ -209,7 +182,7 @@ namespace kiedygramy.Services.Sessions
         {
             var session = await _db.Sessions
                 .AsNoTracking()
-                .AnyAsync(s => s.Id == sessionId && s.OwnerId == userId);
+                .AnyAsync(s => s.Id == sessionId && (s.OwnerId == userId || s.Participants.Any(p => p.UserId == userId)));
 
             if (!session)
                 return (Enumerable.Empty<SessionParticipantDto>(), Errors.Session.NotFound());
@@ -236,8 +209,12 @@ namespace kiedygramy.Services.Sessions
             if (session is null)
                 return Errors.Session.NotFound();
 
-            var fromDate = dto.From.Date;
-            var toDate = dto.To.Date;
+            var fromDate = DateTime.SpecifyKind(dto.From.Date, DateTimeKind.Utc);
+            var toDate = DateTime.SpecifyKind(dto.To.Date, DateTimeKind.Utc);
+
+            var deadline = dto.Deadline.Kind == DateTimeKind.Utc
+                ? dto.Deadline
+                : DateTime.SpecifyKind(dto.Deadline, DateTimeKind.Utc);
 
             if (fromDate > toDate)
                 return Errors.Session.InvalidAvailabilityRange();
@@ -247,12 +224,11 @@ namespace kiedygramy.Services.Sessions
 
             session.AvailabilityFrom = fromDate;
             session.AvailabilityTo = toDate;
-            session.AvailabilityDeadline = dto.Deadline;
+            session.AvailabilityDeadline = deadline;
 
             var existingAvailabilites = _db.SessionAvailabilities
-                .Where(a => a.SessionId == sessionId);
-
-            _db.SessionAvailabilities.RemoveRange(existingAvailabilites);
+                .Where(a => a.SessionId == sessionId)
+                .ExecuteDeleteAsync();
 
             await _db.SaveChangesAsync();
             return null;
@@ -260,7 +236,8 @@ namespace kiedygramy.Services.Sessions
 
         public async Task<ErrorResponseDto?> UpdateAvailabilityAsync(int sessionId, int userId, UpdateAvailabilityDto dto)
         {
-            var session = await _db.Sessions               
+            var session = await _db.Sessions
+                .AsNoTracking()
                 .FirstOrDefaultAsync(s => s.Id == sessionId);
 
             if (session is null)
@@ -295,11 +272,11 @@ namespace kiedygramy.Services.Sessions
                 .OrderBy(d => d)
                 .ToList();
 
-            var existing = await _db.SessionAvailabilities
-                .Where(a => a.SessionId == sessionId && a.UserId == userId)
-                .ToListAsync();
+            await _db.SessionAvailabilities
+                .Where(sa => sa.SessionId == sessionId && sa.UserId == userId)
+                .ExecuteDeleteAsync();
 
-            _db.SessionAvailabilities.RemoveRange(existing);
+            
 
             if (normalizedDates.Count > 0)
             {
@@ -308,7 +285,7 @@ namespace kiedygramy.Services.Sessions
                     {
                         SessionId = sessionId,
                         UserId = userId,
-                        Date = date
+                        Date = DateTime.SpecifyKind(date.Date, DateTimeKind.Utc)
                     });
 
                 await _db.SessionAvailabilities.AddRangeAsync(newAvailabilities);
@@ -351,25 +328,54 @@ namespace kiedygramy.Services.Sessions
 
         public async Task<(AvailabilitySummaryDto? Summary, ErrorResponseDto? Error)> GetAvailabilitySummaryAsync(int sessionId, int userId)
         {
+            // Walidacja sesji 
             var session = await _db.Sessions
                 .AsNoTracking()
+                .Include(s => s.Participants)
                 .FirstOrDefaultAsync(s => s.Id == sessionId);
 
             if (session is null)
                 return (null, Errors.Session.NotFound());
 
-            if (session.OwnerId != userId)
-                return (null, Errors.Session.NotOwner());
+            var isOwner = session.OwnerId == userId;
 
-            var dayList = await _db.SessionAvailabilities
+            // Sprawdzamy czy user jest na liście uczestników z potwierdzonym statusem
+            var isParticipant = session.Participants
+                .Any(p => p.UserId == userId && p.Status == SessionParticipantStatus.Confirmed);
+
+            // Jeśli nie jest ani właścicielem, ani uczestnikiem -> BŁĄD
+            if (!isOwner && !isParticipant)
+            {
+                // Najlepiej zwrócić tu błąd typu Forbidden / AccessDenied.
+                // Jeśli nie masz takiej metody w Errors, możesz użyć tymczasowo NotOwner
+                // lub stworzyć Errors.Session.Forbidden()
+                return (null, Errors.Session.NotOwner());
+            }
+
+            var hasAnyVotes = await _db.SessionAvailabilities
+                .AnyAsync(a => a.SessionId == sessionId);
+
+            if (!hasAnyVotes)
+            {
+                return (new AvailabilitySummaryDto(new List<AvailabilitySummaryDayDto>()), null);
+            }
+
+            var rawData = await _db.SessionAvailabilities
                 .AsNoTracking()
                 .Where(a => a.SessionId == sessionId)
                 .GroupBy(a => a.Date)
-                .Select(g => new AvailabilitySummaryDayDto(
-                    g.Key,
-                    g.Count()))
-                .OrderBy(d => d.Date)
+                .Select(g => new
+                {
+                    Date = g.Key,
+                    Count = g.Count()
+                })
+                .OrderBy(x => x.Date)
                 .ToListAsync();
+
+            // Mapowanie na DTO w pamięci (C#)
+            var dayList = rawData
+                .Select(x => new AvailabilitySummaryDayDto(x.Date, x.Count))
+                .ToList();
 
             var dto = new AvailabilitySummaryDto(dayList);
             return (dto, null);
@@ -456,7 +462,9 @@ namespace kiedygramy.Services.Sessions
                 : dto.Status;
 
             await _db.SaveChangesAsync();
-            return null;           
+            return null;
+
+           
         }
 
         

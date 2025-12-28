@@ -9,6 +9,9 @@
         int OwnerId,
         string OwnerUserName,
         int? GameId,
-        string? GameTitle
+        string? GameTitle,
+        DateTime? AvailabilityFrom,
+        DateTime? AvailabilityTo,
+        DateTime? AvailabilityDeadline
         );
 }
