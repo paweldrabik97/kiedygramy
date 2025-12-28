@@ -1,16 +1,31 @@
 // src/SessionsPage.jsx
 import React, { useEffect, useState } from 'react';
-import { getSessions, createSession } from '../features/sessions/services/sessions.js';
-import { getGames } from '../features/games/services/games.js'; // <-- Importujemy też serwis gier!
+import { Link } from 'react-router-dom';
+import { getSessions, createSession, getInvitedSessions } from '../features/sessions/services/sessions.js';
 import PrimaryButton from '../components/ui/PrimaryButton';
 import CreateSessionModal from '../features/sessions/components/CreateSessionModal.jsx';
 import { useNavigate } from 'react-router-dom';
+import { getGames } from '../features/games/services/games.js';
 
 const SessionsPage = () => {
     const [sessions, setSessions] = useState([]);
-    const [games, setGames] = useState([]); // Lista gier do wyboru i wyświetlania nazw
+    const [invitations, setInvitations] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [games, setGames] = useState([]);
+
+    // Pobierz listę gier przy montowaniu komponentu
+    useEffect(() => {
+        const fetchGames = async () => {
+            try {
+                const gamesData = await getGames();
+                setGames(gamesData);
+            } catch (error) {
+                console.error("Błąd pobierania gier:", error);
+            }
+        };
+        fetchGames();
+    }, []);
     
     const navigate = useNavigate();
 
@@ -19,13 +34,13 @@ const SessionsPage = () => {
         const fetchData = async () => {
             try {
                 // Pobieramy sesje i gry równolegle
-                const [sessionsData, gamesData] = await Promise.all([
+                const [sessionsData, invitationsData] = await Promise.all([
                     getSessions(),
-                    getGames()
+                    getInvitedSessions()
                 ]);
                 
                 setSessions(sessionsData);
-                setGames(gamesData);
+                setInvitations(invitationsData);
             } catch (error) {
                 console.error("Błąd pobierania danych:", error);
             } finally {
@@ -35,11 +50,7 @@ const SessionsPage = () => {
         fetchData();
     }, []);
 
-    // Funkcja pomocnicza: Znajdź nazwę gry po ID
-    const getGameTitle = (gameId) => {
-        const game = games.find(g => g.id === gameId);
-        return game ? game.title : 'Nieznana gra';
-    };
+    
 
     // Obsługa tworzenia sesji
     const handleCreateSession = async (newSessionData) => {
@@ -67,6 +78,51 @@ const SessionsPage = () => {
                 </PrimaryButton>
             </div>
 
+            {/* --- SEKCJA 1: ZAPROSZENIA --- */}
+            {invitations.length > 0 && (
+                <section className="bg-yellow-50 dark:bg-yellow-900/10 border border-yellow-200 dark:border-yellow-700 rounded-2xl p-6 animate-fade-in-down">
+                    <h2 className="text-xl font-bold text-yellow-800 dark:text-yellow-200 mb-4 flex items-center gap-2">
+                        📩 Oczekujące zaproszenia ({invitations.length})
+                    </h2>
+                    <div className="grid gap-4">
+                        {invitations.map(invite => (
+                            <Link 
+                                key={invite.id} 
+                                to={`/sessions/${invite.id}`}
+                                className="block bg-white dark:bg-surface-card p-5 rounded-xl shadow-sm hover:shadow-md transition-all border border-yellow-100 dark:border-gray-700 flex flex-col sm:flex-row sm:items-center justify-between gap-4"
+                            >
+                                <div>
+                                    <h3 className="font-bold text-lg text-slate-900 dark:text-white mb-1">{invite.title}</h3>
+                                    
+                                    <div className="flex flex-wrap gap-3 text-sm text-text-muted">
+                                        {/* Data */}
+                                        {invite.date && (
+                                            <span className="flex items-center gap-1">
+                                                📅 {new Date(invite.date).toLocaleDateString()}
+                                            </span>
+                                        )}
+                                        {/* Lokalizacja */}
+                                        {invite.location && (
+                                            <span className="flex items-center gap-1">
+                                                📍 {invite.location}
+                                            </span>
+                                        )}
+                                        {/* Liczba uczestników */}
+                                        <span className="flex items-center gap-1">
+                                            👥 Uczestników: <b>{invite.attendingCount}</b>
+                                        </span>
+                                    </div>
+                                </div>
+
+                                <span className="bg-primary hover:bg-primary-hover text-white px-5 py-2.5 rounded-lg text-sm font-bold text-center transition-colors shadow-sm shadow-primary/30">
+                                    Zobacz i odpowiedz
+                                </span>
+                            </Link>
+                        ))}
+                    </div>
+                </section>
+            )}
+
             {sessions.length === 0 ? (
                 <div className="text-center py-10 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
                     <p className="text-gray-500 dark:text-gray-400 mb-4">Nie masz jeszcze żadnych zaplanowanych sesji.</p>
@@ -81,9 +137,7 @@ const SessionsPage = () => {
                             className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm hover:shadow-md transition-all cursor-pointer border border-gray-200 dark:border-gray-700 group"
                         >
                             <div className="flex justify-between items-start mb-2">
-                                <span className="inline-block bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full font-semibold">
-                                    {getGameTitle(session.gameId)}
-                                </span>
+                                
                                 <span className="text-xs text-gray-500 dark:text-gray-400">
                                     {new Date(session.date).toLocaleDateString()}
                                 </span>

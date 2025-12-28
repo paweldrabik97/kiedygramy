@@ -186,7 +186,7 @@ namespace kiedygramy.Migrations
                     b.HasIndex("OwnerId", "Title")
                         .IsUnique();
 
-                    b.ToTable("Games");
+                    b.ToTable("Games", (string)null);
                 });
 
             modelBuilder.Entity("kiedygramy.Domain.GameGenre", b =>
@@ -201,7 +201,7 @@ namespace kiedygramy.Migrations
 
                     b.HasIndex("GenreId");
 
-                    b.ToTable("GameGenres");
+                    b.ToTable("GameGenres", (string)null);
                 });
 
             modelBuilder.Entity("kiedygramy.Domain.Genre", b =>
@@ -222,7 +222,7 @@ namespace kiedygramy.Migrations
                     b.HasIndex("Name")
                         .IsUnique();
 
-                    b.ToTable("Genres");
+                    b.ToTable("Genres", (string)null);
                 });
 
             modelBuilder.Entity("kiedygramy.Domain.Notification", b =>
@@ -329,7 +329,7 @@ namespace kiedygramy.Migrations
 
                     b.HasIndex("OwnerId");
 
-                    b.ToTable("Sessions");
+                    b.ToTable("Sessions", (string)null);
                 });
 
             modelBuilder.Entity("kiedygramy.Domain.SessionAvailability", b =>
@@ -356,7 +356,7 @@ namespace kiedygramy.Migrations
                     b.HasIndex("SessionId", "UserId", "Date")
                         .IsUnique();
 
-                    b.ToTable("SessionAvailabilities");
+                    b.ToTable("SessionAvailabilities", (string)null);
                 });
 
             modelBuilder.Entity("kiedygramy.Domain.SessionMessage", b =>
@@ -386,7 +386,7 @@ namespace kiedygramy.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("SessionMessages");
+                    b.ToTable("SessionMessages", (string)null);
                 });
 
             modelBuilder.Entity("kiedygramy.Domain.SessionParticipant", b =>
@@ -421,7 +421,7 @@ namespace kiedygramy.Migrations
                     b.HasIndex("SessionId", "UserId")
                         .IsUnique();
 
-                    b.ToTable("SessionParticipants");
+                    b.ToTable("SessionParticipants", (string)null);
                 });
 
             modelBuilder.Entity("kiedygramy.Domain.User", b =>

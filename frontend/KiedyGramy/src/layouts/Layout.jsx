@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
-import { logout } from '../features/auth/services/auth';
 import { useTheme } from '../context/ThemeContext';
-import NotificationBell from '../features/notifications/components/NotificationBell';
+import { useAuth } from '../features/auth/context/AuthContext';
 
 const Layout = () => {
   const navigate = useNavigate();
@@ -18,10 +17,23 @@ const Layout = () => {
   // Hook do sprawdzania, na której stronie jesteśmy
   const location = useLocation();
 
+  // Pobieramy usera i funkcję logout z kontekstu
+  const { user, logout } = useAuth();
+
   const handleLogout = () => {
     logout();
     navigate('/');
   };
+
+  // Funkcja pomocnicza do inicjałów (np. Jan Kowalski -> JK, User -> U)
+  const getInitials = (name) => {
+    if (!name) return '?';
+    return name.charAt(0).toUpperCase();
+  };
+
+  // Bezpieczne pobieranie nazwy (gdyby username/fullName nie istniało)
+  const displayName = user?.fullName || user?.username || "Użytkownik";
+  const displayEmail = user?.email || "brak@email.com";
 
   // Lista linków nawigacyjnych
   const navItems = [
@@ -118,18 +130,16 @@ const Layout = () => {
           {/* Prawa strona Topbara */}
           <div className="relative flex items-center gap-4">
             
-            <Link to="/notifications">
-              <NotificationBell />
-            </Link>
+            
 
             {/* Avatar */}
             <button 
                 onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
                 className="flex items-center space-x-2 focus:outline-none"
             >
-                {/* ZMIANA: Tło avatara na primary */}
+                {/* Tło avatara na primary */}
                 <div className="w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center font-bold text-lg font-display hover:ring-2 hover:ring-primary-light transition-all shadow-md">
-                    J
+                    {getInitials(displayName)}
                 </div>
             </button>
 
@@ -143,14 +153,14 @@ const Layout = () => {
                     
                     <div className="absolute right-0 top-12 mt-2 w-56 bg-white dark:bg-surface-card border border-gray-200 dark:border-gray-700 rounded-xl shadow-xl z-40 py-2 animate-fade-in-down">
                         <div className="px-4 py-3 border-b border-gray-100 dark:border-gray-700">
-                            <p className="text-sm font-bold text-text-main dark:text-text-inverse font-display">Jan Kowalski</p>
-                            <p className="text-xs text-text-muted">jan@example.com</p>
+                            <p className="text-sm font-bold text-text-main dark:text-text-inverse font-display">{displayName}</p>
+                            <p className="text-xs text-text-muted">{displayEmail}</p>
                         </div>
                         
                         <div className="py-1">
                             <Link 
                                 to="/profile" 
-                                className="block px-4 py-2 text-sm text-text-main dark:text-text-inverse hover:bg-surface-light dark:hover:bg-gray-700 transition-colors"
+                                className="block w-full px-4 py-2 text-sm text-text-main dark:text-text-inverse hover:bg-surface-light dark:hover:bg-gray-700 transition-colors"
                                 onClick={() => setIsUserMenuOpen(false)}
                             >
                                 Ustawienia profilu
@@ -174,7 +184,7 @@ const Layout = () => {
                             </button>
                             <button 
                                 onClick={handleLogout}
-                                className="block w-full text-left px-4 py-2 text-sm text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                                className="block w-full px-4 py-2 text-sm text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
                             >
                                 Wyloguj się
                             </button>

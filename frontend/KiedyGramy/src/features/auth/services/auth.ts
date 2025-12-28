@@ -15,7 +15,7 @@ export async function register(data: {
   fullName?: string;
   city?: string;
 }) {
-  return api<{ id: number; userName: string; email: string }>(
+  return api<{ id: number; username: string; email: string }>(
     "/api/auth/register",
     {
       method: "POST",

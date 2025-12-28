@@ -18,9 +18,13 @@ namespace kiedygramy.Controllers
         }
 
         [HttpGet("search")]
-        public async Task<ActionResult<IEnumerable<ExternalGameDto>>> SearchGames([FromQuery]string query, CancellationToken cancellationToken)
-        {           
-            var games = await _client.SearchGamesAsync(query, cancellationToken);
+        public async Task<ActionResult<IEnumerable<ExternalGameDto>>> SearchGames(
+            [FromQuery] string query,
+            [FromQuery] int skip = 0, 
+            [FromQuery] int take = 10, 
+            CancellationToken cancellationToken = default)
+        {
+            var games = await _client.SearchGamesAsync(query, skip, take, cancellationToken);
                 
              return Ok(games);
              
