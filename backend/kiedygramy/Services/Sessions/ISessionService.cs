@@ -18,6 +18,7 @@ namespace kiedygramy.Services.Sessions
         Task<(AvailabilitySummaryDto? Summary, ErrorResponseDto? Error)> GetAvailabilitySummaryAsync(int sessionId, int userId);
         Task<ErrorResponseDto?> SetFinalDateAsync(int sessionId, int userId, SetFinalDateDto dto);
         Task<ErrorResponseDto?> UpdateAttendanceAsync(int sessionId, int userId, UpdateAttendanceDto dto);
+        Task<ErrorResponseDto?> DeleteAsync(int sessionId, int userId);
 
     }
 }

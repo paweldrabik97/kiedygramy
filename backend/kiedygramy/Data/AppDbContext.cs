@@ -56,7 +56,7 @@ namespace kiedygramy.Data
                 .HasOne(sp => sp.Session)
                 .WithMany(s => s.Participants)
                 .HasForeignKey(sp => sp.SessionId)
-                .OnDelete(DeleteBehavior.Restrict);
+                .OnDelete(DeleteBehavior.Cascade);
 
             modelBuilder.Entity<SessionParticipant>()
                 .HasOne(sp => sp.User)

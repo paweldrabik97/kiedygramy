@@ -458,5 +458,22 @@ namespace kiedygramy.Services.Sessions
             await _db.SaveChangesAsync();
             return null;           
         }
+
+        
+        public async Task<ErrorResponseDto?> DeleteAsync(int sessionId, int userId)
+        {
+            var session = await _db.Sessions
+            .AsNoTracking()
+            .FirstOrDefaultAsync(s => s.Id == sessionId && s.OwnerId == userId);
+
+
+            if (session is null)
+                return Errors.Session.NotFound();
+
+            _db.Sessions.Remove(session);
+            await _db.SaveChangesAsync();
+
+            return null;
+        }
     }  
 }

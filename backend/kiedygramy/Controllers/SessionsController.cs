@@ -54,7 +54,7 @@ namespace kiedygramy.Controllers
                 return ValidationProblemFromModelState();
 
             var userId = GetRequiredUserId();
-            
+
             var error = await _sessionService.RespondToInviteAsync(id, userId, dto.Accept!.Value);
 
             if (error is not null)
@@ -80,7 +80,7 @@ namespace kiedygramy.Controllers
             var errorFromService = await _sessionService.InviteAsync(id, invited.Id, userId);
 
             if (errorFromService is not null)
-               return Problem(errorFromService);
+                return Problem(errorFromService);
 
             return NoContent();
         }
@@ -105,9 +105,9 @@ namespace kiedygramy.Controllers
 
             var (participants, error) = await _sessionService.GetParticipantsAsync(id, userId);
 
-            if (error is not null)            
+            if (error is not null)
                 return Problem(error);
-            
+
             return Ok(participants);
         }
 
@@ -115,7 +115,7 @@ namespace kiedygramy.Controllers
         public async Task<ActionResult<IEnumerable<SessionListItemDto>>> GetInvited()
         {
             var userId = GetRequiredUserId();
-           
+
             var list = await _sessionService.GetInvitedAsync(userId);
 
             return Ok(list);
@@ -138,16 +138,16 @@ namespace kiedygramy.Controllers
 
             var (messages, error) = await _sessionChatService.GetMessagesAsync(id, userId, limit, beforeMessageId);
 
-            if (error is not null)                         
+            if (error is not null)
                 return Problem(error);
-   
+
             return Ok(messages);
         }
 
         [HttpPost("{id:int}/chat/messages")]
         public async Task<IActionResult> SendMessage(int id, [FromBody] CreateSessionMessageDto dto, CancellationToken ct)
         {
-            if(!ModelState.IsValid)
+            if (!ModelState.IsValid)
                 return ValidationProblemFromModelState();
 
             var userId = GetRequiredUserId();
@@ -156,7 +156,7 @@ namespace kiedygramy.Controllers
 
             if (error is not null)
                 return Problem(error);
-            
+
 
             return Ok(message);
         }
@@ -171,7 +171,7 @@ namespace kiedygramy.Controllers
 
             var error = await _sessionService.SetAvailabilityWindowAsync(id, userId, dto);
 
-            if (error is not null)           
+            if (error is not null)
                 return Problem(error);
 
             return NoContent();
@@ -202,7 +202,7 @@ namespace kiedygramy.Controllers
 
             if (error is not null)
                 return Problem(error);
-            
+
 
             return Ok(availability ?? new MyAvailabilityDto(new List<DateTime>()));
         }
@@ -216,7 +216,7 @@ namespace kiedygramy.Controllers
 
             if (error is not null)
                 return Problem(error);
-            
+
             return Ok(summary);
         }
         [HttpPost("{id:int}/final-date")]
@@ -224,10 +224,22 @@ namespace kiedygramy.Controllers
         {
             if (!ModelState.IsValid)
                 return ValidationProblemFromModelState();
-            
+
             var userId = GetRequiredUserId();
 
             var error = await _sessionService.SetFinalDateAsync(id, userId, dto);
+
+            if (error is not null)
+                return Problem(error);
+
+            return NoContent();
+        }
+
+        [HttpDelete("{id:int}")]
+        public async Task<IActionResult> Delete(int id)
+        {
+            var userId = GetRequiredUserId();
+            var error = await _sessionService.DeleteAsync(id, userId);
 
             if (error is not null)
                 return Problem(error);
