@@ -15,9 +15,13 @@ const SessionDetailsPage = () => {
 
     useEffect(() => {
         const fetchDetails = async () => {
+             console.log("PARAM id:", id);
+
             try {
                 // 1. Pobierz szczegóły sesji
-                const sessionData = await getSessionDetails(id);
+                 const sessionId = Number(id);
++                  console.log("CALL getSessionDetails with:", id, "Number:", Number(id));
+                   const sessionData = await getSessionDetails(sessionId);
                 setSession(sessionData);
 
                 // 2. Jeśli mamy gameId, pobierzmy dane gry (żeby wyświetlić tytuł)
