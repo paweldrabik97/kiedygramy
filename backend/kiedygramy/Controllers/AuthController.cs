@@ -1,6 +1,7 @@
 ﻿using kiedygramy.Controllers.Base;
 using kiedygramy.Domain;
 using kiedygramy.DTO.Auth;
+using kiedygramy.Services.Account;
 using kiedygramy.Services.Auth;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -15,11 +16,13 @@ namespace kiedygramy.Controllers
         private readonly UserManager<User> _userManager;
         private readonly SignInManager<User> _signInManager;
         private readonly IAuthService _authService;
+        private readonly IAccountService _accountService;
 
-        public AuthController( UserManager<User> userManager, SignInManager<User> signInManager, IAuthService authService)
+        public AuthController( UserManager<User> userManager, SignInManager<User> signInManager, IAccountService accountService, IAuthService authService)
         {
             _userManager = userManager;
             _signInManager = signInManager;
+            _accountService = accountService;
             _authService = authService;
         }
 
@@ -77,6 +80,74 @@ namespace kiedygramy.Controllers
         public async Task<IActionResult> Logout()
         {
             await _signInManager.SignOutAsync();
+            return NoContent();
+        }
+
+        [HttpPost("change-password")]
+        [Authorize]
+        public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordDto dto)
+        { 
+            if(!ModelState.IsValid)
+                return ValidationProblemFromModelState();
+
+            var user = GetRequiredUserId();
+            
+            var error = await _accountService.ChangePasswordAsync(user, dto);
+
+            if(error is not null)
+                return Problem(error);
+
+            return NoContent();
+        }
+
+        [HttpPost("change-username")]
+        [Authorize]
+        public async Task<IActionResult> ChangeUsername([FromBody] ChangeUserNameDto dto)
+        {
+            if (!ModelState.IsValid)
+                return ValidationProblemFromModelState();
+
+            var userId = GetRequiredUserId();
+
+            var error = await _accountService.ChangeUserNameAsync(userId, dto);
+
+            if (error is not null)
+                return Problem(error);
+
+            return NoContent(); 
+        }
+
+        [HttpPost("change-city")]
+        [Authorize]
+        public async Task<IActionResult> ChangeCity([FromBody] ChangeCityDto dto)
+        {
+            if (!ModelState.IsValid)
+                return ValidationProblemFromModelState();
+
+            var userId = GetRequiredUserId();
+
+            var error = await _accountService.ChangeCityAsync(userId, dto);
+
+            if (error is not null)
+                return Problem(error);
+
+            return NoContent();
+        }
+
+        [HttpPost("change-fullname")]
+        [Authorize]
+        public async Task<IActionResult> ChangeFullName([FromBody] ChangeFullNameDto dto)
+        {
+            if (!ModelState.IsValid)
+                return ValidationProblemFromModelState();
+
+            var userId = GetRequiredUserId();
+
+            var error = await _accountService.ChangeFullNameAsync(userId, dto);
+
+            if (error is not null)
+                return Problem(error);
+
             return NoContent();
         }
     }

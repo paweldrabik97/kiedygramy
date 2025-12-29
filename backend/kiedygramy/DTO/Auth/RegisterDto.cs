@@ -6,6 +6,7 @@ namespace kiedygramy.DTO.Auth
 
         [Required]
         [MaxLength(30)]
+        [MinLength(3)]
         string Username,
 
         [Required]

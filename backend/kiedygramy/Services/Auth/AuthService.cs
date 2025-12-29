@@ -9,7 +9,7 @@ using kiedygramy.Domain.Enums;
 
 namespace kiedygramy.Services.Auth
 {
-    public class AuthService : IAuthService
+    public class AuthService : IAuthService 
     {
         private readonly UserManager<User> _userManager;
         private readonly SignInManager<User> _signInManager;
@@ -101,6 +101,6 @@ namespace kiedygramy.Services.Auth
                 return "Username";
 
             return "General";
-        }
+        }     
     }
 }

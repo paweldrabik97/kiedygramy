@@ -15,7 +15,7 @@ namespace kiedygramy.Data
         public DbSet<Game> Games => Set<Game>();
         public DbSet<Session> Sessions => Set<Session>();
         public DbSet<SessionParticipant> SessionParticipants => Set<SessionParticipant>();
-        public DbSet<SessionMessage> SessionMessages { get; set; } = default!;
+        public DbSet<SessionMessage> SessionMessages => Set<SessionMessage>();
         public DbSet<SessionAvailability> SessionAvailabilities => Set<SessionAvailability>();
         public DbSet<Genre> Genres => Set<Genre>();
         public DbSet<GameGenre> GameGenres => Set<GameGenre>();

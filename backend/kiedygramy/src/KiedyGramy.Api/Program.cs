@@ -1,6 +1,7 @@
 using kiedygramy.Data;
 using kiedygramy.Domain;
 using kiedygramy.Hubs;
+using kiedygramy.Services.Account;
 using kiedygramy.Services.Auth;
 using kiedygramy.Services.Chat;
 using kiedygramy.Services.External;
@@ -31,6 +32,7 @@ namespace kiedygramy.src.KiedyGramy.Api
             builder.Services.AddScoped<ISessionChatHubService, SessionChatHubService>();
             builder.Services.AddScoped<INotificationService, NotificationService>();
             builder.Services.AddScoped<INotificationPublisher, SignalRNotificationPublisher>();
+            builder.Services.AddScoped<IAccountService, AccountService>();
             builder.Services.AddHttpClient<IBoardGameGeekClientService, BoardGameGeekClientService> ((sp, client) =>
             {
                 var config = sp.GetRequiredService<IConfiguration>();
