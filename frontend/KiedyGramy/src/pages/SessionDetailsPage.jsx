@@ -12,7 +12,7 @@ import {
 import { AvailabilityCalendar } from '../features/sessions/components/AvailabilityCalendar.jsx';
 import { AvailabilityWindowForm } from '../features/sessions/components/AvailabilityWindowForm.jsx';
 import { GameVotingSection } from '../features/sessions/components/GameVotingSection.jsx';
-import { OrganizerGamePicker } from '../features/sessions/components/OrganizerGamePicker.jsx'; // <--- NOWY IMPORT
+import { OrganizerGamePicker } from '../features/sessions/components/OrganizerGamePicker.jsx';
 
 const SessionDetailsPage = () => {
     const { id } = useParams();
@@ -178,7 +178,7 @@ const SessionDetailsPage = () => {
                                         onClick={() => setIsGamePickerOpen(!isGamePickerOpen)}
                                         className="text-sm text-primary font-bold hover:text-primary-hover transition-colors flex items-center gap-1"
                                     >
-                                        {isGamePickerOpen ? '❌ Anuluj' : '✏️ Zmień grę'}
+                                        {isGamePickerOpen ? '❌ Anuluj' : '✏️ Wybierz gry'}
                                     </button>
                                 )}
                             </div>
@@ -188,27 +188,35 @@ const SessionDetailsPage = () => {
                                 <div className="mb-6">
                                     <OrganizerGamePicker 
                                         sessionId={id}
-                                        currentGameId={session.gameId} // Przekazujemy obecne ID, żeby podświetlić
+                                        currentGameIds={session.games ? session.games.map(g => g.id) : []}
                                         onGameSelected={handleGameSelected}
                                         onCancel={() => setIsGamePickerOpen(false)}
                                     />
                                 </div>
                             )}
 
-                            {/* Wyświetlanie aktualnie wybranej gry */}
-                            {session.gameTitle ? (
-                                <div className="flex items-center gap-4 bg-gradient-to-r from-blue-50 to-transparent dark:from-blue-900/20 p-4 rounded-xl border border-blue-100 dark:border-blue-800/30">
-                                    <div className="text-4xl shadow-sm bg-white dark:bg-gray-800 w-16 h-16 flex items-center justify-center rounded-lg">
-                                        🎲
-                                    </div>
-                                    <div>
-                                        <h4 className="font-bold text-lg text-slate-800 dark:text-white">{session.gameTitle}</h4>
-                                        <p className="text-sm text-blue-600 dark:text-blue-300 font-medium">Oficjalnie wybrana gra</p>
-                                    </div>
+                            {/* Wyświetlanie wybranych gier */}
+                            {session.games && session.games.length > 0 ? (
+                                <div className="grid grid-cols-1 gap-3">
+                                    {session.games.map(game => (
+                                        <div key={game.id} className="flex items-center gap-4 bg-white dark:bg-gray-800 p-4 rounded-xl border">
+                                            {/* Obrazek */}
+                                            {game.imageUrl ? (
+                                                <img src={game.imageUrl} className="w-12 h-12 rounded object-cover" />
+                                            ) : (
+                                                <div className="w-12 h-12 bg-gray-200 rounded flex items-center justify-center">🎲</div>
+                                            )}
+
+                                            {/* Tytuł */}
+                                            <div>
+                                                <h4 className="font-bold text-lg text-slate-800 dark:text-white">{game.title}</h4>
+                                            </div>
+                                        </div>
+                                    ))}
                                 </div>
                             ) : (
-                                <div className="text-center py-8 bg-gray-50 dark:bg-gray-800/50 rounded-xl border-2 border-dashed border-gray-200 dark:border-gray-700">
-                                    <p className="text-gray-400 font-medium">Organizator jeszcze nie podjął decyzji.</p>
+                                <div className="text-center py-8 border-2 border-dashed rounded-xl">
+                                    <p className="text-gray-400">Organizator jeszcze nie wybrał gier.</p>
                                     {isOrganizer && !isGamePickerOpen && (
                                         <p className="text-sm text-primary mt-2 cursor-pointer hover:underline" onClick={() => setIsGamePickerOpen(true)}>
                                             Kliknij tutaj, aby wybrać grę na podstawie głosów

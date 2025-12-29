@@ -1,8 +1,12 @@
-// src/features/sessions/services/sessions.ts
 import { api } from "../../../api.ts";
-import { Game } from "../../games/services/games.ts";
 
 // --- TYPY DANYCH (DTO) ---
+
+export type SessionGame = {
+    id: number;
+    title: string;
+    imageUrl?: string;
+};
 
 export type SessionDetails = {
     id: number;
@@ -12,8 +16,7 @@ export type SessionDetails = {
     description?: string;
     ownerId: number;
     ownerUserName: string;
-    gameId?: number;
-    gameTitle?: string;
+    games: SessionGame[];
 };
 
 export enum ParticipantStatus {
@@ -48,7 +51,7 @@ export type InvitedSessionDto = {
 
 export type GamePoolItem = {
     title: string;
-    key: string;       // To jest Twoje ID gry (np. "7 cudów świata")
+    key: string;       // To jest Twoje ID gry (np. "7 cudów świata") lub ID numeryczne
     count: number;     // Ile egzemplarzy jest dostępnych
     owners: string[];  // Kto posiada grę (np. ["pawel", "tomek"])
     imageUrl: string;
@@ -56,6 +59,7 @@ export type GamePoolItem = {
     maxPlayers: number;
     votesCount: number; // Ile osób już zagłosowało
     hasVoted: boolean;  // Czy JA już zagłosowałem (true/false)
+    id?: number;        // Opcjonalnie ID numeryczne gry, jeśli potrzebne do mapowania
 };
 
 // --- ENDPOINTY ---
@@ -76,7 +80,7 @@ export async function createSession(session: {
     date?: string;
     location?: string;
     description?: string;
-    gameId?: number;
+    gameIds?: number[];
 }) {
     return api<SessionDetails>(`/api/my/sessions`, {
         method: "POST",
@@ -99,9 +103,6 @@ export async function inviteUser(sessionId: string, usernameOrEmail: string) {
 
 // 6. Odpowiedz na zaproszenie (RSVP - Będę / Nie będę)
 export async function respondToSession(sessionId: string, isAccepted: boolean) {
-    // Zakładam, że backend przyjmuje status lub boolean. 
-    // Dostosuj body zależnie od tego co przyjmuje endpoint /respond
-    // Tutaj zakładam wysłanie prostego obiektu statusu
     return api<void>(`/api/my/sessions/${sessionId}/respond`, {
         method: "POST",
         body: JSON.stringify({ accept: isAccepted })
@@ -126,11 +127,11 @@ export async function getAvailabilitySummary(sessionId: string) {
     return api<AvailabilitySummary>(`/api/my/sessions/${sessionId}/availability/summary`, { method: "GET" });
 }
 
-// 10. Ustaw grę (Dla organizatora - aktualizacja sesji)
-export async function updateSessionGame(sessionId: string, gameId: number) {
-    return api<void>(`/api/my/sessions/${sessionId}`, { // Tutaj endpoint edycji sesji
+// 10. Ustaw GRY (Dla organizatora - aktualizacja listy gier)
+export async function updateSessionGames(sessionId: string, gameIds: number[]) {
+    return api<void>(`/api/my/sessions/${sessionId}/games`, { 
         method: "PUT", 
-        body: JSON.stringify({ gameId }) // Backend musi obsłużyć partial update lub pełny obiekt
+        body: JSON.stringify({ gameIds }) 
     });
 }
 
@@ -149,7 +150,6 @@ export async function setAvailabilityWindow(
     return api<void>(`/api/my/sessions/${sessionId}/availability/window`, {
         method: "POST",
         body: JSON.stringify({
-            // Backend oczekuje pełnego ISO DateTime, więc doklejamy czas
             From: `${from}T00:00:00`,
             To: `${to}T23:59:59`,
             Deadline: `${deadline}T23:59:59`
@@ -164,7 +164,7 @@ export async function getSessionGamePool(sessionId: string) {
     });
 }
 
-// 14. Wyślij głosy na gry
+// 14. Wyślij głosy na gry (Pojedynczy toggle)
 export async function voteForGames(sessionId: string, gameKey: string) {
     console.log("Głosowanie na grę:", gameKey, "w sesji:", sessionId);
     return api<void>(`/api/my/sessions/${sessionId}/game-pool/votes`, {

@@ -40,10 +40,20 @@ namespace kiedygramy.Data
                 .OnDelete(DeleteBehavior.Restrict);
 
             modelBuilder.Entity<Session>()
-                .HasOne(s => s.Game)
+                .HasMany(s => s.Games)
                 .WithMany(g => g.Sessions)
-                .HasForeignKey(s => s.GameId)
-                .OnDelete(DeleteBehavior.SetNull);
+                .UsingEntity<Dictionary<string, object>>(
+                    "SessionGame",
+                    j => j
+                        .HasOne<Game>()
+                        .WithMany()
+                        .HasForeignKey("GameId")
+                        .OnDelete(DeleteBehavior.Cascade),
+                    j => j
+                        .HasOne<Session>()
+                        .WithMany()
+                        .HasForeignKey("SessionId")
+                        .OnDelete(DeleteBehavior.Cascade));
 
             modelBuilder.Entity<SessionParticipant>()
                 .Property(sp => sp.Role)

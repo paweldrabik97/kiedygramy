@@ -11,6 +11,7 @@
 
         public int OwnerId { get; set; }
         public User Owner { get; set; } = default!;
+        [System.Text.Json.Serialization.JsonIgnore]
         public ICollection<Session> Sessions { get; set; } = new List<Session>();
 
         public ICollection<GameGenre> GameGenres { get; set; } = new List<GameGenre>();

@@ -8,8 +8,7 @@
         string? Description,
         int OwnerId,
         string OwnerUserName,
-        int? GameId,
-        string? GameTitle,
+        List<SessionGameDto> Games,
         DateTime? AvailabilityFrom,
         DateTime? AvailabilityTo,
         DateTime? AvailabilityDeadline

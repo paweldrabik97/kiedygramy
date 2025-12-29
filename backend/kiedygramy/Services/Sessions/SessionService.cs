@@ -24,9 +24,9 @@ namespace kiedygramy.Services.Sessions
         {
             var title = dto.Title?.Trim() ?? string.Empty;          
 
-            if (dto.GameId is not null)
+            if (dto.GameIds is not null)
             {
-                var gameExists = await _db.Games.AnyAsync(g => g.Id == dto.GameId && g.OwnerId == userId);
+                var gameExists = await _db.Games.AnyAsync(g => dto.GameIds.Contains(g.Id) && g.OwnerId == userId);
 
                 if (!gameExists)
                     return (null, Errors.Session.GameNotFound());
@@ -38,8 +38,7 @@ namespace kiedygramy.Services.Sessions
                 Date = dto.Date,
                 Location = dto.Location?.Trim(),
                 Description = dto.Description?.Trim(),
-                OwnerId = userId,
-                GameId = dto.GameId
+                OwnerId = userId
             };
 
             var ownerParticipant = new SessionParticipant
@@ -64,9 +63,12 @@ namespace kiedygramy.Services.Sessions
                 Location: session.Location,
                 Description: session.Description,
                 OwnerId: session.OwnerId,
-                OwnerUserName: owner!.UserName!,
-                GameId: session.GameId,
-                GameTitle: null,
+                OwnerUserName: owner!.UserName!, 
+                Games: session.Games.Select(g => new SessionGameDto(
+                    g.Id,
+                    g.Title,
+                    g.ImageUrl
+                )).ToList(),
                 AvailabilityFrom: session.AvailabilityFrom,
                 AvailabilityTo: session.AvailabilityTo,
                 AvailabilityDeadline: session.AvailabilityDeadline
@@ -80,12 +82,14 @@ namespace kiedygramy.Services.Sessions
             var session = await _db.Sessions
                 .AsNoTracking()
                 .Include(s => s.Owner)
-                .Include(s => s.Game)
+                .Include(s => s.Games)
                 .FirstOrDefaultAsync(s => s.Id == id &&
                     (s.OwnerId == userId || s.Participants.Any(p => p.UserId == userId)));
 
             if (session is null)
                 return null;
+
+
 
             return new SessionDetailsDto(
                 session.Id,
@@ -95,8 +99,11 @@ namespace kiedygramy.Services.Sessions
                 session.Description,
                 session.OwnerId,
                 session.Owner.UserName!,
-                session.GameId,
-                session.Game?.Title,
+                Games: session.Games.Select(g => new SessionGameDto(
+                    g.Id,
+                    g.Title,
+                    g.ImageUrl
+                )).ToList(),
                 session.AvailabilityFrom,
                 session.AvailabilityTo,
                 session.AvailabilityDeadline
@@ -451,6 +458,36 @@ namespace kiedygramy.Services.Sessions
             return null;
         }
 
+        public async Task<ErrorResponseDto?> SetFinalGamesAsync(int sessionId, int userId, SetFinalGamesDto dto)
+        {
+            var session = await _db.Sessions
+                .Include(s => s.Games)
+                .FirstOrDefaultAsync(s => s.Id == sessionId);
+
+            if (session is null)
+                return Errors.Session.NotFound();
+
+            if (session.OwnerId != userId)
+                return Errors.Session.NotOwner();
+
+            var incomingIds = dto.GameIds ?? new List<int>();
+
+            var selectedGames = await _db.Games
+                .Where(g => dto.GameIds.Contains(g.Id))
+                .ToListAsync();
+
+            session.Games.Clear();
+
+            foreach (var game in selectedGames)
+            {
+                session.Games.Add(game);
+            }
+
+            await _db.SaveChangesAsync();
+
+            return null;
+        }
+
         public async Task<ErrorResponseDto?> UpdateAttendanceAsync(int sessionId, int userId, UpdateAttendanceDto dto)
         {
             var session = await _db.Sessions
@@ -542,6 +579,7 @@ namespace kiedygramy.Services.Sessions
                 .Where(g => confirmedParticipantIds.Contains(g.OwnerId))
                 .Select(g => new
                 {
+                    g.Id,
                     g.Title,
                     OwnerName = g.Owner.UserName ?? "(brak nazwy)",
                     MinPlayers = g.MinPlayers,
@@ -568,6 +606,7 @@ namespace kiedygramy.Services.Sessions
                 .GroupBy(g => g.Title.Trim().ToLowerInvariant())
                 .Select(g =>
                 {
+                    var id = g.First().Id;
                     var key = g.Key;
                     var first = g.First();
                     var owners = g.Select(x => x.OwnerName).Distinct().OrderBy(x => x).ToList();
@@ -575,6 +614,7 @@ namespace kiedygramy.Services.Sessions
 
                     return new SessionPoolGameDto
                     (
+                        Id: id,
                         Title: first.Title.Trim(),
                         Key: key,
                         Count: g.Count(),

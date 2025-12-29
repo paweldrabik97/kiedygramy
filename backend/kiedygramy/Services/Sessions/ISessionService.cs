@@ -17,6 +17,7 @@ namespace kiedygramy.Services.Sessions
         Task<(MyAvailabilityDto? Availability, ErrorResponseDto? Error)> GetMyAvailabilityAsync(int sessionId, int userId);
         Task<(AvailabilitySummaryDto? Summary, ErrorResponseDto? Error)> GetAvailabilitySummaryAsync(int sessionId, int userId);
         Task<ErrorResponseDto?> SetFinalDateAsync(int sessionId, int userId, SetFinalDateDto dto);
+        Task<ErrorResponseDto?> SetFinalGamesAsync(int sessionId, int userId, SetFinalGamesDto dto);
         Task<ErrorResponseDto?> UpdateAttendanceAsync(int sessionId, int userId, UpdateAttendanceDto dto);
         Task<ErrorResponseDto?> DeleteAsync(int sessionId, int userId);
         Task<(List<SessionPoolGameDto>? GamePool, ErrorResponseDto? Error)> GetConfirmedParticipantsGamesAsync(int sessionId, int userId);

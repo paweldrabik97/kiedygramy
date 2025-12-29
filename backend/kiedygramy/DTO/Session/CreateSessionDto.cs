@@ -16,6 +16,6 @@ namespace kiedygramy.DTO.Session
        [MaxLength(500, ErrorMessage = "Opis może mieć maksymalnie 500 znaków")]
        string? Description,
 
-       int? GameId
+       int[]? GameIds
     );
 }

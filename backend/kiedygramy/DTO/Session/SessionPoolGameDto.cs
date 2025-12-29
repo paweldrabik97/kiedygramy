@@ -1,7 +1,10 @@
-﻿namespace kiedygramy.DTO.Session
+﻿using System.Security.Cryptography.X509Certificates;
+
+namespace kiedygramy.DTO.Session
 {
     public record SessionPoolGameDto
     (     
+        int Id,
         string Title,
         string Key,
         int Count,

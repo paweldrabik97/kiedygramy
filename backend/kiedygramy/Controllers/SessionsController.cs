@@ -248,6 +248,27 @@ namespace kiedygramy.Controllers
             return NoContent();
         }
 
+        [HttpPut("{id:int}/games")]
+        public async Task<IActionResult> SetFinalGames(int id, [FromBody] SetFinalGamesDto dto)
+        {
+            // 1. Walidacja podstawowa (czy JSON jest poprawny)
+            if (!ModelState.IsValid)
+                return ValidationProblemFromModelState();
+
+            // 2. Pobranie ID zalogowanego użytkownika
+            var userId = GetRequiredUserId();
+
+            // 3. Wywołanie logiki biznesowej
+            var error = await _sessionService.SetFinalGamesAsync(id, userId, dto);
+
+            // 4. Obsługa błędów zwróconych przez serwis
+            if (error is not null)
+                return Problem(error);
+
+            // 5. Sukces (204 No Content)
+            return NoContent();
+        }
+
         [HttpDelete("{id:int}")]
         public async Task<IActionResult> Delete(int id)
         {
