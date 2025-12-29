@@ -14,6 +14,13 @@ export default defineConfig({
         changeOrigin: true,
         secure: false, // bo używasz lokalnego certyfikatu (Kestrel)
       },
+      "/notificationHub": {
+        target: "https://localhost:7008",
+        changeOrigin: true,
+        secure: false,
+        ws: true
+      },
     },
+    
   },
 });

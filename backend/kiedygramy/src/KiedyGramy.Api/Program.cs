@@ -71,7 +71,22 @@ namespace kiedygramy.src.KiedyGramy.Api
                 {
                     options.Cookie.Name = "KiedyGramyAuthCookie";
                     options.Cookie.HttpOnly = true;
-                    options.Cookie.SameSite = SameSiteMode.Lax;
+                    options.Cookie.SameSite = SameSiteMode.None;
+                    options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+
+                    // dla braku autentykacji wyrzuć błąd 401
+                    options.Events.OnRedirectToLogin = context =>
+                    {
+                        context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+                        return Task.CompletedTask;
+                    };
+
+                    // dla braku uprawnień wyrzuć błąd 403
+                    options.Events.OnRedirectToAccessDenied = context =>
+                    {
+                        context.Response.StatusCode = StatusCodes.Status403Forbidden;
+                        return Task.CompletedTask;
+                    };
                 });
 
             builder.Services.AddAuthorization();
@@ -97,7 +112,8 @@ namespace kiedygramy.src.KiedyGramy.Api
                     {
                         policy.WithOrigins("http://localhost:5173") // Adres Twojego frontendu (BEZ slasha na końcu!)
                               .AllowAnyHeader()
-                              .AllowAnyMethod();
+                              .AllowAnyMethod()
+                              .AllowCredentials();
                     });
             });
 
@@ -140,10 +156,11 @@ namespace kiedygramy.src.KiedyGramy.Api
             app.UseCors("AllowFrontend");
             app.UseAuthentication();
             app.UseAuthorization();
-            app.MapControllers();
 
             app.MapHub<SessionChatHub>("/chatHub");
             app.MapHub<NotificationHub>("/notificationHub");
+
+            app.MapControllers();
 
             await app.RunAsync();
         }

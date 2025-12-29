@@ -46,6 +46,18 @@ export type InvitedSessionDto = {
     attendingCount: number;
 };
 
+export type GamePoolItem = {
+    title: string;
+    key: string;       // To jest Twoje ID gry (np. "7 cudów świata")
+    count: number;     // Ile egzemplarzy jest dostępnych
+    owners: string[];  // Kto posiada grę (np. ["pawel", "tomek"])
+    imageUrl: string;
+    minPlayers: number;
+    maxPlayers: number;
+    votesCount: number; // Ile osób już zagłosowało
+    hasVoted: boolean;  // Czy JA już zagłosowałem (true/false)
+};
+
 // --- ENDPOINTY ---
 
 // 1. Pobierz szczegóły sesji
@@ -53,12 +65,12 @@ export async function getSession(id: string) {
     return api<SessionDetails>(`/api/my/sessions/${id}`, { method: "GET" });
 }
 
-// Pobierz listę moich sesji
+// 2. Pobierz listę moich sesji
 export async function getSessions() {
     return api<SessionDetails[]>(`/api/my/sessions`, { method: "GET" });
 }
 
-// Utwórz nową sesję
+// 3. Utwórz nową sesję
 export async function createSession(session: {
     title: string;
     date?: string;
@@ -72,12 +84,12 @@ export async function createSession(session: {
     });
 }
 
-// 2. Pobierz uczestników
+// 4. Pobierz uczestników
 export async function getSessionParticipants(id: string) {
     return api<Participant[]>(`/api/my/sessions/${id}/participants`, { method: "GET" });
 }
 
-// 3. Zaproś użytkownika (po nicku lub emailu)
+// 5. Zaproś użytkownika (po nicku lub emailu)
 export async function inviteUser(sessionId: string, usernameOrEmail: string) {
     return api<void>(`/api/my/sessions/${sessionId}/invite`, {
         method: "POST",
@@ -85,7 +97,7 @@ export async function inviteUser(sessionId: string, usernameOrEmail: string) {
     });
 }
 
-// 4. Odpowiedz na zaproszenie (RSVP - Będę / Nie będę)
+// 6. Odpowiedz na zaproszenie (RSVP - Będę / Nie będę)
 export async function respondToSession(sessionId: string, isAccepted: boolean) {
     // Zakładam, że backend przyjmuje status lub boolean. 
     // Dostosuj body zależnie od tego co przyjmuje endpoint /respond
@@ -96,12 +108,12 @@ export async function respondToSession(sessionId: string, isAccepted: boolean) {
     });
 }
 
-// 5. Pobierz moją dostępność (na co zagłosowałem)
+// 7. Pobierz moją dostępność (na co zagłosowałem)
 export async function getMyAvailability(sessionId: string) {
     return api<{ dates: string[] }>(`/api/my/sessions/${sessionId}/availability/me`, { method: "GET" });
 }
 
-// 6. Zagłosuj na terminy (Wyślij listę dat)
+// 8. Zagłosuj na terminy (Wyślij listę dat)
 export async function updateAvailability(sessionId: string, dates: string[]) {
     return api<void>(`/api/my/sessions/${sessionId}/availability`, {
         method: "PUT",
@@ -109,28 +121,25 @@ export async function updateAvailability(sessionId: string, dates: string[]) {
     });
 }
 
-// 7. Pobierz podsumowanie dostępności (dla organizatora)
+// 9. Pobierz podsumowanie dostępności (dla organizatora)
 export async function getAvailabilitySummary(sessionId: string) {
     return api<AvailabilitySummary>(`/api/my/sessions/${sessionId}/availability/summary`, { method: "GET" });
 }
 
-// 8. Ustaw grę (Dla organizatora - aktualizacja sesji)
-// Używamy endpointu PUT /api/my/sessions/{id} (zakładając, że służy do edycji)
-// lub jeśli masz dedykowany, podmień URL.
+// 10. Ustaw grę (Dla organizatora - aktualizacja sesji)
 export async function updateSessionGame(sessionId: string, gameId: number) {
-    // Wysyłamy patch lub put z ID gry. 
-    // Tu zakładam prostą aktualizację. W razie potrzeby dostosuj strukturę body.
     return api<void>(`/api/my/sessions/${sessionId}`, { // Tutaj endpoint edycji sesji
         method: "PUT", 
         body: JSON.stringify({ gameId }) // Backend musi obsłużyć partial update lub pełny obiekt
     });
 }
 
-// Pobierz sesje, na które zostałem zaproszony
+// 11. Pobierz sesje, na które zostałem zaproszony
 export async function getInvitedSessions() {
     return api<InvitedSessionDto[]>("/api/my/sessions/invited", { method: "GET" });
 }
 
+// 12. Ustaw okno dostępności (Dla organizatora)
 export async function setAvailabilityWindow(
     sessionId: string, 
     from: string,     // Format YYYY-MM-DD
@@ -146,4 +155,20 @@ export async function setAvailabilityWindow(
             Deadline: `${deadline}T23:59:59`
         })
     });
+}
+
+// 13. Pobierz pulę gier do głosowania
+export async function getSessionGamePool(sessionId: string) {
+    return api<GamePoolItem[]>(`/api/my/sessions/${sessionId}/game-pool`, { 
+        method: "GET" 
+    });
+}
+
+// 14. Wyślij głosy na gry
+export async function voteForGames(sessionId: string, gameKey: string) {
+    console.log("Głosowanie na grę:", gameKey, "w sesji:", sessionId);
+    return api<void>(`/api/my/sessions/${sessionId}/game-pool/votes`, {
+        method: "POST",
+        body: JSON.stringify({ key: gameKey })
+    }); 
 }

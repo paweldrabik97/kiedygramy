@@ -67,9 +67,9 @@ namespace kiedygramy.Services.Sessions
                 OwnerUserName: owner!.UserName!,
                 GameId: session.GameId,
                 GameTitle: null,
-                AvailabilityFrom: null,
-                AvailabilityTo: null,
-                AvailabilityDeadline: null
+                AvailabilityFrom: session.AvailabilityFrom,
+                AvailabilityTo: session.AvailabilityTo,
+                AvailabilityDeadline: session.AvailabilityDeadline
             );
 
             return (details, null);

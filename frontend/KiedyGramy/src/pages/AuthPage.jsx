@@ -1,11 +1,12 @@
-import React, { useState } from "react";
-import { useAuth } from "../features/auth/context/AuthContext.jsx";
-import { useNavigate, Link } from "react-router-dom";
+import React, { useEffect, useState } from "react";
+import { useAuth } from "../features/auth/contexts/AuthContext.jsx";
+import { useNavigate, useLocation, Link } from "react-router-dom";
 import { Button } from "../components/ui/Button.jsx";
+
 
 const AuthPage = () => {
   // --- STATE ---
-  const { login, register } = useAuth();
+  const { login, register, user } = useAuth();
   const [isRegisterActive, setIsRegisterActive] = useState(false);
   const [formData, setFormData] = useState({
     username: "",
@@ -27,6 +28,15 @@ const AuthPage = () => {
   const [loading, setLoading] = useState(false);
 
   const navigate = useNavigate();
+  const location = useLocation();
+
+  const from = location.state?.from?.pathname || "/dashboard";
+
+  useEffect(() => {
+    if (user) {
+      navigate(from, { replace: true });
+    }
+  }, [user, navigate, from]);
 
   // --- HANDLERS ---
   const handleInputChange = (e) => {

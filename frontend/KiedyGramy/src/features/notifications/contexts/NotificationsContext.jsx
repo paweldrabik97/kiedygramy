@@ -1,6 +1,7 @@
 import React, {createContext, useContext, useEffect, useState} from "react";
-import { createNotificationConnection } from "./notificationConnection";
-import { getMyNotifications, getUnreadCount, markAsRead } from "./notificationsApi";
+import { createNotificationConnection } from "../services/notificationConnection";
+import { getMyNotifications, getUnreadCount, markAsRead } from "../services/notificationsApi";
+import { useAuth } from "../../auth/contexts/AuthContext";
 
 const NotificationsContext = createContext(null);
 
@@ -13,8 +14,16 @@ export const useNotifications = () => {
 export const NotificationsProvider = ({ children }) => {
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
+  const { user } = useAuth();
 
     useEffect(() => {
+
+        if (!user) {
+            setNotifications([]);
+            setUnreadCount(0);
+            return;
+        }
+        
         const conn = createNotificationConnection();
 
             conn.on("NotificationUpserted", (n) => {
@@ -46,9 +55,11 @@ export const NotificationsProvider = ({ children }) => {
             setUnreadCount(await getUnreadCount());
         })();
 
-        conn.start();
+        conn.start()
+            .then(() => console.log("SignalR Połączono"))
+            .catch(err => console.error("SignalR Błąd:", err));
         return () => conn.stop();
-        }, []);
+        }, [user]);
 
     const markRead = async (id) => {
         await markAsRead(id);

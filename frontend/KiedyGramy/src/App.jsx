@@ -10,6 +10,7 @@ import Layout from "./layouts/Layout.jsx";
 import { Routes, Route } from "react-router-dom";
 import LandingPage from "./pages/LandingPage.jsx";
 import NotificationsPage from "./features/notifications/components/NotificationsPage";
+import { ProtectedRoute } from "./features/auth/components/ProtectedRoute.jsx";
 
 function App() {
   return (
@@ -18,7 +19,14 @@ function App() {
       <Routes>
         <Route path="/" element={<LandingPage />} />
         <Route path="/auth" element={<AuthPage />} />
-        <Route path="/*" element={ <Layout /> }>
+        <Route 
+          path="/*" 
+          element={ 
+            <ProtectedRoute>
+              <Layout />
+            </ProtectedRoute>
+          }
+        >
           <Route path="dashboard" element={<DashboardPage />} />
           <Route path="games" element={<GamesPage />} />
           <Route path="games/new" element={<NewGamePage />} />
