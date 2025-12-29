@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using kiedygramy.Data;
@@ -11,9 +12,11 @@ using kiedygramy.Data;
 namespace kiedygramy.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251229140911_SessionGameVoteAdded")]
+    partial class SessionGameVoteAdded
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -359,34 +362,6 @@ namespace kiedygramy.Migrations
                     b.ToTable("SessionAvailabilities");
                 });
 
-            modelBuilder.Entity("kiedygramy.Domain.SessionGameVote", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("GameKey")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<int>("SessionId")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("UserId")
-                        .HasColumnType("integer");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("UserId");
-
-                    b.HasIndex("SessionId", "UserId", "GameKey")
-                        .IsUnique();
-
-                    b.ToTable("SessionGameVotes");
-                });
-
             modelBuilder.Entity("kiedygramy.Domain.SessionMessage", b =>
                 {
                     b.Property<int>("Id")
@@ -643,25 +618,6 @@ namespace kiedygramy.Migrations
                 {
                     b.HasOne("kiedygramy.Domain.Session", "Session")
                         .WithMany("Availabilities")
-                        .HasForeignKey("SessionId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("kiedygramy.Domain.User", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Session");
-
-                    b.Navigation("User");
-                });
-
-            modelBuilder.Entity("kiedygramy.Domain.SessionGameVote", b =>
-                {
-                    b.HasOne("kiedygramy.Domain.Session", "Session")
-                        .WithMany()
                         .HasForeignKey("SessionId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();

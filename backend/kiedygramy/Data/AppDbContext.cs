@@ -20,6 +20,7 @@ namespace kiedygramy.Data
         public DbSet<Genre> Genres => Set<Genre>();
         public DbSet<GameGenre> GameGenres => Set<GameGenre>();
         public DbSet<Notification> Notifications => Set<Notification>();
+        public DbSet<SessionGameVote> SessionGameVotes => Set<SessionGameVote>();
 
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -77,6 +78,10 @@ namespace kiedygramy.Data
                 .WithMany(u => u.Games)
                 .HasForeignKey(g => g.OwnerId)
                 .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<SessionGameVote>()
+                .HasIndex(v => new { v.SessionId, v.UserId, v.GameKey })
+                .IsUnique();
 
             modelBuilder.Entity<SessionMessage>()
                 .HasOne(sm => sm.Session)

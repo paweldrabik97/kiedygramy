@@ -19,6 +19,7 @@ namespace kiedygramy.Services.Sessions
         Task<ErrorResponseDto?> SetFinalDateAsync(int sessionId, int userId, SetFinalDateDto dto);
         Task<ErrorResponseDto?> UpdateAttendanceAsync(int sessionId, int userId, UpdateAttendanceDto dto);
         Task<ErrorResponseDto?> DeleteAsync(int sessionId, int userId);
-
+        Task<(List<SessionPoolGameDto>? GamePool, ErrorResponseDto? Error)> GetConfirmedParticipantsGamesAsync(int sessionId, int userId);
+        Task<ErrorResponseDto?> ToggleGameVoteAsync(int sessionId, int userId, string key);
     }
 }

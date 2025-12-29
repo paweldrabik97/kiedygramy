@@ -510,5 +510,127 @@ namespace kiedygramy.Services.Sessions
 
             return null;
         }
+
+        public async Task<(List<SessionPoolGameDto>? GamePool, ErrorResponseDto? Error)> GetConfirmedParticipantsGamesAsync(int sessionId, int userId)
+        {
+            var session = await _db.Sessions
+                .AsNoTracking()
+                .FirstOrDefaultAsync(s => s.Id == sessionId);
+
+            if (session is null)
+                return (null, Errors.Session.NotFound());
+
+            var hasAccess = session.OwnerId == userId ||
+               await _db.SessionParticipants.AnyAsync(p => p.SessionId == sessionId &&
+               p.UserId == userId && p.Status == SessionParticipantStatus.Confirmed);
+
+            if(!hasAccess)
+                return (null, Errors.Session.InvalidParticipant());
+
+            var confirmedParticipantIds = await _db.SessionParticipants
+                .AsNoTracking()
+                .Where(p => p.SessionId == sessionId && p.Status == SessionParticipantStatus.Confirmed)
+                .Select(p => p.UserId)
+                .Distinct()
+                .ToListAsync();
+
+            if(!confirmedParticipantIds.Contains(session.OwnerId))
+                confirmedParticipantIds.Add(session.OwnerId);
+
+            var games = await _db.Games
+                .AsNoTracking()
+                .Where(g => confirmedParticipantIds.Contains(g.OwnerId))
+                .Select(g => new
+                {
+                    g.Title,
+                    OwnerName = g.Owner.UserName ?? "(brak nazwy)",
+                    MinPlayers = g.MinPlayers,
+                    MaxPlayers = g.MaxPlayers,
+                    g.ImageUrl
+                }).ToListAsync();
+
+            var votes = await _db.SessionGameVotes
+                .AsNoTracking()
+                .Where(v => v.SessionId == sessionId)
+                .Select(v => new {v.GameKey, v.UserId })
+                .ToListAsync();
+
+            var votesCounts = votes
+                .GroupBy(g => g.GameKey)
+                .ToDictionary(g => g.Key, g => g.Count());
+
+            var myVotes = votes
+                .Where(v => v.UserId == userId)
+                .Select(v => v.GameKey).ToHashSet();
+
+            var groupedGames = games
+                .Where(g => !string.IsNullOrEmpty(g.Title))
+                .GroupBy(g => g.Title.Trim().ToLowerInvariant())
+                .Select(g =>
+                {
+                    var key = g.Key;
+                    var first = g.First();
+                    var owners = g.Select(x => x.OwnerName).Distinct().OrderBy(x => x).ToList();
+                    var image = g.Select(x => x.ImageUrl).FirstOrDefault(url => !string.IsNullOrEmpty(url));
+
+                    return new SessionPoolGameDto
+                    (
+                        Title: first.Title.Trim(),
+                        Key: key,
+                        Count: g.Count(),
+                        Owners: owners,
+                        ImageUrl: image,
+                        MinPlayers: first.MinPlayers,
+                        MaxPlayers: first.MaxPlayers,
+                        VotesCount: votesCounts.TryGetValue(key, out var c) ? c : 0,
+                        hasVoted: myVotes.Contains(key)
+                    );
+
+                }).OrderBy(x => x.Title).ToList();
+
+            return (groupedGames, null);
+        }
+
+        public async Task<ErrorResponseDto?> ToggleGameVoteAsync(int sessionId, int userId, string key)
+        {
+            if (string.IsNullOrWhiteSpace(key))
+                return Errors.General.Validation("Nieprawidłowy klucz gry","Key");
+
+            key = key.Trim().ToLowerInvariant();
+
+            var session = await _db.Sessions
+                .AsNoTracking()
+                .FirstOrDefaultAsync(s => s.Id == sessionId);
+
+            if (session is null)
+                return Errors.Session.NotFound();
+
+            var hasAccess = session.OwnerId == userId ||
+                await _db.SessionParticipants.AnyAsync(p =>
+                p.SessionId == sessionId &&
+                p.UserId == userId &&
+                p.Status == SessionParticipantStatus.Confirmed);
+
+            if(!hasAccess)
+                return Errors.Session.InvalidParticipant();
+
+            var existing = await _db.SessionGameVotes.
+                FirstOrDefaultAsync(v => v.SessionId == sessionId &&
+                v.UserId == userId &&
+                v.GameKey == key);
+
+            if(existing is not null)
+                _db.SessionGameVotes.Remove(existing);
+            else
+                _db.SessionGameVotes.Add(new SessionGameVote
+                {
+                    SessionId = sessionId,
+                    UserId = userId,
+                    GameKey = key
+                });
+
+            await _db.SaveChangesAsync();
+            return null;
+        }
     }  
 }

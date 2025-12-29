@@ -259,5 +259,34 @@ namespace kiedygramy.Controllers
 
             return NoContent();
         }
+
+        [HttpGet("{id:int}/game-pool")]
+        public async Task<IActionResult> GetGamePool(int id)
+        {
+            var userId = GetRequiredUserId();
+
+            var (gamePool, error) = await _sessionService.GetConfirmedParticipantsGamesAsync(id, userId);
+
+            if (error is not null)
+                return Problem(error);
+
+            return Ok(gamePool);
+        }
+
+        [HttpPost("{id:int}/game-pool/votes)")]
+        public async Task<IActionResult> ToggleGameVote(int id, [FromBody] ToggleGameVoteDto dto)
+        { 
+            if(!ModelState.IsValid)
+                return ValidationProblemFromModelState();
+
+            var userId = GetRequiredUserId();
+
+            var error = await _sessionService.ToggleGameVoteAsync(id, userId, dto.key);
+
+            if(error is not null)
+                return Problem(error);
+
+            return NoContent();
+        }
     }
 }
