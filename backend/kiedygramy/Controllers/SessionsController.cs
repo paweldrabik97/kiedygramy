@@ -273,7 +273,7 @@ namespace kiedygramy.Controllers
             return Ok(gamePool);
         }
 
-        [HttpPost("{id:int}/game-pool/votes)")]
+        [HttpPost("{id:int}/game-pool/votes")]
         public async Task<IActionResult> ToggleGameVote(int id, [FromBody] ToggleGameVoteDto dto)
         { 
             if(!ModelState.IsValid)

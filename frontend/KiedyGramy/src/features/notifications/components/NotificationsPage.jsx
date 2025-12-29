@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useNotifications } from "../services/NotificationsContext.jsx";
+import { useNotifications } from "../contexts/NotificationsContext.jsx";
 import { respondToInvite } from "../../sessions/services/invitations.ts";
 
 function formatTime(iso) {

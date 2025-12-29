@@ -1,9 +1,11 @@
-﻿using Microsoft.AspNetCore.SignalR;
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.SignalR;
 using System.Security.Claims;
 
 namespace kiedygramy.Hubs
 {
+    [Authorize]
     public class NotificationHub : Hub
     {
         public override async Task OnConnectedAsync()

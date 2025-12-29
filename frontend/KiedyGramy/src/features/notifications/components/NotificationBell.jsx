@@ -1,5 +1,5 @@
 import React from "react";
-import { useNotifications } from "../services/NotificationsContext.jsx";
+import { useNotifications } from "../contexts/NotificationsContext.jsx";
 
 
 export default function NotificationBell() {
