@@ -5,16 +5,19 @@ using kiedygramy.Domain.Enums;
 using kiedygramy.DTO.Common;
 using kiedygramy.DTO.Session;
 using Microsoft.EntityFrameworkCore;
+using kiedygramy.Services.Notifications;
 
 namespace kiedygramy.Services.Sessions
 {
     public class SessionService : ISessionService
     {
         private readonly AppDbContext _db;
+        private readonly INotificationService _notification;
 
-        public SessionService(AppDbContext db)
+        public SessionService(AppDbContext db, INotificationService notification)
         {
             _db = db;
+            _notification = notification;
         }
 
         public async Task<(SessionDetailsDto? Session, ErrorResponseDto? Error)> CreateAsync(CreateSessionDto dto, int userId)
@@ -63,7 +66,10 @@ namespace kiedygramy.Services.Sessions
                 OwnerId: session.OwnerId,
                 OwnerUserName: owner!.UserName!,
                 GameId: session.GameId,
-                GameTitle: null
+                GameTitle: null,
+                AvailabilityFrom: null,
+                AvailabilityTo: null,
+                AvailabilityDeadline: null
             );
 
             return (details, null);
@@ -137,6 +143,28 @@ namespace kiedygramy.Services.Sessions
 
             _db.SessionParticipants.Add(participant);
             await _db.SaveChangesAsync();
+
+            try
+            {
+                var title = "Nowe zaproszenie do sesji";
+                var message = $"Zaproszono Cię do sesji: {session.Title}";
+                var url = $"/sessions/{sessionId}";
+
+                await _notification.CreateAsync(
+                    userId: invitedUserId,
+                    type: NotificationType.SessionInviteRecived,
+                    title: title,
+                    message: message,
+                    url: url,
+                    sessionId: sessionId,
+                    key: $"invite:{sessionId}",
+                    ct: CancellationToken.None
+                );
+            }
+            catch
+            {
+                // ignorujemy błędy publikacji powiadomień, kiedyś doda się loga
+            }
 
             return null;
         }
@@ -467,7 +495,6 @@ namespace kiedygramy.Services.Sessions
            
         }
 
-        
         public async Task<ErrorResponseDto?> DeleteAsync(int sessionId, int userId)
         {
             var session = await _db.Sessions
