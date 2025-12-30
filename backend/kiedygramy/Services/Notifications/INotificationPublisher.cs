@@ -4,7 +4,7 @@ namespace kiedygramy.Services.Notifications
 {
     public interface INotificationPublisher
     {
-        Task NotificationUpsertedAsync(int userId, NotificationDto dto, CancellationToken ct);
+        Task NotificationUpsertedAsync(int userId, NotificationResponse dto, CancellationToken ct);
         Task UnreadCountUpdatedAsync(int userId, int unreadCount, CancellationToken ct);
     }
 }

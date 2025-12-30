@@ -21,7 +21,7 @@ namespace kiedygramy.Services.Games
             _bgg = bgg;
         }
 
-        public async Task<(Game? game, ErrorResponseDto? error)> CreateAsync(CreateGameDto dto, int userId)
+        public async Task<(Game? game, ErrorResponseDto? error)> CreateAsync(CreateGameRequest dto, int userId)
         {             
             var title = dto.Title.Trim(); 
             
@@ -69,7 +69,7 @@ namespace kiedygramy.Services.Games
             return (game, null);
         }
 
-        public async Task<ErrorResponseDto?> UpdateAsync(int gameId, UpdateGameDto dto, int userId)
+        public async Task<ErrorResponseDto?> UpdateAsync(int gameId, UpdateGameRequest dto, int userId)
         {            
             var game = await _db.Games
                 .Include(g => g.GameGenres)
@@ -132,14 +132,14 @@ namespace kiedygramy.Services.Games
             return null;
         }
 
-        public async Task<IEnumerable<GameListItemDto>> GetAllAsync(int userId)
+        public async Task<IEnumerable<GameListItemResponse>> GetAllAsync(int userId)
         {
             return await _db.Games
                 .AsNoTracking()
                 .Where(g => g.OwnerId == userId)
                 .Include(g => g.GameGenres)
                     .ThenInclude(gg => gg.Genre)
-                .Select(g => new GameListItemDto(
+                .Select(g => new GameListItemResponse(
                     g.Id,
                     g.Title,
                     g.GameGenres.Select(x => x.Genre.Name).ToList(),
@@ -150,14 +150,14 @@ namespace kiedygramy.Services.Games
                 .ToListAsync();
         }
 
-        public async Task<GameListItemDto?> GetByIdAsync(int gameId, int userId)
+        public async Task<GameListItemResponse?> GetByIdAsync(int gameId, int userId)
         {
             return await _db.Games
                 .AsNoTracking()
                 .Where(g => g.OwnerId == userId && g.Id == gameId)
                 .Include(g => g.GameGenres)
                     .ThenInclude(gg => gg.Genre)
-                .Select(g => new GameListItemDto(
+                .Select(g => new GameListItemResponse(
                     g.Id,
                     g.Title,
                     g.GameGenres.Select(x => x.Genre.Name).ToList(),

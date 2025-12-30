@@ -1,12 +1,19 @@
 ﻿using kiedygramy.Controllers.Base;
 using kiedygramy.Domain;
-using kiedygramy.DTO.Session;
 using kiedygramy.Services.Sessions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using kiedygramy.Services.Chat;
 using kiedygramy.Application.Errors;
+using kiedygramy.DTO.Session.List;
+using kiedygramy.DTO.Session.Create;
+using kiedygramy.DTO.Session.Invitations;
+using kiedygramy.DTO.Session.Availability;
+using kiedygramy.DTO.Session.Chat;
+using kiedygramy.DTO.Session.Votes;
+using kiedygramy.DTO.Session.Details;
+using kiedygramy.DTO.Session.Pool;
 
 
 
@@ -32,7 +39,7 @@ namespace kiedygramy.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Create([FromBody] CreateSessionDto dto)
+        public async Task<IActionResult> Create([FromBody] CreateSessionRequest dto)
         {
             if (!ModelState.IsValid)
                 return ValidationProblemFromModelState();
@@ -48,7 +55,7 @@ namespace kiedygramy.Controllers
         }
 
         [HttpPost("{id:int}/respond")]
-        public async Task<IActionResult> Respond(int id, [FromBody] RespondToInvitationDto dto)
+        public async Task<IActionResult> Respond(int id, [FromBody] RespondToInvitationRequest dto)
         {
             if (!ModelState.IsValid)
                 return ValidationProblemFromModelState();
@@ -64,7 +71,7 @@ namespace kiedygramy.Controllers
         }
 
         [HttpPost("{id:int}/invite")]
-        public async Task<IActionResult> Invite(int id, [FromBody] InviteUserToSessionDto dto)
+        public async Task<IActionResult> Invite(int id, [FromBody] InviteUserToSessionRequest dto)
         {
             if (!ModelState.IsValid)
                 return ValidationProblemFromModelState();
@@ -112,7 +119,7 @@ namespace kiedygramy.Controllers
         }
 
         [HttpGet("invited")]
-        public async Task<ActionResult<IEnumerable<SessionListItemDto>>> GetInvited()
+        public async Task<ActionResult<IEnumerable<SessionListItemResponse>>> GetInvited()
         {
             var userId = GetRequiredUserId();
 
@@ -145,7 +152,7 @@ namespace kiedygramy.Controllers
         }
 
         [HttpPost("{id:int}/chat/messages")]
-        public async Task<IActionResult> SendMessage(int id, [FromBody] CreateSessionMessageDto dto, CancellationToken ct)
+        public async Task<IActionResult> SendMessage(int id, [FromBody] CreateSessionMessageRequest dto, CancellationToken ct)
         {
             if (!ModelState.IsValid)
                 return ValidationProblemFromModelState();
@@ -162,7 +169,7 @@ namespace kiedygramy.Controllers
         }
 
         [HttpPost("{id:int}/availability/window")]
-        public async Task<IActionResult> SetAvailabilityWindow(int id, [FromBody] SetAvailabilityWindowDto dto)
+        public async Task<IActionResult> SetAvailabilityWindow(int id, [FromBody] SetAvailabilityWindowRequest dto)
         {
             if (!ModelState.IsValid)
                 return ValidationProblemFromModelState();
@@ -178,7 +185,7 @@ namespace kiedygramy.Controllers
         }
 
         [HttpPut("{id:int}/availability")]
-        public async Task<IActionResult> UpdateAvailability(int id, [FromBody] UpdateAvailabilityDto dto)
+        public async Task<IActionResult> UpdateAvailability(int id, [FromBody] UpdateAvailabilityRequest dto)
         {
             if (!ModelState.IsValid)
                 return ValidationProblemFromModelState();
@@ -204,7 +211,7 @@ namespace kiedygramy.Controllers
                 return Problem(error);
 
 
-            return Ok(availability ?? new MyAvailabilityDto(new List<DateTime>()));
+            return Ok(availability ?? new MyAvailabilityResponse(new List<DateTime>()));
         }
 
         [HttpGet("{id:int}/availability/summary")]
@@ -221,7 +228,7 @@ namespace kiedygramy.Controllers
 
                 if (summary is null)
                 {
-                    return Ok(new AvailabilitySummaryDto(new List<AvailabilitySummaryDayDto>()));
+                    return Ok(new AvailabilitySummaryResponse(new List<AvailabilitySummaryDayDto>()));
                 }
 
                 return Ok(summary);
@@ -233,7 +240,7 @@ namespace kiedygramy.Controllers
         }
 
         [HttpPost("{id:int}/final-date")]
-        public async Task<IActionResult> SetFinalDate(int id, [FromBody] SetFinalDateDto dto)
+        public async Task<IActionResult> SetFinalDate(int id, [FromBody] SetFinalDateRequest dto)
         {
             if (!ModelState.IsValid)
                 return ValidationProblemFromModelState();
@@ -249,7 +256,7 @@ namespace kiedygramy.Controllers
         }
 
         [HttpPut("{id:int}/games")]
-        public async Task<IActionResult> SetFinalGames(int id, [FromBody] SetFinalGamesDto dto)
+        public async Task<IActionResult> SetFinalGames(int id, [FromBody] SetFinalGamesRequest dto)
         {
             // 1. Walidacja podstawowa (czy JSON jest poprawny)
             if (!ModelState.IsValid)
@@ -295,7 +302,7 @@ namespace kiedygramy.Controllers
         }
 
         [HttpPost("{id:int}/game-pool/votes")]
-        public async Task<IActionResult> ToggleGameVote(int id, [FromBody] ToggleGameVoteDto dto)
+        public async Task<IActionResult> ToggleGameVote(int id, [FromBody] ToggleGameVoteRequest dto)
         { 
             if(!ModelState.IsValid)
                 return ValidationProblemFromModelState();

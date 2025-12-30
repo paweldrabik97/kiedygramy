@@ -19,7 +19,7 @@ namespace kiedygramy.Services.Notifications
             _notificationPublisher = notificationPublisher;
         }
 
-        public async Task<List<NotificationDto>> GetMyAsync(int userId, bool unreadOnly, int take, CancellationToken ct)
+        public async Task<List<NotificationResponse>> GetMyAsync(int userId, bool unreadOnly, int take, CancellationToken ct)
         {
             if (take < 1) take = 20;
             if (take > 100) take = 100;
@@ -29,7 +29,7 @@ namespace kiedygramy.Services.Notifications
             return await query
                .OrderByDescending(n => n.UpdatedAt)
                .Take(take)
-               .Select(n => new NotificationDto(
+               .Select(n => new NotificationResponse(
                    n.Id,
                    n.Type,
                    n.SessionId,
@@ -196,9 +196,9 @@ namespace kiedygramy.Services.Notifications
             }
         }
 
-        public static NotificationDto MapToDto(Notification n)
+        public static NotificationResponse MapToDto(Notification n)
         { 
-            return new NotificationDto(
+            return new NotificationResponse(
                 Id: n.Id,
                 Type: n.Type,
                 Title: n.Title,

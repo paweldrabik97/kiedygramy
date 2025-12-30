@@ -18,7 +18,7 @@ namespace kiedygramy.Controllers
         }
 
         [HttpGet("search")]
-        public async Task<ActionResult<IEnumerable<ExternalGameDto>>> SearchGames(
+        public async Task<ActionResult<IEnumerable<ExternalGameResponse>>> SearchGames(
             [FromQuery] string query,
             [FromQuery] int skip = 0, 
             [FromQuery] int take = 10, 

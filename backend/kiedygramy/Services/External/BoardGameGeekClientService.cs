@@ -14,11 +14,11 @@ namespace kiedygramy.Services.External
             _httpClient = httpClient;
         }
 
-        public async Task<IEnumerable<ExternalGameDto>> SearchGamesAsync(string query, int skip = 0, int take = 10, CancellationToken cancellationToken = default)
+        public async Task<IEnumerable<ExternalGameResponse>> SearchGamesAsync(string query, int skip = 0, int take = 10, CancellationToken cancellationToken = default)
         {
 
             if (string.IsNullOrWhiteSpace(query) || query.Length < 3)
-                return Enumerable.Empty<ExternalGameDto>();
+                return Enumerable.Empty<ExternalGameResponse>();
             
 
             var encodedQuery = Uri.EscapeDataString(query);
@@ -35,7 +35,7 @@ namespace kiedygramy.Services.External
                 .ToList();
 
             if (!pagedItems.Any())
-                return Enumerable.Empty<ExternalGameDto>();
+                return Enumerable.Empty<ExternalGameResponse>();
             
             var ids = pagedItems
                 .Select(i => i.Attribute("id")?.Value)
@@ -49,7 +49,7 @@ namespace kiedygramy.Services.External
        
             var detailsDoc = XDocument.Parse(detailsXml);
 
-            var result = new List<ExternalGameDto>();
+            var result = new List<ExternalGameResponse>();
 
             foreach (var item in detailsDoc.Descendants("item"))
             {
@@ -86,7 +86,7 @@ namespace kiedygramy.Services.External
                 var genreString = string.Join(", ", genres);
                 var bggId = item.Attribute("id")?.Value ?? "";
 
-                result.Add(new ExternalGameDto(
+                result.Add(new ExternalGameResponse(
                     Title: title,
                     Genres: genres,
                     ImageUrl: image,
@@ -100,7 +100,7 @@ namespace kiedygramy.Services.External
             return result;
         }
 
-        public async Task<ExternalGameDto?> GetGameByIdAsync(string sourceId, CancellationToken cancellationToken = default)
+        public async Task<ExternalGameResponse?> GetGameByIdAsync(string sourceId, CancellationToken cancellationToken = default)
         {
             if (string.IsNullOrWhiteSpace(sourceId))
                 return null;
@@ -135,7 +135,7 @@ namespace kiedygramy.Services.External
                 .Distinct(StringComparer.OrdinalIgnoreCase)
                 .ToList();
 
-            return new ExternalGameDto(
+            return new ExternalGameResponse(
                 Title: title,
                 Genres: genres,
                 ImageUrl: image,

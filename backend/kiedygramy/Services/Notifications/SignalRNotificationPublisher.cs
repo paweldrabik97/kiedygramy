@@ -15,7 +15,7 @@ namespace kiedygramy.Services.Notifications
 
         private static string UserGroup(int userId) => $"user-{userId}";
 
-        public Task NotificationUpsertedAsync(int userId, NotificationDto dto, CancellationToken ct) =>
+        public Task NotificationUpsertedAsync(int userId, NotificationResponse dto, CancellationToken ct) =>
             _hub.Clients.Group(UserGroup(userId)).SendAsync("NotificationUpserted", dto, ct);
 
         public Task UnreadCountUpdatedAsync(int userId, int unreadCount, CancellationToken ct) =>

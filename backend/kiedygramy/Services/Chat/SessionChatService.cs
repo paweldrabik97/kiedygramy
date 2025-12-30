@@ -1,13 +1,13 @@
 ﻿using kiedygramy.Data;
 using kiedygramy.Domain;
 using kiedygramy.DTO.Common;
-using kiedygramy.DTO.Session;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.SignalR;
 using kiedygramy.Hubs;
 using kiedygramy.Application.Errors;
 using kiedygramy.Domain.Enums;
 using kiedygramy.Services.Notifications;
+using kiedygramy.DTO.Session.Chat;
 
 
 namespace kiedygramy.Services.Chat
@@ -27,7 +27,7 @@ namespace kiedygramy.Services.Chat
             _logger = logger;
         }
 
-        public async Task<(SessionMessageDto? Message, ErrorResponseDto? Error)> AddMessageAsync(int sessionId, int userId, CreateSessionMessageDto dto, CancellationToken ct)
+        public async Task<(SessionMessageResponse? Message, ErrorResponseDto? Error)> AddMessageAsync(int sessionId, int userId, CreateSessionMessageRequest dto, CancellationToken ct)
         {
             var session = await _db.Sessions
                 .AsNoTracking()
@@ -66,7 +66,7 @@ namespace kiedygramy.Services.Chat
                .AsNoTracking()
                .FirstAsync(u => u.Id == userId, ct);
 
-            var messageDto = new SessionMessageDto(
+            var messageDto = new SessionMessageResponse(
                message.Id,
                message.UserId,
                user.UserName!,
@@ -112,7 +112,7 @@ namespace kiedygramy.Services.Chat
             return (messageDto, null);
         }
         
-        public async Task<(IEnumerable<SessionMessageDto> Messages, ErrorResponseDto? Error)>GetMessagesAsync(int sessionId, int userId, int? limit, int? beforeMessageId)
+        public async Task<(IEnumerable<SessionMessageResponse> Messages, ErrorResponseDto? Error)>GetMessagesAsync(int sessionId, int userId, int? limit, int? beforeMessageId)
         {
             var session = await _db.Sessions
              .AsNoTracking()
@@ -120,17 +120,17 @@ namespace kiedygramy.Services.Chat
              .FirstOrDefaultAsync(s => s.Id == sessionId);
 
             if (session is null)
-                return (Enumerable.Empty<SessionMessageDto>(), Errors.Chat.NotFound());
+                return (Enumerable.Empty<SessionMessageResponse>(), Errors.Chat.NotFound());
 
             var isParticipant = session.OwnerId == userId ||
                 session.Participants.Any(p => p.UserId == userId && p.Status == SessionParticipantStatus.Confirmed);
 
             if (!isParticipant)
-                return (Enumerable.Empty<SessionMessageDto>(), Errors.Chat.InvalidParticipant());
+                return (Enumerable.Empty<SessionMessageResponse>(), Errors.Chat.InvalidParticipant());
 
             var take = limit ?? 50;
                 if (take < 1 || take > 200)
-                    return (Enumerable.Empty<SessionMessageDto>(), Errors.Chat.InvalidLimit());
+                    return (Enumerable.Empty<SessionMessageResponse>(), Errors.Chat.InvalidLimit());
             
             IQueryable<SessionMessage> query = _db.SessionMessages
                 .AsNoTracking()
@@ -142,7 +142,7 @@ namespace kiedygramy.Services.Chat
             var messages = await query
                 .OrderByDescending(m => m.Id)
                 .Take(take)
-                .Select(m => new SessionMessageDto(
+                .Select(m => new SessionMessageResponse(
                     m.Id,
                     m.UserId,
                     m.Text,

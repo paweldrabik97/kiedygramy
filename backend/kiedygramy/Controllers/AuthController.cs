@@ -6,6 +6,8 @@ using kiedygramy.Services.Auth;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
+using static kiedygramy.Infrastructure.RateLimitingExtensions;
 
 namespace kiedygramy.Controllers
 {
@@ -28,7 +30,8 @@ namespace kiedygramy.Controllers
 
         [HttpPost("register")]
         [AllowAnonymous]
-        public async Task<IActionResult> Register([FromBody] RegisterDto dto)
+        [EnableRateLimiting(RateLimitPolicies.Auth)]
+        public async Task<IActionResult> Register([FromBody] RegisterRequest dto)
         {
             if(!ModelState.IsValid)
                 return ValidationProblemFromModelState();
@@ -43,7 +46,8 @@ namespace kiedygramy.Controllers
 
         [HttpPost("login")]
         [AllowAnonymous]
-        public async Task<IActionResult> Login([FromBody] LoginDto dto)
+        [EnableRateLimiting(RateLimitPolicies.Auth)]
+        public async Task<IActionResult> Login([FromBody] LoginRequest dto)
         {
             if (!ModelState.IsValid)
                 return ValidationProblemFromModelState();
@@ -65,7 +69,7 @@ namespace kiedygramy.Controllers
             if (user is null)
                 return Unauthorized();
 
-            var meDto = new MeDto(
+            var meDto = new MeResponse(
                 user.Id,
                 user.UserName!,
                 user.Email,
@@ -85,7 +89,8 @@ namespace kiedygramy.Controllers
 
         [HttpPost("change-password")]
         [Authorize]
-        public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordDto dto)
+        [EnableRateLimiting(RateLimitPolicies.Account)]
+        public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordRequest dto)
         { 
             if(!ModelState.IsValid)
                 return ValidationProblemFromModelState();
@@ -102,7 +107,8 @@ namespace kiedygramy.Controllers
 
         [HttpPost("change-username")]
         [Authorize]
-        public async Task<IActionResult> ChangeUsername([FromBody] ChangeUserNameDto dto)
+        [EnableRateLimiting(RateLimitPolicies.Account)]
+        public async Task<IActionResult> ChangeUsername([FromBody] ChangeUserNameRequest dto)
         {
             if (!ModelState.IsValid)
                 return ValidationProblemFromModelState();
@@ -119,7 +125,8 @@ namespace kiedygramy.Controllers
 
         [HttpPost("change-city")]
         [Authorize]
-        public async Task<IActionResult> ChangeCity([FromBody] ChangeCityDto dto)
+        [EnableRateLimiting(RateLimitPolicies.Account)]
+        public async Task<IActionResult> ChangeCity([FromBody] ChangeCityRequest dto)
         {
             if (!ModelState.IsValid)
                 return ValidationProblemFromModelState();
@@ -136,7 +143,8 @@ namespace kiedygramy.Controllers
 
         [HttpPost("change-fullname")]
         [Authorize]
-        public async Task<IActionResult> ChangeFullName([FromBody] ChangeFullNameDto dto)
+        [EnableRateLimiting(RateLimitPolicies.Account)]
+        public async Task<IActionResult> ChangeFullName([FromBody] ChangeFullNameRequest dto)
         {
             if (!ModelState.IsValid)
                 return ValidationProblemFromModelState();

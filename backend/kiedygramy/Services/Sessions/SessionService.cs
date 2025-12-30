@@ -3,9 +3,13 @@ using kiedygramy.Data;
 using kiedygramy.Domain;
 using kiedygramy.Domain.Enums;
 using kiedygramy.DTO.Common;
-using kiedygramy.DTO.Session;
 using Microsoft.EntityFrameworkCore;
 using kiedygramy.Services.Notifications;
+using kiedygramy.DTO.Session.List;
+using kiedygramy.DTO.Session.Details;
+using kiedygramy.DTO.Session.Create;
+using kiedygramy.DTO.Session.Availability;
+using kiedygramy.DTO.Session.Pool;
 
 namespace kiedygramy.Services.Sessions
 {
@@ -20,7 +24,7 @@ namespace kiedygramy.Services.Sessions
             _notification = notification;
         }
 
-        public async Task<(SessionDetailsDto? Session, ErrorResponseDto? Error)> CreateAsync(CreateSessionDto dto, int userId)
+        public async Task<(SessionDetailsResponse? Session, ErrorResponseDto? Error)> CreateAsync(CreateSessionRequest dto, int userId)
         {
             var title = dto.Title?.Trim() ?? string.Empty;          
 
@@ -56,7 +60,7 @@ namespace kiedygramy.Services.Sessions
 
             var owner = await _db.Users.FindAsync(userId);
 
-            var details = new SessionDetailsDto(
+            var details = new SessionDetailsResponse(
                 Id: session.Id,
                 Title: session.Title,
                 Date: session.Date,
@@ -77,7 +81,7 @@ namespace kiedygramy.Services.Sessions
             return (details, null);
         }
 
-        public async Task<SessionDetailsDto?> GetByIdAsync(int id, int userId)
+        public async Task<SessionDetailsResponse?> GetByIdAsync(int id, int userId)
         {
             var session = await _db.Sessions
                 .AsNoTracking()
@@ -91,7 +95,7 @@ namespace kiedygramy.Services.Sessions
 
 
 
-            return new SessionDetailsDto(
+            return new SessionDetailsResponse(
                 session.Id,
                 session.Title,
                 session.Date,
@@ -110,13 +114,13 @@ namespace kiedygramy.Services.Sessions
             );
         }
 
-        public async Task<IEnumerable<SessionListItemDto>> GetMineAsync(int userId)
+        public async Task<IEnumerable<SessionListItemResponse>> GetMineAsync(int userId)
         {
             return await _db.Sessions
                 .AsNoTracking()
                 .Where(s => s.OwnerId == userId || s.Participants.Any(p => p.UserId == userId && p.Status == SessionParticipantStatus.Confirmed))
                 .OrderByDescending(s => s.Date ?? DateTime.MaxValue)
-                .Select(s => new SessionListItemDto(
+                .Select(s => new SessionListItemResponse(
                     s.Id,
                     s.Title,
                     s.Date,
@@ -196,14 +200,14 @@ namespace kiedygramy.Services.Sessions
             return null;
         }
 
-        public async Task<IEnumerable<SessionListItemDto>> GetInvitedAsync(int userId)
+        public async Task<IEnumerable<SessionListItemResponse>> GetInvitedAsync(int userId)
         {
             return await _db.Sessions
                 .AsNoTracking()
                 .Where(s => s.Participants.Any
                 (p => p.UserId == userId && p.Status == SessionParticipantStatus.Invited))
                 .OrderByDescending(s => s.Date ?? DateTime.MaxValue)
-                .Select(s => new SessionListItemDto(
+                .Select(s => new SessionListItemResponse(
                     s.Id,
                     s.Title,
                     s.Date,
@@ -237,7 +241,7 @@ namespace kiedygramy.Services.Sessions
             return (participants, null);
         }
 
-        public async Task<ErrorResponseDto?> SetAvailabilityWindowAsync(int sessionId, int userId, SetAvailabilityWindowDto dto)
+        public async Task<ErrorResponseDto?> SetAvailabilityWindowAsync(int sessionId, int userId, SetAvailabilityWindowRequest dto)
         {
             var session = await _db.Sessions.FirstOrDefaultAsync(s => s.Id == sessionId && s.OwnerId == userId);
 
@@ -269,7 +273,7 @@ namespace kiedygramy.Services.Sessions
             return null;
         }
 
-        public async Task<ErrorResponseDto?> UpdateAvailabilityAsync(int sessionId, int userId, UpdateAvailabilityDto dto)
+        public async Task<ErrorResponseDto?> UpdateAvailabilityAsync(int sessionId, int userId, UpdateAvailabilityRequest dto)
         {
             var session = await _db.Sessions
                 .AsNoTracking()
@@ -330,7 +334,7 @@ namespace kiedygramy.Services.Sessions
             return null;
         }
 
-        public async Task<(MyAvailabilityDto? Availability, ErrorResponseDto? Error)> GetMyAvailabilityAsync(int sessionId, int userId)
+        public async Task<(MyAvailabilityResponse? Availability, ErrorResponseDto? Error)> GetMyAvailabilityAsync(int sessionId, int userId)
         {
             var session = await _db.Sessions
                 .AsNoTracking()
@@ -357,11 +361,11 @@ namespace kiedygramy.Services.Sessions
                 .OrderBy(d => d.Date)
                 .ToListAsync();
 
-            var dto = new MyAvailabilityDto(dates);
+            var dto = new MyAvailabilityResponse(dates);
             return (dto, null);
         }
 
-        public async Task<(AvailabilitySummaryDto? Summary, ErrorResponseDto? Error)> GetAvailabilitySummaryAsync(int sessionId, int userId)
+        public async Task<(AvailabilitySummaryResponse? Summary, ErrorResponseDto? Error)> GetAvailabilitySummaryAsync(int sessionId, int userId)
         {
             // Walidacja sesji 
             var session = await _db.Sessions
@@ -392,7 +396,7 @@ namespace kiedygramy.Services.Sessions
 
             if (!hasAnyVotes)
             {
-                return (new AvailabilitySummaryDto(new List<AvailabilitySummaryDayDto>()), null);
+                return (new AvailabilitySummaryResponse(new List<AvailabilitySummaryDayDto>()), null);
             }
 
             var rawData = await _db.SessionAvailabilities
@@ -412,11 +416,11 @@ namespace kiedygramy.Services.Sessions
                 .Select(x => new AvailabilitySummaryDayDto(x.Date, x.Count))
                 .ToList();
 
-            var dto = new AvailabilitySummaryDto(dayList);
+            var dto = new AvailabilitySummaryResponse(dayList);
             return (dto, null);
         }
 
-        public async Task<ErrorResponseDto?> SetFinalDateAsync(int sessionId, int userId, SetFinalDateDto dto)
+        public async Task<ErrorResponseDto?> SetFinalDateAsync(int sessionId, int userId, SetFinalDateRequest dto)
         {
             
             var session = await _db.Sessions
@@ -458,7 +462,7 @@ namespace kiedygramy.Services.Sessions
             return null;
         }
 
-        public async Task<ErrorResponseDto?> SetFinalGamesAsync(int sessionId, int userId, SetFinalGamesDto dto)
+        public async Task<ErrorResponseDto?> SetFinalGamesAsync(int sessionId, int userId, SetFinalGamesRequest dto)
         {
             var session = await _db.Sessions
                 .Include(s => s.Games)
@@ -488,7 +492,7 @@ namespace kiedygramy.Services.Sessions
             return null;
         }
 
-        public async Task<ErrorResponseDto?> UpdateAttendanceAsync(int sessionId, int userId, UpdateAttendanceDto dto)
+        public async Task<ErrorResponseDto?> UpdateAttendanceAsync(int sessionId, int userId, UpdateAttendanceRequest dto)
         {
             var session = await _db.Sessions
                 .FirstOrDefaultAsync(s => s.Id == sessionId);
@@ -548,7 +552,7 @@ namespace kiedygramy.Services.Sessions
             return null;
         }
 
-        public async Task<(List<SessionPoolGameDto>? GamePool, ErrorResponseDto? Error)> GetConfirmedParticipantsGamesAsync(int sessionId, int userId)
+        public async Task<(List<SessionPoolGameItemDto>? GamePool, ErrorResponseDto? Error)> GetConfirmedParticipantsGamesAsync(int sessionId, int userId)
         {
             var session = await _db.Sessions
                 .AsNoTracking()
@@ -612,7 +616,7 @@ namespace kiedygramy.Services.Sessions
                     var owners = g.Select(x => x.OwnerName).Distinct().OrderBy(x => x).ToList();
                     var image = g.Select(x => x.ImageUrl).FirstOrDefault(url => !string.IsNullOrEmpty(url));
 
-                    return new SessionPoolGameDto
+                    return new SessionPoolGameItemDto
                     (
                         Id: id,
                         Title: first.Title.Trim(),

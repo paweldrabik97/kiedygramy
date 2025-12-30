@@ -6,8 +6,8 @@ namespace kiedygramy.Services.Auth
 {
     public interface IAuthService
     {
-        Task<(MeDto? User, ErrorResponseDto? Error)> RegisterAsync(RegisterDto dto);
-        Task<ErrorResponseDto?> LoginAsync(LoginDto dto);
+        Task<(MeResponse? User, ErrorResponseDto? Error)> RegisterAsync(RegisterRequest dto);
+        Task<ErrorResponseDto?> LoginAsync(LoginRequest dto);
         
     }
 }

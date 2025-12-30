@@ -19,7 +19,7 @@ namespace kiedygramy.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<List<NotificationDto>>> GetMy([FromQuery] bool unreadOnly = false, [FromQuery] int take = 50, CancellationToken ct = default)
+        public async Task<ActionResult<List<NotificationResponse>>> GetMy([FromQuery] bool unreadOnly = false, [FromQuery] int take = 50, CancellationToken ct = default)
         {
             var userId = GetRequiredUserId();
 

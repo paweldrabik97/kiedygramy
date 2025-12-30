@@ -24,7 +24,7 @@ namespace kiedygramy.Services.Account
             _signInManager = signInManager;
         }
 
-        public async Task<ErrorResponseDto?> ChangeCityAsync(int userId, ChangeCityDto dto)
+        public async Task<ErrorResponseDto?> ChangeCityAsync(int userId, ChangeCityRequest dto)
         {
             var city = dto.NewCity?.Trim();
 
@@ -47,7 +47,7 @@ namespace kiedygramy.Services.Account
             return null;
         }
 
-        public async Task<ErrorResponseDto?> ChangeFullNameAsync(int userId, ChangeFullNameDto dto)
+        public async Task<ErrorResponseDto?> ChangeFullNameAsync(int userId, ChangeFullNameRequest dto)
         {
             var fullName = dto.NewFullName?.Trim();
 
@@ -70,7 +70,7 @@ namespace kiedygramy.Services.Account
             return null;
         }
 
-        public async Task<ErrorResponseDto?> ChangePasswordAsync(int userId, ChangePasswordDto dto)
+        public async Task<ErrorResponseDto?> ChangePasswordAsync(int userId, ChangePasswordRequest dto)
         {
             if (string.IsNullOrWhiteSpace(dto.CurrentPassword))
                 return Errors.General.Validation("podaj obecne hasło", "CurrentPassword");
@@ -96,7 +96,7 @@ namespace kiedygramy.Services.Account
             return null;
         }
 
-        public async Task<ErrorResponseDto?> ChangeUserNameAsync(int userId, ChangeUserNameDto dto)
+        public async Task<ErrorResponseDto?> ChangeUserNameAsync(int userId, ChangeUserNameRequest dto)
         {
 
             if (string.IsNullOrWhiteSpace(dto.NewUserName))

@@ -5,10 +5,10 @@ namespace kiedygramy.Services.Account
 {
     public interface IAccountService
     {
-        Task<ErrorResponseDto?> ChangeUserNameAsync(int userId, ChangeUserNameDto dto);
-        Task<ErrorResponseDto?> ChangePasswordAsync(int userId, ChangePasswordDto dto);
-        Task<ErrorResponseDto?> ChangeFullNameAsync(int userId, ChangeFullNameDto dto);
-        Task<ErrorResponseDto?> ChangeCityAsync(int userId, ChangeCityDto dto);
+        Task<ErrorResponseDto?> ChangeUserNameAsync(int userId, ChangeUserNameRequest dto);
+        Task<ErrorResponseDto?> ChangePasswordAsync(int userId, ChangePasswordRequest dto);
+        Task<ErrorResponseDto?> ChangeFullNameAsync(int userId, ChangeFullNameRequest dto);
+        Task<ErrorResponseDto?> ChangeCityAsync(int userId, ChangeCityRequest dto);
 
     }
 }

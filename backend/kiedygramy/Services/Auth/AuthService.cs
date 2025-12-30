@@ -23,7 +23,7 @@ namespace kiedygramy.Services.Auth
         }
 
 
-        public async Task<(MeDto? User, ErrorResponseDto? Error)> RegisterAsync(RegisterDto dto)
+        public async Task<(MeResponse? User, ErrorResponseDto? Error)> RegisterAsync(RegisterRequest dto)
         {
 
             if (await _userManager.FindByNameAsync(dto.Username) is not null)
@@ -58,7 +58,7 @@ namespace kiedygramy.Services.Auth
                 ct: CancellationToken.None
             );
 
-            var meDto = new MeDto(
+            var meDto = new MeResponse(
                 Id: user.Id,
                 Username: user.UserName!,
                 Email: user.Email,
@@ -69,7 +69,7 @@ namespace kiedygramy.Services.Auth
             return (meDto, null);
         }
 
-        public async Task<ErrorResponseDto?> LoginAsync(LoginDto dto)
+        public async Task<ErrorResponseDto?> LoginAsync(LoginRequest dto)
         {
             var user = await _userManager.FindByNameAsync(dto.UsernameOrEmail)
                        ?? await _userManager.FindByEmailAsync(dto.UsernameOrEmail);

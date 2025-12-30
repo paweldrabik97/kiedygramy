@@ -22,7 +22,7 @@ namespace kiedygramy.Controllers
         }
       
         [HttpPost]
-        public async Task<IActionResult> Create([FromBody] CreateGameDto dto)
+        public async Task<IActionResult> Create([FromBody] CreateGameRequest dto)
         {
             if(!ModelState.IsValid)
                 return ValidationProblemFromModelState();
@@ -40,7 +40,7 @@ namespace kiedygramy.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<GameListItemDto>>> GetAll()
+        public async Task<ActionResult<IEnumerable<GameListItemResponse>>> GetAll()
         {
             var userId = GetRequiredUserId();
 
@@ -62,7 +62,7 @@ namespace kiedygramy.Controllers
         }
 
         [HttpPut("{id:int}")]
-        public async Task<IActionResult> Update(int id, [FromBody] UpdateGameDto dto)
+        public async Task<IActionResult> Update(int id, [FromBody] UpdateGameRequest dto)
         {
             if (!ModelState.IsValid)
                 return ValidationProblemFromModelState();
@@ -91,7 +91,7 @@ namespace kiedygramy.Controllers
         }
 
         [HttpPost("from-external")]
-        public async Task<IActionResult> ImportFromExternal( [FromBody] ImportGameFromExternalDto dto, CancellationToken cancellationToken)
+        public async Task<IActionResult> ImportFromExternal( [FromBody] ImportGameFromExternalRequest dto, CancellationToken cancellationToken)
         {
             if (!ModelState.IsValid)
                 return ValidationProblemFromModelState();
