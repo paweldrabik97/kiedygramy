@@ -29,7 +29,7 @@ namespace kiedygramy.Infrastructure
 
                     return RateLimitPartition.GetFixedWindowLimiter(key, _ => new FixedWindowRateLimiterOptions
                     { 
-                        PermitLimit = 5,
+                        PermitLimit = 50,
                         Window = TimeSpan.FromMinutes(1),
                         QueueLimit = 0
                     });

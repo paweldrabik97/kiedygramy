@@ -87,7 +87,7 @@ namespace kiedygramy.Controllers
             return NoContent();
         }
 
-        [HttpPost("change-password")]
+        [HttpPatch("change-password")]
         [Authorize]
         [EnableRateLimiting(RateLimitPolicies.Account)]
         public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordRequest dto)
@@ -105,7 +105,7 @@ namespace kiedygramy.Controllers
             return NoContent();
         }
 
-        [HttpPost("change-username")]
+        [HttpPatch("change-username")]
         [Authorize]
         [EnableRateLimiting(RateLimitPolicies.Account)]
         public async Task<IActionResult> ChangeUsername([FromBody] ChangeUserNameRequest dto)
@@ -123,7 +123,7 @@ namespace kiedygramy.Controllers
             return NoContent(); 
         }
 
-        [HttpPost("change-city")]
+        [HttpPatch("change-city")]
         [Authorize]
         [EnableRateLimiting(RateLimitPolicies.Account)]
         public async Task<IActionResult> ChangeCity([FromBody] ChangeCityRequest dto)
@@ -141,7 +141,7 @@ namespace kiedygramy.Controllers
             return NoContent();
         }
 
-        [HttpPost("change-fullname")]
+        [HttpPatch("change-fullname")]
         [Authorize]
         [EnableRateLimiting(RateLimitPolicies.Account)]
         public async Task<IActionResult> ChangeFullName([FromBody] ChangeFullNameRequest dto)
