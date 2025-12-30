@@ -11,6 +11,7 @@ import { Routes, Route } from "react-router-dom";
 import LandingPage from "./pages/LandingPage.jsx";
 import NotificationsPage from "./features/notifications/components/NotificationsPage";
 import { ProtectedRoute } from "./features/auth/components/ProtectedRoute.jsx";
+import  ProfilePage from "./pages/ProfilePage.jsx";
 
 function App() {
   return (
@@ -33,6 +34,7 @@ function App() {
           <Route path="sessions" element={<SessionsPage />} />
           <Route path="sessions/:id" element={<SessionDetailsPage />} />
           <Route path="notifications" element={<NotificationsPage />} />
+          <Route path="profile" element={<ProfilePage/>}/>
         </Route>
       </Routes>
       
