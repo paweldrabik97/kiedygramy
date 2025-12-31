@@ -5,7 +5,8 @@ import { Button } from '../components/ui/Button.jsx';
 import { 
     getSession, getSessionParticipants, inviteUser, respondToSession, 
     getMyAvailability, updateAvailability, getAvailabilitySummary, 
-    ParticipantStatus
+    ParticipantStatus,
+    removeUserFromSession
 } from '../features/sessions/services/sessions';
 
 // Import komponentów
@@ -33,6 +34,10 @@ const SessionDetailsPage = () => {
     // Wybór gry (UI)
     const [isGamePickerOpen, setIsGamePickerOpen] = useState(false);
 
+    // --- NOWE STANY DLA DRUŻYNY ---
+    const [isTeamMenuOpen, setIsTeamMenuOpen] = useState(false);
+    const [isKickMode, setIsKickMode] = useState(false);
+
     const isOrganizer = session?.ownerId === user?.id;
     const myParticipantData = participants.find(p => p.userId === user?.id);
     const isAccepted = myParticipantData?.status === ParticipantStatus.Accepted;
@@ -48,12 +53,9 @@ const SessionDetailsPage = () => {
             setSession(sData);
             setParticipants(pData);
 
-            // Jeśli użytkownik jest uczestnikiem lub organizatorem -> pobierz szczegóły
             const me = pData.find(p => p.userId === user?.id);
             
             if (me?.status === ParticipantStatus.Accepted || sData.ownerId === user?.id) {
-                
-                // Pobieranie dostępności
                 try {
                     const myAvail = await getMyAvailability(id);
                     setMyDates(myAvail.dates.map(d => d.split('T')[0]));
@@ -63,7 +65,6 @@ const SessionDetailsPage = () => {
                 } catch (err) {
                     console.warn("Błąd pobierania dostępności:", err);
                 }
-                // Usunąłem stąd pobieranie gier 'myGames' - robi to teraz OrganizerGamePicker
             }
 
         } catch (error) {
@@ -121,7 +122,40 @@ const SessionDetailsPage = () => {
 
     const handleGameSelected = () => {
         setIsGamePickerOpen(false);
-        fetchData(); // Odśwież sesję, żeby zaktualizować tytuł wybranej gry w nagłówku/karcie
+        fetchData();
+    };
+
+    // --- NOWE HANDLERY DLA KICK MODE ---
+
+    const activateKickMode = () => {
+        setIsTeamMenuOpen(false); // Zamknij dropdown
+        setIsKickMode(true);      // Włącz tryb wyrzucania
+    };
+
+    const cancelKickMode = () => {
+        setIsKickMode(false);
+    };
+
+    const handleKickPlayer = async (participantId, participantName) => {
+        if (!window.confirm(`Czy na pewno chcesz wyrzucić gracza ${participantName} z sesji?`)) {
+            return;
+        }
+
+        try {
+            // Tutaj wołamy funkcję z serwisu (musisz ją tam dodać!)
+            await removeUserFromSession(id, participantId);
+            
+            // Odświeżamy listę
+            const pData = await getSessionParticipants(id);
+            setParticipants(pData);
+            
+            // Jeśli po wyrzuceniu nikogo nie ma (mało prawdopodobne, bo jest host),
+            // albo po prostu dla UX, możemy wyłączyć tryb kickowania, ale zostawmy włączony, 
+            // żeby można było wyrzucić kilka osób pod rząd.
+        } catch (error) {
+            alert("Nie udało się wyrzucić gracza.");
+            console.error(error);
+        }
     };
 
     if (loading) return <div className="p-10 text-center">Ładowanie sesji...</div>;
@@ -142,7 +176,6 @@ const SessionDetailsPage = () => {
                         </p>
                     </div>
                     
-                    {/* Przyciski RSVP */}
                     {!isOrganizer && (
                         <div className="flex gap-2">
                             {myParticipantData?.status === ParticipantStatus.Pending && (
@@ -161,15 +194,12 @@ const SessionDetailsPage = () => {
                 </div>
             </header>
 
-            {/* --- GŁÓWNY GRID (ZAMIANA KOLUMN) --- */}
-            {/* Main Content (2 cols) jest teraz pierwszy w kodzie, ale w Gridzie layout jest kontrolowany przez kolejność divów */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 
-                {/* 1. KOLUMNA GŁÓWNA (LEWA - 2/3 szerokości) */}
+                {/* 1. KOLUMNA GŁÓWNA */}
                 {(isAccepted || isOrganizer) ? (
                     <div className="lg:col-span-2 space-y-8">
-                        
-                        {/* --- SEKCJA 1: WYBÓR GRY --- */}
+                        {/* SEKCJA 1: WYBÓR GRY */}
                         <section className="bg-white dark:bg-surface-card p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
                             <div className="flex justify-between items-center mb-4">
                                 <h3 className="font-bold font-display text-xl text-slate-900 dark:text-white">W co gramy?</h3>
@@ -183,7 +213,6 @@ const SessionDetailsPage = () => {
                                 )}
                             </div>
 
-                            {/* Komponent wyboru gry (Widoczny po kliknięciu "Zmień") */}
                             {isOrganizer && isGamePickerOpen && (
                                 <div className="mb-6">
                                     <OrganizerGamePicker 
@@ -195,19 +224,15 @@ const SessionDetailsPage = () => {
                                 </div>
                             )}
 
-                            {/* Wyświetlanie wybranych gier */}
                             {session.games && session.games.length > 0 ? (
                                 <div className="grid grid-cols-1 gap-3">
                                     {session.games.map(game => (
                                         <div key={game.id} className="flex items-center gap-4 bg-white dark:bg-gray-800 p-4 rounded-xl border">
-                                            {/* Obrazek */}
                                             {game.imageUrl ? (
                                                 <img src={game.imageUrl} className="w-12 h-12 rounded object-cover" />
                                             ) : (
                                                 <div className="w-12 h-12 bg-gray-200 rounded flex items-center justify-center">🎲</div>
                                             )}
-
-                                            {/* Tytuł */}
                                             <div>
                                                 <h4 className="font-bold text-lg text-slate-800 dark:text-white">{game.title}</h4>
                                             </div>
@@ -226,10 +251,8 @@ const SessionDetailsPage = () => {
                             )}
                         </section>
 
-                        {/* --- SEKCJA 2: DOSTĘPNOŚĆ --- */}
+                        {/* SEKCJA 2: DOSTĘPNOŚĆ */}
                         <section className="bg-white dark:bg-surface-card p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700">
-                            
-                            {/* Formularz konfiguracji okna czasowego */}
                             {isOrganizer && (
                                 <div className="mb-6 pb-6 border-b border-gray-100 dark:border-gray-700">
                                      <AvailabilityWindowForm 
@@ -243,8 +266,6 @@ const SessionDetailsPage = () => {
                                     />
                                 </div>
                             )}
-
-                            {/* Kalendarz */}
                             <AvailabilityCalendar 
                                 session={session}
                                 myDates={myDates}
@@ -254,7 +275,7 @@ const SessionDetailsPage = () => {
                             />
                         </section>
 
-                        {/* --- SEKCJA 3: GŁOSOWANIE NA GRY (Game Pool) --- */}
+                        {/* SEKCJA 3: GŁOSOWANIE */}
                         <div className="mt-8">
                             <GameVotingSection sessionId={id} />
                         </div>
@@ -275,11 +296,46 @@ const SessionDetailsPage = () => {
                 )}
 
 
-                {/* 2. KOLUMNA BOCZNA (PRAWA - 1/3 szerokości) - UCZESTNICY */}
+                {/* 2. KOLUMNA BOCZNA - UCZESTNICY */}
                 <div className="space-y-6">
-                    <section className="bg-white dark:bg-surface-card p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 sticky top-6">
-                        <div className="flex items-center justify-between mb-4">
+                    <section className="bg-white dark:bg-surface-card p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 sticky top-6 relative">
+                        {/* NAGŁÓWEK SEKCJ DRUŻYNY */}
+                        <div className="flex items-center justify-between mb-4 relative">
                             <h3 className="font-bold font-display text-lg text-slate-900 dark:text-white">Drużyna ({participants.length})</h3>
+                            
+                            {/* --- MENU ORGANIZATORA (3 KROPKI / ANULUJ) --- */}
+                            {isOrganizer && (
+                                <div className="relative">
+                                    {isKickMode ? (
+                                        <button 
+                                            onClick={cancelKickMode}
+                                            className="text-xs font-bold text-gray-500 hover:text-gray-700 dark:text-gray-400 bg-gray-100 dark:bg-gray-700 px-3 py-1 rounded-full transition-colors"
+                                        >
+                                            Anuluj
+                                        </button>
+                                    ) : (
+                                        <button 
+                                            onClick={() => setIsTeamMenuOpen(!isTeamMenuOpen)}
+                                            className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 transition-colors"
+                                        >
+                                            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" /></svg>
+                                        </button>
+                                    )}
+
+                                    {/* ROZWIJANE MENU */}
+                                    {isTeamMenuOpen && !isKickMode && (
+                                        <div className="absolute right-0 top-full mt-2 w-48 bg-white dark:bg-surface-card border border-gray-200 dark:border-gray-600 rounded-xl shadow-xl z-20 overflow-hidden">
+                                            <button 
+                                                onClick={activateKickMode}
+                                                className="w-full text-left px-4 py-3 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors flex items-center gap-2"
+                                            >
+                                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 7a4 4 0 11-8 0 4 4 0 018 0zM9 14a6 6 0 00-6 6v1h12v-1a6 6 0 00-6-6zM21 12h-6" /></svg>
+                                                Wyrzuć gracza z sesji
+                                            </button>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
                         </div>
                         
                         <ul className="space-y-3 mb-6">
@@ -299,11 +355,24 @@ const SessionDetailsPage = () => {
                                             {p.role === 1 && <span className="text-[10px] text-yellow-600 font-bold uppercase tracking-wider">Organizator</span>}
                                         </div>
                                     </div>
-                                    <span className="text-xs font-bold">
-                                        {p.status === ParticipantStatus.Pending && <span className="text-gray-400 bg-gray-100 px-2 py-1 rounded-full">Oczekuje</span>}
-                                        {p.status === ParticipantStatus.Accepted && <span className="text-green-600 bg-green-100 px-2 py-1 rounded-full">Będzie</span>}
-                                        {p.status === ParticipantStatus.Rejected && <span className="text-red-500 bg-red-100 px-2 py-1 rounded-full">Odpada</span>}
-                                    </span>
+
+                                    {/* --- LOGIKA WYŚWIETLANIA STATUSU LUB PRZYCISKU WYRZUĆ --- */}
+                                    {isKickMode && p.userId !== user.id ? (
+                                        // TRYB KICK: Pokaż przycisk (chyba że to ja sam)
+                                        <button 
+                                            onClick={() => handleKickPlayer(p.userId, p.userName)}
+                                            className="text-xs font-bold text-white bg-red-500 hover:bg-red-600 px-3 py-1 rounded-full transition-colors shadow-sm"
+                                        >
+                                            Wyrzuć
+                                        </button>
+                                    ) : (
+                                        // TRYB NORMALNY: Pokaż status
+                                        <span className="text-xs font-bold">
+                                            {p.status === ParticipantStatus.Pending && <span className="text-gray-400 bg-gray-100 px-2 py-1 rounded-full">Oczekuje</span>}
+                                            {p.status === ParticipantStatus.Accepted && <span className="text-green-600 bg-green-100 px-2 py-1 rounded-full">Będzie</span>}
+                                            {p.status === ParticipantStatus.Rejected && <span className="text-red-500 bg-red-100 px-2 py-1 rounded-full">Odpada</span>}
+                                        </span>
+                                    )}
                                 </li>
                             ))}
                         </ul>

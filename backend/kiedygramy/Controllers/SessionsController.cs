@@ -28,6 +28,18 @@ namespace kiedygramy.Controllers
         private readonly UserManager<User> _userManager;
         private readonly ISessionChatService _sessionChatService;
 
+        protected int GetCurrentUserId()
+        {
+            var idClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier);
+
+            if (idClaim == null)
+            {
+                throw new UnauthorizedAccessException("Użytkownik nie jest zalogowany.");
+            }
+
+            return int.Parse(idClaim.Value);
+        }
+
         public SessionsController(
             ISessionService sessionService,
             UserManager<User> userManager,
@@ -111,6 +123,19 @@ namespace kiedygramy.Controllers
             var userId = GetRequiredUserId();
 
             var (participants, error) = await _sessionService.GetParticipantsAsync(id, userId);
+
+            if (error is not null)
+                return Problem(error);
+
+            return Ok(participants);
+        }
+
+        [HttpDelete("{sessionId}/participants/{userId}")]
+        public async Task<IActionResult> RemoveParticipant(int sessionId, int userId)
+        {
+            var organizerId = GetCurrentUserId();
+
+            var (participants, error) = await _sessionService.RemoveParticipantAsync(sessionId, organizerId, userId);
 
             if (error is not null)
                 return Problem(error);

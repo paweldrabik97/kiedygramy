@@ -89,6 +89,24 @@ namespace kiedygramy.Application.Errors
                     detail: "Sesja już się odbyła, nie można zmienić statusu",
                     field: "DateTime"
                 );
+
+            public static ErrorResponseDto Forbidden(string detail)
+            {
+                return new ErrorResponseDto(
+                    status: 403,
+                    title: "Brak dostępu",
+                    detail: detail
+                );
+            }
+
+            public static ErrorResponseDto ParticipantNotFound()
+            {
+                return new ErrorResponseDto(
+                   status: 404,
+                   title: "Not Found",
+                   detail: "Użytkownik nie jest uczestnikiem tej sesji."
+               );
+            }
         }
     }
 }

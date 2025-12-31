@@ -24,6 +24,8 @@ namespace kiedygramy.Services.Sessions
             _notification = notification;
         }
 
+        
+
         public async Task<(SessionDetailsResponse? Session, ErrorResponseDto? Error)> CreateAsync(CreateSessionRequest dto, int userId)
         {
             var title = dto.Title?.Trim() ?? string.Empty;          
@@ -240,6 +242,58 @@ namespace kiedygramy.Services.Sessions
 
             return (participants, null);
         }
+
+        public async Task<(IEnumerable<SessionParticipantDto> Participants, ErrorResponseDto? Error)> RemoveParticipantAsync(int sessionId, int organizerId, int targetUserId)
+        {
+            // 1. Sprawdź czy sesja istnieje
+            var session = await _db.Sessions
+                .AsNoTracking()
+                .FirstOrDefaultAsync(s => s.Id == sessionId);
+
+            if (session is null)
+                return (Enumerable.Empty<SessionParticipantDto>(), Errors.Session.NotFound());
+
+            // 2. Autoryzacja: Czy usuwający (organizerId) jest właścicielem sesji?
+            // (Chyba że pozwalasz użytkownikowi usunąć samego siebie - wtedy warunek: organizerId == session.OwnerId || organizerId == targetUserId)
+            if (session.OwnerId != organizerId)
+                return (Enumerable.Empty<SessionParticipantDto>(), Errors.Session.Forbidden("Tylko organizator może wyrzucać graczy."));
+
+            // 3. Zabezpieczenie: Nie można wyrzucić samego siebie (jeśli jesteś właścicielem)
+            if (session.OwnerId == targetUserId)
+                return (Enumerable.Empty<SessionParticipantDto>(), Errors.Session.Forbidden("Organizator nie może wyrzucić samego siebie."));
+
+            // 4. Znajdź konkretnego uczestnika do usunięcia
+            var participantToRemove = await _db.SessionParticipants
+                .FirstOrDefaultAsync(p => p.SessionId == sessionId && p.UserId == targetUserId);
+
+            if (participantToRemove is null)
+                return (Enumerable.Empty<SessionParticipantDto>(), Errors.Session.ParticipantNotFound()); // Lub po prostu zwróć listę, jeśli już go nie ma
+
+            // 5. Usuń gracza
+            _db.SessionParticipants.Remove(participantToRemove);
+
+            // Opcjonalnie: Usuń też jego głosy na gry i dostępność (jeśli nie masz Cascade Delete w bazie)
+            // var votes = _db.SessionGameVotes.Where(...)
+            // _db.SessionGameVotes.RemoveRange(votes);
+
+            await _db.SaveChangesAsync();
+
+            // 6. Zwróć zaktualizowaną listę
+            var remainingParticipants = await _db.SessionParticipants
+                .AsNoTracking()
+                .Where(p => p.SessionId == sessionId)
+                .Include(p => p.User)
+                .Select(p => new SessionParticipantDto(
+                     p.UserId,
+                     p.User.UserName!,
+                     p.Role,
+                     p.Status
+                ))
+                .ToListAsync();
+
+            return (remainingParticipants, null);
+        }
+
 
         public async Task<ErrorResponseDto?> SetAvailabilityWindowAsync(int sessionId, int userId, SetAvailabilityWindowRequest dto)
         {

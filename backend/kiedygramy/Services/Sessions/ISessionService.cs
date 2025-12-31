@@ -15,6 +15,7 @@ namespace kiedygramy.Services.Sessions
         Task<ErrorResponseDto?> InviteAsync(int sessionId, int invitedUserId, int currentUserId);
         Task<ErrorResponseDto?> RespondToInviteAsync(int sessionId, int userId, bool accept);
         Task<(IEnumerable<SessionParticipantDto> Participants, ErrorResponseDto? Error)> GetParticipantsAsync(int sessionId, int userId);
+        Task<(IEnumerable<SessionParticipantDto> Participants, ErrorResponseDto? Error)> RemoveParticipantAsync(int sessionId, int organizerId, int targetUserId);
         Task<IEnumerable<SessionListItemResponse>> GetInvitedAsync(int userId);
         Task<ErrorResponseDto?> SetAvailabilityWindowAsync(int sessionId, int userId, SetAvailabilityWindowRequest dto);
         Task<ErrorResponseDto?> UpdateAvailabilityAsync(int sessionId, int userId, UpdateAvailabilityRequest dto);

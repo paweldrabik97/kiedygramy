@@ -172,3 +172,10 @@ export async function voteForGames(sessionId: string, gameKey: string) {
         body: JSON.stringify({ key: gameKey })
     }); 
 }
+
+// 15. Usuń użytkownika z sesji (Dla organizatora)
+export async function removeUserFromSession(sessionId: string, userId: number) {
+    return api<void>(`/api/my/sessions/${sessionId}/participants/${userId}`, {
+        method: "DELETE"
+    });
+}

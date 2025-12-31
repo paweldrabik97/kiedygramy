@@ -18,6 +18,7 @@ export default function ProfilePage() {
 
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
+  const [confirmNewPassword, setConfirmNewPassword] = useState("");
 
   const refreshMe = async () => {
     const data = await profileApi.me();
@@ -46,6 +47,7 @@ export default function ProfilePage() {
   }, []);
 
   const runSave = async (fn, successText) => {
+
     setSaving(true);
     setErrorMsg("");
     setInfoMsg("");
@@ -230,9 +232,22 @@ export default function ProfilePage() {
               onCancel={() => {
                 setCurrentPassword("");
                 setNewPassword("");
+                setConfirmNewPassword("");
                 setEditing(null);
               }}
-              onSave={() =>
+              onSave={() => {
+                // Sprawdzenie czy hasła się zgadzają
+                if (newPassword !== confirmNewPassword) {
+                  setErrorMsg("Nowe hasła muszą być identyczne.");
+                  return;
+                }
+                
+                // sprawdzenie czy hasło nie jest puste
+                if (!newPassword) {
+                    setErrorMsg("Nowe hasło nie może być puste.");
+                    return;
+                }
+
                 runSave(
                   () =>
                     profileApi.changePassword({
@@ -240,8 +255,8 @@ export default function ProfilePage() {
                       newPassword,
                     }),
                   "Zmieniono hasło."
-                )
-              }
+                );
+              }}
             >
               <div className="grid gap-3">
                 <input
@@ -259,6 +274,15 @@ export default function ProfilePage() {
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
                   placeholder="Nowe hasło"
+                  autoComplete="new-password"
+                  disabled={saving}
+                />
+                <input
+                  type="password"
+                  className="w-full border border-gray-200 dark:border-gray-700 rounded-2xl px-5 py-3 text-lg bg-white dark:bg-surface-dark"
+                  value={confirmNewPassword}
+                  onChange={(e) => setConfirmNewPassword(e.target.value)}
+                  placeholder="Powtórz nowe hasło"
                   autoComplete="new-password"
                   disabled={saving}
                 />
