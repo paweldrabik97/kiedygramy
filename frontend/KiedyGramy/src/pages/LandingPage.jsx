@@ -2,6 +2,7 @@ import React from "react";
 import DicePhysicsScene from "../features/landing/components/DicePhysicsScene.jsx";
 
 const LandingPage = () => {
+  const NAVBAR_HEIGHT = 80;
   return (
     <div className="w-full bg-surface-light dark:bg-surface-dark font-sans text-text-main dark:text-text-inverse overflow-x-hidden selection:bg-primary selection:text-white">
       
@@ -47,7 +48,7 @@ const LandingPage = () => {
         {/* TŁO: SCENA 3D */}
         <div className="absolute inset-0 z-0 bg-gradient-to-b from-blue-50 to-white dark:from-slate-900 dark:to-slate-800">
              {/* Kostki są renderowane tutaj i ograniczone wymiarami tego diva */}
-             <DicePhysicsScene />
+             <DicePhysicsScene topBarrierOffset={NAVBAR_HEIGHT} />
              
              {/* Gradient Overlay na dole, żeby przejście do następnej sekcji było gładkie */}
              <div className="absolute bottom-0 left-0 w-full h-32 bg-gradient-to-t from-surface-light dark:from-surface-dark to-transparent pointer-events-none"></div>

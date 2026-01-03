@@ -54,13 +54,30 @@ function Floor() {
 }
 
 // --- Komponent Ścian (bez zmian) ---
-function Walls() {
+function Walls({ topBarrierOffset = 0 }) {
   const { viewport } = useThree();
-  const width = viewport.width / 2; const height = viewport.height / 2;
+  const width = viewport.width / 2;
+  const height = viewport.height / 2;
+
+  // --- OBLICZENIA DLA NAVBARA ---
+  // Przeliczamy pixele na jednostki sceny 3D
+  const pixelToUnit = viewport.height / window.innerHeight;
+  // Obliczamy o ile jednostek przesunąć ścianę w dół
+  const offsetInUnits = topBarrierOffset * pixelToUnit;
+  // Nowa pozycja "sufitu" (górnej krawędzi ekranu)
+  const topWallZ = -height + offsetInUnits;
+
+  // Lewa
   usePlane(() => ({ position: [-width, 0, 0], rotation: [0, Math.PI / 2, 0] }));
+  // Prawa
   usePlane(() => ({ position: [width, 0, 0], rotation: [0, -Math.PI / 2, 0] }));
-  usePlane(() => ({ position: [0, 0, -height], rotation: [0, 0, 0] }));
+  
+  // GÓRA (Zmodyfikowana - uwzględnia navbar)
+  usePlane(() => ({ position: [0, 0, topWallZ], rotation: [0, 0, 0] }));
+  
+  // Dół
   usePlane(() => ({ position: [0, 0, height], rotation: [Math.PI, 0, 0] }));
+
   return null;
 }
 
@@ -126,7 +143,7 @@ function Dice() {
 }
 
 // --- Główna Scena (bez zmian) ---
-export default function DiceArena() {
+export default function DiceArena( { topBarrierOffset = 0 } ) {
   return (
     <div className='w-screen h-screen bg-gradient-to-b from-blue-200 via-white to-blue-200 dark:from-gray-800 dark:via-gray-900 dark:to-gray-800'>
       <Canvas shadows camera={{ position: [0, 15, 0], fov: 45 }}>
@@ -139,7 +156,7 @@ export default function DiceArena() {
         />
         <SoftShadows size={5} samples={8} />
         <Physics gravity={[0, -10, 0]}>
-          <Walls /> <Floor /> <Dice />
+          <Walls topBarrierOffset={topBarrierOffset} /> <Floor /> <Dice />
         </Physics>
       </Canvas>
     </div>
