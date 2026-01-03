@@ -9,11 +9,11 @@ namespace kiedygramy.Hubs
     [Authorize]
     public class SessionChatHub : Hub
     {
-        private readonly SessionChatHubService _chatHubService;
+        private readonly ISessionChatHubService _chatHubService;
         private readonly INotificationService _notificationService;
         private readonly ILogger<SessionChatHub> _logger;
 
-        public SessionChatHub(SessionChatHubService chatHubService, INotificationService notificationService, ILogger<SessionChatHub> logger)
+        public SessionChatHub(ISessionChatHubService chatHubService, INotificationService notificationService, ILogger<SessionChatHub> logger)
         {
             _chatHubService = chatHubService;
             _notificationService = notificationService;
@@ -22,20 +22,24 @@ namespace kiedygramy.Hubs
 
         private static string GroupName(int sessionId) => $"session-{sessionId}";
 
-        public async Task JoinSessionGroup(int sessionId, CancellationToken ct)
+        public async Task JoinSessionGroup(int sessionId)
         {
+
+            Console.WriteLine($"[HUB] Klient {Context.ConnectionId} dodawany do grupy: '{GroupName(sessionId)}'");
             var userId = GetRequiredUserId();
 
-            var error = await _chatHubService.ValidateJoinAsync(sessionId, userId, ct);
+            var error = await _chatHubService.ValidateJoinAsync(sessionId, userId, CancellationToken.None);
 
             if (error is not null)
                 HubErrorThrower.Throw(error);
 
-            await Groups.AddToGroupAsync(Context.ConnectionId, GroupName(sessionId), ct);
+           
+
+            await Groups.AddToGroupAsync(Context.ConnectionId, GroupName(sessionId), CancellationToken.None);
 
             try
             {
-               var error2 = await _notificationService.MarkChatAsReadAsync(userId, sessionId, ct);
+               var error2 = await _notificationService.MarkChatAsReadAsync(userId, sessionId, CancellationToken.None);
                 
                if (error2 is not null)
                { 
@@ -45,7 +49,7 @@ namespace kiedygramy.Hubs
 
                var userKey = userId.ToString();
 
-               await Clients.Caller.SendAsync("ChatNotificationRead", new { sessionId }, ct);
+               await Clients.Caller.SendAsync("ChatNotificationRead", new { sessionId }, CancellationToken.None);
             }
             catch(Exception ex)
             {                         

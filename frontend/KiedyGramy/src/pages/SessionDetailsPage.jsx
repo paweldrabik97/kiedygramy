@@ -8,6 +8,7 @@ import {
     ParticipantStatus,
     removeUserFromSession
 } from '../features/sessions/services/sessions';
+import { SessionChat } from '../features/sessions/components/SessionChat.jsx';
 
 // Import komponentów
 import { AvailabilityCalendar } from '../features/sessions/components/AvailabilityCalendar.jsx';
@@ -23,6 +24,7 @@ const SessionDetailsPage = () => {
     const [session, setSession] = useState(null);
     const [participants, setParticipants] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [activeTab, setActiveTab] = useState('board');
     
     // Zapraszanie
     const [inviteQuery, setInviteQuery] = useState("");
@@ -199,86 +201,133 @@ const SessionDetailsPage = () => {
                 {/* 1. KOLUMNA GŁÓWNA */}
                 {(isAccepted || isOrganizer) ? (
                     <div className="lg:col-span-2 space-y-8">
-                        {/* SEKCJA 1: WYBÓR GRY */}
-                        <section className="bg-white dark:bg-surface-card p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
-                            <div className="flex justify-between items-center mb-4">
-                                <h3 className="font-bold font-display text-xl text-slate-900 dark:text-white">W co gramy?</h3>
-                                {isOrganizer && (
-                                    <button 
-                                        onClick={() => setIsGamePickerOpen(!isGamePickerOpen)}
-                                        className="text-sm text-primary font-bold hover:text-primary-hover transition-colors flex items-center gap-1"
-                                    >
-                                        {isGamePickerOpen ? '❌ Anuluj' : '✏️ Wybierz gry'}
-                                    </button>
+
+                        {/* --- ZAKŁADKI (TABS) --- */}
+                        <div className="flex border-b border-gray-200 dark:border-gray-700 mb-6">
+                            <button
+                                onClick={() => setActiveTab('board')}
+                                className={`flex-1 pb-4 text-center font-bold text-sm transition-colors relative ${
+                                    activeTab === 'board' 
+                                        ? 'text-primary' 
+                                        : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'
+                                }`}
+                            >
+                                📋 Tablica
+                                {/* Aktywny pasek pod spodem */}
+                                {activeTab === 'board' && (
+                                    <div className="absolute bottom-0 left-0 w-full h-0.5 bg-primary rounded-t-full" />
                                 )}
-                            </div>
-
-                            {isOrganizer && isGamePickerOpen && (
-                                <div className="mb-6">
-                                    <OrganizerGamePicker 
-                                        sessionId={id}
-                                        currentGameIds={session.games ? session.games.map(g => g.id) : []}
-                                        onGameSelected={handleGameSelected}
-                                        onCancel={() => setIsGamePickerOpen(false)}
-                                    />
-                                </div>
-                            )}
-
-                            {session.games && session.games.length > 0 ? (
-                                <div className="grid grid-cols-1 gap-3">
-                                    {session.games.map(game => (
-                                        <div key={game.id} className="flex items-center gap-4 bg-white dark:bg-gray-800 p-4 rounded-xl border">
-                                            {game.imageUrl ? (
-                                                <img src={game.imageUrl} className="w-12 h-12 rounded object-cover" />
-                                            ) : (
-                                                <div className="w-12 h-12 bg-gray-200 rounded flex items-center justify-center">🎲</div>
-                                            )}
-                                            <div>
-                                                <h4 className="font-bold text-lg text-slate-800 dark:text-white">{game.title}</h4>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            ) : (
-                                <div className="text-center py-8 border-2 border-dashed rounded-xl">
-                                    <p className="text-gray-400">Organizator jeszcze nie wybrał gier.</p>
-                                    {isOrganizer && !isGamePickerOpen && (
-                                        <p className="text-sm text-primary mt-2 cursor-pointer hover:underline" onClick={() => setIsGamePickerOpen(true)}>
-                                            Kliknij tutaj, aby wybrać grę na podstawie głosów
-                                        </p>
-                                    )}
-                                </div>
-                            )}
-                        </section>
-
-                        {/* SEKCJA 2: DOSTĘPNOŚĆ */}
-                        <section className="bg-white dark:bg-surface-card p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700">
-                            {isOrganizer && (
-                                <div className="mb-6 pb-6 border-b border-gray-100 dark:border-gray-700">
-                                     <AvailabilityWindowForm 
-                                        sessionId={session.id}
-                                        currentSettings={{
-                                            availabilityFrom: session.availabilityFrom,
-                                            availabilityTo: session.availabilityTo,
-                                            availabilityDeadline: session.availabilityDeadline
-                                        }}
-                                        onSuccess={fetchData}
-                                    />
-                                </div>
-                            )}
-                            <AvailabilityCalendar 
-                                session={session}
-                                myDates={myDates}
-                                summaryDates={summaryDates}
-                                participantsCount={participants.length}
-                                onToggleDate={toggleDate}
-                            />
-                        </section>
-
-                        {/* SEKCJA 3: GŁOSOWANIE */}
-                        <div className="mt-8">
-                            <GameVotingSection sessionId={id} />
+                            </button>
+                            
+                            <button
+                                onClick={() => setActiveTab('discussion')}
+                                className={`flex-1 pb-4 text-center font-bold text-sm transition-colors relative ${
+                                    activeTab === 'discussion' 
+                                        ? 'text-primary' 
+                                        : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'
+                                }`}
+                            >
+                                💬 Dyskusja
+                                {activeTab === 'discussion' && (
+                                    <div className="absolute bottom-0 left-0 w-full h-0.5 bg-primary rounded-t-full" />
+                                )}
+                            </button>
                         </div>
+
+                        {/* --- TREŚĆ ZALEŻNA OD ZAKŁADKI --- */}
+                        
+                        {activeTab === 'board' ? (
+                            <div className="space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                                {/* Tu wrzucamy wszystko co było wcześniej w lewej kolumnie */}
+
+
+                                {/* SEKCJA 1: WYBÓR GRY */}
+                                <section className="bg-white dark:bg-surface-card p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
+                                    <div className="flex justify-between items-center mb-4">
+                                        <h3 className="font-bold font-display text-xl text-slate-900 dark:text-white">W co gramy?</h3>
+                                        {isOrganizer && (
+                                            <button 
+                                                onClick={() => setIsGamePickerOpen(!isGamePickerOpen)}
+                                                className="text-sm text-primary font-bold hover:text-primary-hover transition-colors flex items-center gap-1"
+                                            >
+                                                {isGamePickerOpen ? '❌ Anuluj' : '✏️ Wybierz gry'}
+                                            </button>
+                                        )}
+                                    </div>
+
+                                    {isOrganizer && isGamePickerOpen && (
+                                        <div className="mb-6">
+                                            <OrganizerGamePicker 
+                                                sessionId={id}
+                                                currentGameIds={session.games ? session.games.map(g => g.id) : []}
+                                                onGameSelected={handleGameSelected}
+                                                onCancel={() => setIsGamePickerOpen(false)}
+                                            />
+                                        </div>
+                                    )}
+
+                                    {session.games && session.games.length > 0 ? (
+                                        <div className="grid grid-cols-1 gap-3">
+                                            {session.games.map(game => (
+                                                <div key={game.id} className="flex items-center gap-4 bg-white dark:bg-gray-800 p-4 rounded-xl border">
+                                                    {game.imageUrl ? (
+                                                        <img src={game.imageUrl} className="w-12 h-12 rounded object-cover" />
+                                                    ) : (
+                                                        <div className="w-12 h-12 bg-gray-200 rounded flex items-center justify-center">🎲</div>
+                                                    )}
+                                                    <div>
+                                                        <h4 className="font-bold text-lg text-slate-800 dark:text-white">{game.title}</h4>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    ) : (
+                                        <div className="text-center py-8 border-2 border-dashed rounded-xl">
+                                            <p className="text-gray-400">Organizator jeszcze nie wybrał gier.</p>
+                                            {isOrganizer && !isGamePickerOpen && (
+                                                <p className="text-sm text-primary mt-2 cursor-pointer hover:underline" onClick={() => setIsGamePickerOpen(true)}>
+                                                    Kliknij tutaj, aby wybrać grę na podstawie głosów
+                                                </p>
+                                            )}
+                                        </div>
+                                    )}
+                                </section>
+
+                                {/* SEKCJA 2: DOSTĘPNOŚĆ */}
+                                <section className="bg-white dark:bg-surface-card p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700">
+                                    {isOrganizer && (
+                                        <div className="mb-6 pb-6 border-b border-gray-100 dark:border-gray-700">
+                                            <AvailabilityWindowForm 
+                                                sessionId={session.id}
+                                                currentSettings={{
+                                                    availabilityFrom: session.availabilityFrom,
+                                                    availabilityTo: session.availabilityTo,
+                                                    availabilityDeadline: session.availabilityDeadline
+                                                }}
+                                                onSuccess={fetchData}
+                                            />
+                                        </div>
+                                    )}
+                                    <AvailabilityCalendar 
+                                        session={session}
+                                        myDates={myDates}
+                                        summaryDates={summaryDates}
+                                        participantsCount={participants.length}
+                                        onToggleDate={toggleDate}
+                                    />
+                                </section>
+
+                                {/* SEKCJA 3: GŁOSOWANIE */}
+                                <div className="mt-8">
+                                    <GameVotingSection sessionId={id} />
+                                </div>
+                            </div>
+                        ) : (
+                            // --- WIDOK DYSKUSJI ---
+                            <div className="animate-in fade-in slide-in-from-bottom-2 duration-300">
+                                <SessionChat sessionId={id} />
+                            </div>
+                        )}
 
                     </div>
                 ) : (
@@ -294,6 +343,8 @@ const SessionDetailsPage = () => {
                         </Button>
                     </div>
                 )}
+                
+                
 
 
                 {/* 2. KOLUMNA BOCZNA - UCZESTNICY */}

@@ -62,6 +62,24 @@ export type GamePoolItem = {
     id?: number;        // Opcjonalnie ID numeryczne gry, jeśli potrzebne do mapowania
 };
 
+// --- INTERFEJSY ---
+
+export interface ChatMessage {
+    id: number;
+    sessionId: number;
+    authorId: number;
+    authorName: string;
+    text: string;
+    createdAt: string; 
+}
+
+export interface SessionParticipant {
+    userId: number;
+    userName: string;
+    role: number;
+    status: ParticipantStatus;
+}
+
 // --- ENDPOINTY ---
 
 // 1. Pobierz szczegóły sesji
@@ -179,3 +197,60 @@ export async function removeUserFromSession(sessionId: string, userId: number) {
         method: "DELETE"
     });
 }
+
+
+// 16. CZAT - Pobierz wiadomości czatu
+export const getChatMessages = async (
+    sessionId: number | string, 
+    limit: number = 20, 
+    beforeMessageId: number | null = null
+): Promise<ChatMessage[]> => {
+    
+    const params = new URLSearchParams({ limit: limit.toString() });
+    
+    if (beforeMessageId !== null) {
+        params.append("beforeMessageId", beforeMessageId.toString());
+    }
+
+    const response = await fetch(`/api/my/sessions/${sessionId}/chat/messages?${params.toString()}`, {
+        method: 'GET',
+        headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`,
+            'Content-Type': 'application/json'
+        }
+    });
+
+    if (!response.ok) {
+        throw new Error(`Failed to fetch messages: ${response.statusText}`);
+    }
+
+    return await response.json() as ChatMessage[];
+};
+
+// 17. CZAT - Wyślij wiadomość czatu
+export const sendChatMessage = async (
+    sessionId: number | string, 
+    text: string
+): Promise<ChatMessage | null> => {
+    
+    const response = await fetch(`/api/my/sessions/${sessionId}/chat/messages`, {
+        method: 'POST',
+        headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`,
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ text })
+    });
+
+    if (!response.ok) {
+        throw new Error(`Failed to send message: ${response.statusText}`);
+    }
+
+    // Jeśli API zwraca 204 No Content, zwracamy null.
+    // Jeśli zwraca 200/201 z utworzoną wiadomością, zwracamy ją.
+    if (response.status === 204) {
+        return null;
+    }
+
+    return await response.json() as ChatMessage;
+};

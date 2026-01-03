@@ -79,6 +79,10 @@ namespace kiedygramy.Services.Chat
                .Group($"session-{sessionId}")
                .SendAsync("NewSessionMessage", messageDto, ct);
 
+            //await _hubContext.Clients
+            //   .All
+            //   .SendAsync("NewSessionMessage", messageDto, CancellationToken.None);
+
             try
             {
                 var recipientIds = session.Participants
@@ -145,8 +149,8 @@ namespace kiedygramy.Services.Chat
                 .Select(m => new SessionMessageResponse(
                     m.Id,
                     m.UserId,
-                    m.Text,
                     m.User!.UserName!,
+                    m.Text,
                     m.CreatedAt
                 ))
                 .ToListAsync();
