@@ -25,6 +25,7 @@ const AuthPage = () => {
   });
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [registerSuccess, setRegisterSuccess] = useState(false);
 
   const navigate = useNavigate();
   const location = useLocation();
@@ -78,7 +79,8 @@ const AuthPage = () => {
         fullName: newFormData.newFullName,
         city: newFormData.newCity,
       });
-      // Opcjonalnie: navigate("/dashboard");
+      setRegisterSuccess(true);
+      toggleMode();
     } catch (err) {
       setError("Rejestracja nieudana. Spróbuj ponownie.");
     } finally {
@@ -134,7 +136,7 @@ const AuthPage = () => {
           `}
         >
           <div className="w-full max-w-sm">
-            <h2 className="text-3xl md:text-4xl font-bold font-display mb-2 text-slate-900 dark:text-white text-center">Witaj ponownie!</h2>
+            <h2 className="text-3xl md:text-4xl font-bold font-display mb-2 text-slate-900 dark:text-white text-center">{registerSuccess ? "Rejestracja udana!" : "Witaj ponownie!"}</h2>
             <p className="text-text-muted text-center mb-8">Zaloguj się, aby zarządzać sesjami.</p>
 
             {error && !isRegisterActive && (

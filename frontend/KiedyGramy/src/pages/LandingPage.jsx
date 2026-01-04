@@ -200,7 +200,7 @@ const LandingPage = () => {
                 {/* Placeholder na grafikę/screenshot aplikacji */}
                 <div className="flex-1 bg-surface-light dark:bg-gray-800 rounded-3xl p-8 border border-gray-200 dark:border-gray-700 shadow-2xl rotate-3 hover:rotate-0 transition-transform duration-500">
                     <div className="aspect-video bg-white dark:bg-gray-900 rounded-xl flex items-center justify-center text-text-muted">
-                        <span className="font-display text-lg">Tu będzie screen z aplikacji</span>
+                        <img src="../../assets/screenshot.jpg" alt="Screenshot aplikacji KiedyGramy" className="max-h-full max-w-full object-contain" />
                     </div>
                 </div>
             </div>

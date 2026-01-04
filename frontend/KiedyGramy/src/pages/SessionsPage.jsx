@@ -61,6 +61,15 @@ const SessionsPage = () => {
             const updatedSessions = await getSessions();
             setSessions(updatedSessions);
             setIsModalOpen(false); // Zamknij modal
+            
+            // przekieruj do nowo utworzonej sesji
+            const createdSession = updatedSessions.find(
+                session => session.title === newSessionData.title
+            );
+            if (createdSession) {
+                navigate(`/sessions/${createdSession.id}`);
+            }
+
         } catch (error) {
             console.error("Błąd tworzenia sesji:", error);
             alert("Nie udało się utworzyć sesji.");
