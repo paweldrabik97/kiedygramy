@@ -2,7 +2,7 @@
 
 **KiedyGramy** is a modern web platform designed to streamline the organization of Tabletop RPG sessions and board game nights. It solves the eternal problem of "scheduling conflicts," manages your game library, and enables real-time communication for your party.
 
-![Project Banner](https://ibb.co/VYkD045Q)
+![Project Banner](https://i.ibb.co/jkjG9XsW/obraz-2026-01-04-120352259.png)
 
 
 ## ✨ Key Features
@@ -94,11 +94,11 @@ Follow these steps to run the project locally.
 
 | 3D Physics Landing Page | Dashboard |
 | :---: | :---: |
-| ![Landing](https://ibb.co/JjFFDVFm) | ![Dashboard](https://ibb.co/DDKyd8Dz) |
+| ![Landing](https://i.ibb.co/qYFFTKF7/obraz-2026-01-04-121654214.png) | ![Dashboard](https://i.ibb.co/tMCtRxMQ/obraz-2026-01-04-121252224.png) |
 
 | Session Chat | Auth Page |
 | :---: | :---: |
-| ![Chat](https://ibb.co/Zpj7NMHp) | ![Auth](https://ibb.co/9m17Pdj1) |
+| ![Chat](https://i.ibb.co/bM0D7KHM/obraz-2026-01-04-121541376.png) | ![Auth](https://i.ibb.co/WNMLCR1M/obraz-2026-01-04-121749076.png) |
 
 *(Replace these placeholders with your actual screenshots)*
 
