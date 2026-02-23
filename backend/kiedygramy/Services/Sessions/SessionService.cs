@@ -478,7 +478,6 @@ namespace kiedygramy.Services.Sessions
         {
             
             var session = await _db.Sessions
-                .AsNoTracking()
                 .FirstOrDefaultAsync(s => s.Id == sessionId);
 
             if (session is null)

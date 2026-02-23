@@ -16,13 +16,16 @@ function getRetryAfterSeconds(res: Response): number | undefined {
   const h = res.headers.get("Retry-After");
   if (!h) return undefined;
   const n = Number(h);
-  return Number.isFinite(n) ? n : undefined;
+  return Number.isFinite(n) ? n : undefined;  
 }
 
+const BASE_URL = (import.meta as any).env.VITE_API_URL || "";
+
 export async function api<T>(url: string, options: RequestInit = {}): Promise<T> {
-  const res = await fetch(url, {
-    headers: { "Content-Type": "application/json", ...(options.headers || {}) },
+  const fullUrl = `${BASE_URL}${url}`;
+  const res = await fetch(fullUrl, {
     ...options,
+    headers: { "Content-Type": "application/json", ...(options.headers || {}) },
     credentials: "include",
   });
 

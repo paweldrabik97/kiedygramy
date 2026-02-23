@@ -212,19 +212,11 @@ export const getChatMessages = async (
         params.append("beforeMessageId", beforeMessageId.toString());
     }
 
-    const response = await fetch(`/api/my/sessions/${sessionId}/chat/messages?${params.toString()}`, {
+    return api<ChatMessage[]>(`/api/my/sessions/${sessionId}/chat/messages?${params.toString()}`, {
         method: 'GET',
         headers: {
-            'Authorization': `Bearer ${localStorage.getItem('token')}`,
-            'Content-Type': 'application/json'
         }
     });
-
-    if (!response.ok) {
-        throw new Error(`Failed to fetch messages: ${response.statusText}`);
-    }
-
-    return await response.json() as ChatMessage[];
 };
 
 // 17. CZAT - Wyślij wiadomość czatu
@@ -233,24 +225,18 @@ export const sendChatMessage = async (
     text: string
 ): Promise<ChatMessage | null> => {
     
-    const response = await fetch(`/api/my/sessions/${sessionId}/chat/messages`, {
+    return api<ChatMessage | null>(`/api/my/sessions/${sessionId}/chat/messages`, {
         method: 'POST',
         headers: {
-            'Authorization': `Bearer ${localStorage.getItem('token')}`,
-            'Content-Type': 'application/json'
         },
         body: JSON.stringify({ text })
     });
-
-    if (!response.ok) {
-        throw new Error(`Failed to send message: ${response.statusText}`);
-    }
-
-    // Jeśli API zwraca 204 No Content, zwracamy null.
-    // Jeśli zwraca 200/201 z utworzoną wiadomością, zwracamy ją.
-    if (response.status === 204) {
-        return null;
-    }
-
-    return await response.json() as ChatMessage;
 };
+
+// 18. Ustaw DATĘ (Dla organizatora - aktualizacja listy gier)
+export async function setFinalDate(sessionId: string, date: string) {
+    return api<void>(`/api/my/sessions/${sessionId}/final-date`, {
+        method: "POST",
+        body: JSON.stringify({ dateTime: date })
+    });
+}

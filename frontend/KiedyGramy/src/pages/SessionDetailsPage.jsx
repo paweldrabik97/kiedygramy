@@ -15,6 +15,7 @@ import { AvailabilityCalendar } from '../features/sessions/components/Availabili
 import { AvailabilityWindowForm } from '../features/sessions/components/AvailabilityWindowForm.jsx';
 import { GameVotingSection } from '../features/sessions/components/GameVotingSection.jsx';
 import { OrganizerGamePicker } from '../features/sessions/components/OrganizerGamePicker.jsx';
+import { OrganizerDatePicker } from '../features/sessions/components/OrganizerDatePicker.jsx';
 
 const SessionDetailsPage = () => {
     const { id } = useParams();
@@ -239,6 +240,17 @@ const SessionDetailsPage = () => {
                         {activeTab === 'board' ? (
                             <div className="space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-300">
                                 {/* Tu wrzucamy wszystko co było wcześniej w lewej kolumnie */}
+
+                                {/* SEKCJA 0: WYBÓR OSTATECZNEJ DATY (DLA ORGANIZATORA) */}
+                                {isOrganizer && (
+                                    <OrganizerDatePicker 
+                                        sessionId={session.id} 
+                                        currentFinalDate={session.date} // Jeśli chcesz, by pole było wstępnie wypełnione, jeśli data już istnieje
+                                        onSuccess={(newDate) => { 
+                                            fetchData(); // Odśwież dane sesji, żeby pokazać nową datę
+                                        }} 
+                                    />
+                                )}
 
 
                                 {/* SEKCJA 1: WYBÓR GRY */}

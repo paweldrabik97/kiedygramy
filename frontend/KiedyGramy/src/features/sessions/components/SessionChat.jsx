@@ -49,7 +49,6 @@ export const SessionChat = ({ sessionId }) => {
 
         // 3. Nasłuchiwanie na nowe wiadomości
         connection.on("NewSessionMessage", (message) => {
-            console.log("Otrzymano wiadomość:", message); // Log dla pewności
             
             // Dodaj nową wiadomość do listy
             setMessages(prev => [...prev, message]);
