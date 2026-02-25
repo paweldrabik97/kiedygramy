@@ -51,14 +51,37 @@ namespace kiedygramy.Services.External
 
             var result = new List<ExternalGameResponse>();
 
+            var normalizedQuery = query.ToLower().Trim();
+
             foreach (var item in detailsDoc.Descendants("item"))
             {
                 cancellationToken.ThrowIfCancellationRequested();
 
+                
                 var title = item
                     .Descendants("name")
                     .FirstOrDefault(n => n.Attribute("type")?.Value == "primary")?
                     .Attribute("value")?.Value ?? "Unknown";
+
+                
+                var displayTitle = title; 
+
+                
+                if (!title.ToLower().Contains(normalizedQuery))
+                {
+                    
+                    var alternateNames = item.Descendants("name")
+                        .Where(n => n.Attribute("type")?.Value == "alternate")
+                        .Select(n => n.Attribute("value")?.Value)
+                        .Where(n => !string.IsNullOrWhiteSpace(n));
+
+                    
+                    var matchedAlt = alternateNames.FirstOrDefault(a => a.ToLower().Contains(normalizedQuery));
+                    if (matchedAlt != null)
+                    {
+                        displayTitle = matchedAlt; 
+                    }
+                }
 
                 var image = item.Element("image")?.Value;
 
@@ -88,6 +111,7 @@ namespace kiedygramy.Services.External
 
                 result.Add(new ExternalGameResponse(
                     Title: title,
+                    DisplayTitle: displayTitle,
                     Genres: genres,
                     ImageUrl: image,
                     PlayTime: playtimeString,
@@ -119,6 +143,8 @@ namespace kiedygramy.Services.External
                 .FirstOrDefault(n => n.Attribute("type")?.Value == "primary")?
                 .Attribute("value")?.Value ?? "Unknown";
 
+            var displayTitle = title;
+
             var image = item.Element("image")?.Value;
 
             var minPlayers = int.TryParse(item.Element("minplayers")?.Attribute("value")?.Value, out var min) ? min : 0;
@@ -137,6 +163,7 @@ namespace kiedygramy.Services.External
 
             return new ExternalGameResponse(
                 Title: title,
+                DisplayTitle: displayTitle,
                 Genres: genres,
                 ImageUrl: image,
                 PlayTime: playtimeString,

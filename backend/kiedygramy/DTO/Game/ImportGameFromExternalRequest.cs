@@ -5,6 +5,7 @@ namespace kiedygramy.DTO.Game
     public record ImportGameFromExternalRequest
     (
         [Required]  
-        string SourceId
+        string SourceId,
+        string? LocalTitle
     );
 }

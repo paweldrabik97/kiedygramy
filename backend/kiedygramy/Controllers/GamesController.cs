@@ -98,7 +98,7 @@ namespace kiedygramy.Controllers
 
             var userId = GetRequiredUserId();
 
-            var (game, error) = await _gameService.ImportFromExternalAsync(dto.SourceId, userId, cancellationToken);
+            var (game, error) = await _gameService.ImportFromExternalAsync(dto.SourceId, dto.LocalTitle, userId, cancellationToken);
 
             if (error is not null)
                 return Problem(error);

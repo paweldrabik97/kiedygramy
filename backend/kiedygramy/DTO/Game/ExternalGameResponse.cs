@@ -2,6 +2,7 @@
 {
     public record ExternalGameResponse(
          string Title,
+        string DisplayTitle,
         List<string> Genres,
         int MinPlayers,
         int MaxPlayers,

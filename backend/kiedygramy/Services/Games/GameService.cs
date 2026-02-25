@@ -199,8 +199,8 @@ namespace kiedygramy.Services.Games
                 .FirstOrDefaultAsync();
         }
 
-        // 6. IMPORT Z BGG (Obsługa LocalTitle z frontendu - ZAKŁADAM, ŻE DODAŁEŚ 'LocalTitle' DO CZEGOŚ, np. zmieniamy sygnaturę metody lub zakładasz, że przekażesz to osobno. Tu zrobię prosty wariant dla importu samej gry).
-        public async Task<(Game? Game, ErrorResponseDto? Error)> ImportFromExternalAsync(string sourceId, int userId, CancellationToken ct = default)
+        // ZMIANA: Dodano parametr "string? localTitle"
+        public async Task<(Game? Game, ErrorResponseDto? Error)> ImportFromExternalAsync(string sourceId, string? localTitle, int userId, CancellationToken ct = default)
         {
             if (string.IsNullOrWhiteSpace(sourceId))
                 return (null, Errors.General.Validation("SourceId jest wymagane.", "SourceId"));
@@ -243,7 +243,6 @@ namespace kiedygramy.Services.Games
 
                 game = new Game
                 {
-                    // USUNIĘTO: OwnerId = userId,
                     BggId = numericSourceId,
                     Title = globalTitle, // Zostawiamy w globalnej bazie oryginalny tytuł z BGG
                     IsCustom = false,
@@ -282,8 +281,7 @@ namespace kiedygramy.Services.Games
             {
                 UserId = userId,
                 Game = game,
-                // Gdy dorobisz pole na frontendzie do przesyłania LocalTitle podczas importu,
-                // to tutaj będziesz je zapisywał, np.: LocalTitle = dto.LocalTitle
+                LocalTitle = localTitle // <--- ZMIANA: Przypisujemy polski tytuł z frontendu do tabeli łączącej!
             };
 
             _db.UserGames.Add(userGame);
