@@ -20,7 +20,7 @@ namespace kiedygramy.Controllers
         private readonly IAuthService _authService;
         private readonly IAccountService _accountService;
 
-        public AuthController( UserManager<User> userManager, SignInManager<User> signInManager, IAccountService accountService, IAuthService authService)
+        public AuthController(UserManager<User> userManager, SignInManager<User> signInManager, IAccountService accountService, IAuthService authService)
         {
             _userManager = userManager;
             _signInManager = signInManager;
@@ -33,7 +33,7 @@ namespace kiedygramy.Controllers
         [EnableRateLimiting(RateLimitPolicies.Auth)]
         public async Task<IActionResult> Register([FromBody] RegisterRequest dto)
         {
-            if(!ModelState.IsValid)
+            if (!ModelState.IsValid)
                 return ValidationProblemFromModelState();
 
             var (user, error) = await _authService.RegisterAsync(dto);
@@ -41,7 +41,7 @@ namespace kiedygramy.Controllers
             if (error is not null)
                 return Problem(error);
 
-            return Ok(user); 
+            return Ok(user);
         }
 
         [HttpPost("login")]
@@ -91,15 +91,15 @@ namespace kiedygramy.Controllers
         [Authorize]
         [EnableRateLimiting(RateLimitPolicies.Account)]
         public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordRequest dto)
-        { 
-            if(!ModelState.IsValid)
+        {
+            if (!ModelState.IsValid)
                 return ValidationProblemFromModelState();
 
             var user = GetRequiredUserId();
-            
+
             var error = await _accountService.ChangePasswordAsync(user, dto);
 
-            if(error is not null)
+            if (error is not null)
                 return Problem(error);
 
             return NoContent();
@@ -120,7 +120,7 @@ namespace kiedygramy.Controllers
             if (error is not null)
                 return Problem(error);
 
-            return NoContent(); 
+            return NoContent();
         }
 
         [HttpPatch("change-city")]
@@ -156,6 +156,20 @@ namespace kiedygramy.Controllers
             if (error is not null)
                 return Problem(error);
 
+            return NoContent();
+        }
+
+        [HttpPatch("language")]
+        [Authorize]
+        [EnableRateLimiting(RateLimitPolicies.Account)]
+        public async Task<IActionResult> ChangeLanguage([FromBody] UpdateLanguageRequest dto)
+        {
+            if (!ModelState.IsValid)
+                return ValidationProblemFromModelState();
+            var userId = GetRequiredUserId();
+            var error = await _accountService.UpdateLanguageAsync(userId, dto);
+            if (error is not null)
+                return Problem(error);
             return NoContent();
         }
     }

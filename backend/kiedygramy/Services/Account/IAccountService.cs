@@ -9,6 +9,7 @@ namespace kiedygramy.Services.Account
         Task<ErrorResponseDto?> ChangePasswordAsync(int userId, ChangePasswordRequest dto);
         Task<ErrorResponseDto?> ChangeFullNameAsync(int userId, ChangeFullNameRequest dto);
         Task<ErrorResponseDto?> ChangeCityAsync(int userId, ChangeCityRequest dto);
+        Task<ErrorResponseDto?> UpdateLanguageAsync(int userId, UpdateLanguageRequest dto);
 
     }
 }

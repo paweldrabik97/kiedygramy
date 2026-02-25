@@ -18,6 +18,7 @@ public class AppDbContext : IdentityDbContext<User, IdentityRole<int>, int>
     public DbSet<GameGenre> GameGenres => Set<GameGenre>();
     public DbSet<Notification> Notifications => Set<Notification>();
     public DbSet<SessionGameVote> SessionGameVotes => Set<SessionGameVote>();
+    public DbSet<UserGame> UserGames => Set<UserGame>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

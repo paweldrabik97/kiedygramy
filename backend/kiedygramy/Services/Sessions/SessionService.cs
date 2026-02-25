@@ -24,27 +24,39 @@ namespace kiedygramy.Services.Sessions
             _notification = notification;
         }
 
-        
-
         public async Task<(SessionDetailsResponse? Session, ErrorResponseDto? Error)> CreateAsync(CreateSessionRequest dto, int userId)
         {
-            var title = dto.Title?.Trim() ?? string.Empty;          
+            var title = dto.Title?.Trim() ?? string.Empty;
 
-            if (dto.GameIds is not null)
+            // Przygotowujemy pustą listę gier, do której za chwilę dodamy gry wybrane przez gracza
+            List<Game> sessionGames = new List<Game>();
+
+            if (dto.GameIds is not null && dto.GameIds.Any())
             {
-                var gameExists = await _db.Games.AnyAsync(g => dto.GameIds.Contains(g.Id) && g.OwnerId == userId);
+                // ZMIANA: Pytamy nową tabelę łączącą (UserGames), czy gracz posiada te gry
+                // Od razu używamy Include, aby zaciągnąć pełne dane gry (Title, ImageUrl) potrzebne do stworzenia sesji
+                var validUserGames = await _db.UserGames
+                    .Include(ug => ug.Game)
+                    .Where(ug => ug.UserId == userId && dto.GameIds.Contains(ug.GameId))
+                    .ToListAsync();
 
-                if (!gameExists)
+                // Jeśli znaleźliśmy mniej gier w kolekcji niż gracz wysłał w requeście, 
+                // to znaczy, że próbuje dodać do sesji grę, której nie ma
+                if (validUserGames.Count != dto.GameIds.Count())
                     return (null, Errors.Session.GameNotFound());
+
+                // Wyciągamy same obiekty Game z tabeli łączącej
+                sessionGames = validUserGames.Select(ug => ug.Game).ToList();
             }
 
-            var session = new Session 
+            var session = new Session
             {
                 Title = title,
                 Date = dto.Date,
                 Location = dto.Location?.Trim(),
                 Description = dto.Description?.Trim(),
-                OwnerId = userId
+                OwnerId = userId,
+                Games = sessionGames // NAPRAWA BŁĘDU LOGICZNEGO: Dodajemy zweryfikowane gry do sesji!
             };
 
             var ownerParticipant = new SessionParticipant
@@ -69,7 +81,7 @@ namespace kiedygramy.Services.Sessions
                 Location: session.Location,
                 Description: session.Description,
                 OwnerId: session.OwnerId,
-                OwnerUserName: owner!.UserName!, 
+                OwnerUserName: owner!.UserName!,
                 Games: session.Games.Select(g => new SessionGameDto(
                     g.Id,
                     g.Title,
@@ -82,6 +94,63 @@ namespace kiedygramy.Services.Sessions
 
             return (details, null);
         }
+
+        //public async Task<(SessionDetailsResponse? Session, ErrorResponseDto? Error)> CreateAsync(CreateSessionRequest dto, int userId)
+        //{
+        //    var title = dto.Title?.Trim() ?? string.Empty;          
+
+        //    if (dto.GameIds is not null)
+        //    {
+        //        var gameExists = await _db.Games.AnyAsync(g => dto.GameIds.Contains(g.Id) && g.OwnerId == userId);
+
+        //        if (!gameExists)
+        //            return (null, Errors.Session.GameNotFound());
+        //    }
+
+        //    var session = new Session 
+        //    {
+        //        Title = title,
+        //        Date = dto.Date,
+        //        Location = dto.Location?.Trim(),
+        //        Description = dto.Description?.Trim(),
+        //        OwnerId = userId
+        //    };
+
+        //    var ownerParticipant = new SessionParticipant
+        //    {
+        //        Session = session,
+        //        UserId = userId,
+        //        Role = SessionParticipantRole.Host,
+        //        Status = SessionParticipantStatus.Confirmed
+        //    };
+
+        //    _db.Sessions.Add(session);
+        //    _db.SessionParticipants.Add(ownerParticipant);
+
+        //    await _db.SaveChangesAsync();
+
+        //    var owner = await _db.Users.FindAsync(userId);
+
+        //    var details = new SessionDetailsResponse(
+        //        Id: session.Id,
+        //        Title: session.Title,
+        //        Date: session.Date,
+        //        Location: session.Location,
+        //        Description: session.Description,
+        //        OwnerId: session.OwnerId,
+        //        OwnerUserName: owner!.UserName!, 
+        //        Games: session.Games.Select(g => new SessionGameDto(
+        //            g.Id,
+        //            g.Title,
+        //            g.ImageUrl
+        //        )).ToList(),
+        //        AvailabilityFrom: session.AvailabilityFrom,
+        //        AvailabilityTo: session.AvailabilityTo,
+        //        AvailabilityDeadline: session.AvailabilityDeadline
+        //    );
+
+        //    return (details, null);
+        //}
 
         public async Task<SessionDetailsResponse?> GetByIdAsync(int id, int userId)
         {
@@ -631,17 +700,17 @@ namespace kiedygramy.Services.Sessions
             if(!confirmedParticipantIds.Contains(session.OwnerId))
                 confirmedParticipantIds.Add(session.OwnerId);
 
-            var games = await _db.Games
+            var games = await _db.UserGames
                 .AsNoTracking()
-                .Where(g => confirmedParticipantIds.Contains(g.OwnerId))
-                .Select(g => new
+                .Where(ug => confirmedParticipantIds.Contains(ug.UserId))
+                .Select(ug => new
                 {
-                    g.Id,
-                    g.Title,
-                    OwnerName = g.Owner.UserName ?? "(brak nazwy)",
-                    MinPlayers = g.MinPlayers,
-                    MaxPlayers = g.MaxPlayers,
-                    g.ImageUrl
+                    ug.Game.Id,
+                    ug.Game.Title,
+                    OwnerName = ug.User.UserName ?? "(brak nazwy)",
+                    MinPlayers = ug.Game.MinPlayers,
+                    MaxPlayers = ug.Game.MaxPlayers,
+                    ug.Game.ImageUrl
                 }).ToListAsync();
 
             var votes = await _db.SessionGameVotes

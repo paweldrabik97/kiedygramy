@@ -41,7 +41,7 @@ namespace kiedygramy.Services.Account
 
             if (!result.Succeeded)
                 return Errors.Auth.IdentityValidation(result.Errors);
-           
+
             await _signInManager.RefreshSignInAsync(user);
 
             return null;
@@ -75,7 +75,7 @@ namespace kiedygramy.Services.Account
             if (string.IsNullOrWhiteSpace(dto.CurrentPassword))
                 return Errors.General.Validation("podaj obecne hasło", "CurrentPassword");
 
-            if(string.IsNullOrWhiteSpace(dto.NewPassword))
+            if (string.IsNullOrWhiteSpace(dto.NewPassword))
                 return Errors.General.Validation("podaj nowe hasło", "NewPassword");
 
             if (dto.NewPassword == dto.CurrentPassword)
@@ -106,27 +106,53 @@ namespace kiedygramy.Services.Account
 
             if (user is null)
                 return Errors.General.Unauthorized();
-          
+
             var usernameTaken = await _userManager.Users.AnyAsync(u =>
                 u.UserName!.ToLower() == dto.NewUserName.Trim().ToLower() && u.Id != userId
             );
 
             if (usernameTaken)
                 return Errors.General.Validation("Ta nazwa użytkownika jest już zajęta.", "NewUsername");
-      
+
             user.UserName = dto.NewUserName.Trim();
-        
+
             var result = await _userManager.UpdateAsync(user);
 
             if (!result.Succeeded)
             {
-              
+
                 return Errors.Auth.IdentityValidation(result.Errors);
             }
-           
+
             await _signInManager.RefreshSignInAsync(user);
 
-            return null;       
+            return null;
+        }
+
+        public async Task<ErrorResponseDto?> UpdateLanguageAsync(int userId, UpdateLanguageRequest dto)
+        {
+            if (string.IsNullOrWhiteSpace(dto.Language))
+                return Errors.General.Validation("Language cannot be empty.", "Language");
+
+            var user = await _userManager.Users.FirstOrDefaultAsync(u => u.Id == userId);
+            if (user is null)
+                return Errors.General.Unauthorized();
+
+            var supportedLanguages = new[] { "en", "pl" };
+            var requestedLanguage = dto.Language.Trim().ToLower();
+
+            if (!supportedLanguages.Contains(requestedLanguage))
+                return Errors.General.Validation("Unsupported language.", "Language");
+
+            user.PrefferedLanguage = requestedLanguage;
+
+            var result = await _userManager.UpdateAsync(user);
+            if (!result.Succeeded)
+                return Errors.Auth.IdentityValidation(result.Errors);
+
+            await _signInManager.RefreshSignInAsync(user);
+
+            return null;
         }
     }
 }
