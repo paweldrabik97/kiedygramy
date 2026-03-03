@@ -7,20 +7,27 @@ export type Genre = {
     name: string;
 };
 
-// Zaktualizowany DTO pod Twoje wymagania
-export type CreateGameDto = {
+
+
+export type CreateCustomGameDto = {
     title: string;
-    genreIds: number[]; // <--- Tablica liczb!
     minPlayers: number;
     maxPlayers: number;
-    imageUrl?: string;
     playTime?: string;
+    imageUrl?: string;
+    genreIds: number[];
+};
+
+export type ImportBggGameDto = {
+    sourceId: string;
+    localTitle?: string;
 };
 
 // To co wraca z backendu (lista gier)
 export type Game = {
     id: number;
     title: string;
+    localTitle?: string;
     genreIds: number[];
     minPlayers: number;
     maxPlayers: number;
@@ -50,7 +57,7 @@ export async function getGames() {
     return api<Game[]>("/api/my/games", { method: "GET" });
 }
 
-export async function addGame(data: CreateGameDto) {
+export async function addGame(data: CreateCustomGameDto) {
     return api<Game>("/api/my/games", { 
         method: "POST", 
         body: JSON.stringify(data) 
@@ -61,7 +68,7 @@ export async function deleteGame(id: number) {
     return api<void>(`/api/my/games/${id}`, { method: "DELETE" });
 }
 
-export async function updateGame(id: number, data: Partial<CreateGameDto>) {
+export async function updateGame(id: number, data: Partial<CreateCustomGameDto>) {
     return api<Game>(`/api/my/games/${id}`, { 
         method: "PUT", 
         body: JSON.stringify(data) 
@@ -87,7 +94,7 @@ export async function searchBggGames(query: string, skip: number = 0, take: numb
  * @param bggId - ID gry z BGG (sourceId)
  */
 export async function fetchWikiTitle(bggId: string): Promise<string | null> {
-    // Zapytanie SPARQL: Znajdź obiekt z property P3501 (BGG ID) == bggId i daj etykietę PL/EN
+    // Zapytanie SPARQL: Znajdź obiekt z property P2339 (BGG ID) == bggId i daj etykietę PL/EN
     const sparqlQuery = `
         SELECT ?gameLabel WHERE {
             ?game wdt:P2339 "${bggId}" .
@@ -103,8 +110,6 @@ export async function fetchWikiTitle(bggId: string): Promise<string | null> {
             method: 'GET',
             headers: {
                 'Accept': 'application/json',
-                // Wikidata prosi o User-Agent w nagłówku, aby nie blokować botów
-                // Wpisz tu nazwę swojej apki lub po prostu 'KiedyGramyApp'
                 'User-Agent': 'KiedyGramyApp/1.0 (hobby project)' 
             }
         });
@@ -122,4 +127,11 @@ export async function fetchWikiTitle(bggId: string): Promise<string | null> {
         console.warn("Błąd pobierania tytułu z Wikidaty:", error);
         return null;
     }
+}
+
+export async function importBggGame(data: ImportBggGameDto) {
+    return api<Game>("/api/my/games/from-external", { 
+        method: "POST", 
+        body: JSON.stringify(data) 
+    });
 }

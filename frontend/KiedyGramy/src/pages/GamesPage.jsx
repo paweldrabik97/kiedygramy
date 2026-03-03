@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import PrimaryButton from '../components/ui/PrimaryButton.jsx';
 // 1. Dodajemy addGame do importów
-import { getGames, deleteGame, updateGame, addGame } from '../features/games/services/games.ts';
+import { getGames, deleteGame, updateGame, importBggGame, addGame } from '../features/games/services/games.ts';
 import GameModal from '../features/games/components/GameModal.jsx';
 import AddGameModal from '../features/games/components/AddGameModal.jsx';
 
@@ -41,21 +41,29 @@ const GamesPage = () => {
 
     // 4. Obsługa dodawania nowej gry (Logika biznesowa)
     const handleAddGameSubmit = async (newGameData) => {
-        try {
-            // Wywołujemy API
-            const createdGame = await addGame(newGameData);
-            
-            // Aktualizujemy listę lokalnie (dodajemy nową grę do tablicy)
-            // Dzięki temu nie trzeba odświeżać całej listy z serwera
-            setGames(prevGames => [...prevGames, createdGame]);
-            
-            // Zamykamy modal
-            setIsAddModalOpen(false);
-        } catch (error) {
-            console.error("Nie udało się dodać gry:", error);
-            alert("Wystąpił błąd podczas dodawania gry.");
+    try {
+        let createdGame;
+
+        // Sprawdzamy flagę akcji z modala, żeby wywołać odpowiedni endpoint
+        if (newGameData.action === 'BGG') {
+            createdGame = await importBggGame(newGameData.data);
+        } else if (newGameData.action === 'CUSTOM') {
+            createdGame = await addGame(newGameData.data);
         }
-    };
+
+        // Aktualizujemy listę lokalnie (dodajemy nową grę do tablicy)
+        if (createdGame) {
+            setGames(prevGames => [...prevGames, createdGame]);
+        }
+        
+        // Zamykamy modal
+        setIsAddModalOpen(false);
+
+    } catch (error) {
+        console.error("Nie udało się dodać gry:", error);
+        alert("Wystąpił błąd podczas dodawania gry.");
+    }
+};
 
     const toggleMenu = (id) => {
         setOpenMenuId(prevId => (prevId === id ? null : id));
