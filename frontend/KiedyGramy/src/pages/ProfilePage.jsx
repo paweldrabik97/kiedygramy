@@ -1,12 +1,15 @@
 import { useEffect, useState } from "react";
 import { profileApi } from "../features/profile/services/profileApi";
+import { useTranslation } from "react-i18next";
+import LanguageSelector from "../features/landing/components/LanguageSelector";
 
 export default function ProfilePage() {
+  const { t } = useTranslation();
   const [me, setMe] = useState(null);
   const [loading, setLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState("");
 
-  const [infoMsg, setInfoMsg] = useState(""); // sukces/info
+  const [infoMsg, setInfoMsg] = useState(""); // success/info
   const [saving, setSaving] = useState(false);
 
   // 'username' | 'fullName' | 'city' | 'password' | null
@@ -39,7 +42,7 @@ export default function ProfilePage() {
         await refreshMe();
       } catch (e) {
         setMe(null);
-        setErrorMsg(e?.message ?? "Unknown error");
+        setErrorMsg(e?.message ?? t("profile.errors.unknown"));
       } finally {
         setLoading(false);
       }
@@ -58,7 +61,7 @@ export default function ProfilePage() {
       setEditing(null);
       setInfoMsg(successText);
     } catch (e) {
-      setErrorMsg(e?.message ?? "Unknown error");
+      setErrorMsg(e?.message ?? t("profile.errors.unknown"));
     } finally {
       setSaving(false);
     }
@@ -68,7 +71,7 @@ export default function ProfilePage() {
     <div className="p-8 max-w-3xl mx-auto">
       {loading && (
         <div className="mt-10 rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-surface-card p-6 text-base opacity-80 text-center">
-          Loading...
+          {t("profile.loading")}
         </div>
       )}
 
@@ -81,7 +84,7 @@ export default function ProfilePage() {
           }`}
         >
           <div className="text-base font-semibold">
-            {errorMsg ? "Błąd" : "Zapisano"}
+            {errorMsg ? t("profile.errorTitle") : t("profile.savedTitle")}
           </div>
           <div className="text-sm opacity-80 mt-1">
             {errorMsg || infoMsg}
@@ -91,7 +94,7 @@ export default function ProfilePage() {
 
       {!loading && me && (
         <div className="rounded-3xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-surface-card shadow-xl p-10 mt-10">
-          {/* Header w tym samym bloczku */}
+          {/* Header in the same block */}
           <div className="flex flex-col items-center text-center mb-10">
             <div className="w-36 h-36 rounded-full bg-primary/10 flex items-center justify-center shadow-md">
               <svg
@@ -117,17 +120,17 @@ export default function ProfilePage() {
           </div>
 
           <h1 className="text-3xl font-bold font-display text-text-main dark:text-text-inverse mb-8 text-center">
-            Dane profilu
+            {t("profile.profileData")}
           </h1>
 
           <div className="grid gap-6">
             {/* LOGIN */}
             <ProfileFieldCard
-              title="Login"
+              title={t("profile.fields.login")}
               value={me.username ?? "—"}
               isEditing={editing === "username"}
               disabled={saving}
-              editLabel="Zmień login"
+              editLabel={t("profile.edit.changeLogin")}
               onEdit={() => {
                 setInfoMsg("");
                 setErrorMsg("");
@@ -140,7 +143,7 @@ export default function ProfilePage() {
               onSave={() =>
                 runSave(
                   () => profileApi.changeUsername({ newUserName: username.trim() }),
-                  "Zmieniono login."
+                  t("profile.success.usernameChanged")
                 )
               }
             >
@@ -148,18 +151,18 @@ export default function ProfilePage() {
                 className="w-full border border-gray-200 dark:border-gray-700 rounded-2xl px-5 py-3 text-lg bg-white dark:bg-surface-dark"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
-                placeholder="Nowy login"
+                placeholder={t("profile.placeholders.newLogin")}
                 disabled={saving}
               />
             </ProfileFieldCard>
 
             {/* FULL NAME */}
             <ProfileFieldCard
-              title="Imię i nazwisko"
+              title={t("profile.fields.fullName")}
               value={me.fullName ?? "—"}
               isEditing={editing === "fullName"}
               disabled={saving}
-              editLabel="Zmień nazwę"
+              editLabel={t("profile.edit.changeName")}
               onEdit={() => {
                 setInfoMsg("");
                 setErrorMsg("");
@@ -172,7 +175,7 @@ export default function ProfilePage() {
               onSave={() =>
                 runSave(
                   () => profileApi.changeFullName({ NewFullName: fullName.trim() }),
-                  "Zmieniono imię i nazwisko."
+                  t("profile.success.fullNameChanged")
                 )
               }
             >
@@ -180,18 +183,18 @@ export default function ProfilePage() {
                 className="w-full border border-gray-200 dark:border-gray-700 rounded-2xl px-5 py-3 text-lg bg-white dark:bg-surface-dark"
                 value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
-                placeholder="Twoje imię i nazwisko"
+                placeholder={t("profile.placeholders.fullName")}
                 disabled={saving}
               />
             </ProfileFieldCard>
 
             {/* CITY */}
             <ProfileFieldCard
-              title="Miasto"
+              title={t("profile.fields.city")}
               value={me.city ?? "—"}
               isEditing={editing === "city"}
               disabled={saving}
-              editLabel="Zmień miasto"
+              editLabel={t("profile.edit.changeCity")}
               onEdit={() => {
                 setInfoMsg("");
                 setErrorMsg("");
@@ -204,7 +207,7 @@ export default function ProfilePage() {
               onSave={() =>
                 runSave(
                   () => profileApi.changeCity({ NewCity: city.trim() }),
-                  "Zmieniono miasto."
+                  t("profile.success.cityChanged")
                 )
               }
             >
@@ -212,18 +215,18 @@ export default function ProfilePage() {
                 className="w-full border border-gray-200 dark:border-gray-700 rounded-2xl px-5 py-3 text-lg bg-white dark:bg-surface-dark"
                 value={city}
                 onChange={(e) => setCity(e.target.value)}
-                placeholder="Twoje miasto"
+                placeholder={t("profile.placeholders.city")}
                 disabled={saving}
               />
             </ProfileFieldCard>
 
             {/* PASSWORD */}
             <ProfileFieldCard
-              title="Hasło"
+              title={t("profile.fields.password")}
               value="••••••••"
               isEditing={editing === "password"}
               disabled={saving}
-              editLabel="Zmień hasło"
+              editLabel={t("profile.edit.changePassword")}
               onEdit={() => {
                 setInfoMsg("");
                 setErrorMsg("");
@@ -236,15 +239,15 @@ export default function ProfilePage() {
                 setEditing(null);
               }}
               onSave={() => {
-                // Sprawdzenie czy hasła się zgadzają
+                // Check whether passwords match
                 if (newPassword !== confirmNewPassword) {
-                  setErrorMsg("Nowe hasła muszą być identyczne.");
+                  setErrorMsg(t("profile.errors.passwordsMustMatch"));
                   return;
                 }
                 
-                // sprawdzenie czy hasło nie jest puste
+                // Check whether password is not empty
                 if (!newPassword) {
-                    setErrorMsg("Nowe hasło nie może być puste.");
+                    setErrorMsg(t("profile.errors.newPasswordEmpty"));
                     return;
                 }
 
@@ -254,7 +257,7 @@ export default function ProfilePage() {
                       currentPassword,
                       newPassword,
                     }),
-                  "Zmieniono hasło."
+                  t("profile.success.passwordChanged")
                 );
               }}
             >
@@ -264,7 +267,7 @@ export default function ProfilePage() {
                   className="w-full border border-gray-200 dark:border-gray-700 rounded-2xl px-5 py-3 text-lg bg-white dark:bg-surface-dark"
                   value={currentPassword}
                   onChange={(e) => setCurrentPassword(e.target.value)}
-                  placeholder="Aktualne hasło"
+                  placeholder={t("profile.placeholders.currentPassword")}
                   autoComplete="current-password"
                   disabled={saving}
                 />
@@ -273,7 +276,7 @@ export default function ProfilePage() {
                   className="w-full border border-gray-200 dark:border-gray-700 rounded-2xl px-5 py-3 text-lg bg-white dark:bg-surface-dark"
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
-                  placeholder="Nowe hasło"
+                  placeholder={t("profile.placeholders.newPassword")}
                   autoComplete="new-password"
                   disabled={saving}
                 />
@@ -282,12 +285,19 @@ export default function ProfilePage() {
                   className="w-full border border-gray-200 dark:border-gray-700 rounded-2xl px-5 py-3 text-lg bg-white dark:bg-surface-dark"
                   value={confirmNewPassword}
                   onChange={(e) => setConfirmNewPassword(e.target.value)}
-                  placeholder="Powtórz nowe hasło"
+                  placeholder={t("profile.placeholders.repeatNewPassword")}
                   autoComplete="new-password"
                   disabled={saving}
                 />
               </div>
             </ProfileFieldCard>
+            <div>
+                <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">
+                    {t("profile.fields.language")}
+                </label>
+                {/* isLogged={true} sprawi, że wywoła się funkcja zapisu do bazy C# */}
+                <LanguageSelector variant="default" isLogged={true} />
+            </div>
           </div>
         </div>
       )}
@@ -303,9 +313,11 @@ function ProfileFieldCard({
   onSave,
   onCancel,
   children,
-  editLabel = "Zmień",
+  editLabel = "Change",
   disabled = false,
 }) {
+  const { t } = useTranslation();
+
   return (
     <div className="rounded-3xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-surface-card p-7">
       <div className="flex items-start justify-between gap-4">
@@ -337,14 +349,14 @@ function ProfileFieldCard({
               onClick={onSave}
               disabled={disabled}
             >
-              Zapisz
+              {t("profile.save")}
             </button>
             <button
               className="px-6 py-3 rounded-2xl border border-gray-200 dark:border-gray-700 text-base font-semibold hover:bg-surface-light dark:hover:bg-gray-700 transition disabled:opacity-60 disabled:cursor-not-allowed"
               onClick={onCancel}
               disabled={disabled}
             >
-              Anuluj
+              {t("profile.cancel")}
             </button>
           </div>
         </div>

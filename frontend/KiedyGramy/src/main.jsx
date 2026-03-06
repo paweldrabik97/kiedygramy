@@ -5,6 +5,7 @@ import { ThemeProvider } from "./context/ThemeContext.jsx";
 import { AuthProvider } from "./features/auth/contexts/AuthContext.jsx";
 import { NotificationsProvider } from "./features/notifications/contexts/NotificationsContext.jsx";
 import "./index.css";
+import "./i18n.js";
 import App from "./App.jsx";
 
 createRoot(document.getElementById("root")).render(

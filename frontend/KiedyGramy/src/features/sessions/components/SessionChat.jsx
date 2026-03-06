@@ -2,8 +2,10 @@ import React, { useEffect, useState, useRef } from 'react';
 import { useAuth } from '../../auth/contexts/AuthContext';
 import { getChatMessages, sendChatMessage } from '../services/sessions';
 import { createChatConnection } from '../services/chatConnection';
+import { useTranslation } from 'react-i18next';
 
 export const SessionChat = ({ sessionId }) => {
+    const { t } = useTranslation();
     const { user } = useAuth();
     const [messages, setMessages] = useState([]);
     const [newMessage, setNewMessage] = useState("");
@@ -12,7 +14,7 @@ export const SessionChat = ({ sessionId }) => {
     const messagesEndRef = useRef(null);
     const inputRef = useRef(null);
 
-    // Ładowanie wiadomości
+    // Loading messages
     const loadMessages = async (beforeId = null) => {
         try {
             const data = await getChatMessages(sessionId, 20, beforeId);
@@ -32,34 +34,34 @@ export const SessionChat = ({ sessionId }) => {
         }
     };
 
-    // Pobierz wiadomości na starcie
+    // Fetch messages on start
     useEffect(() => {
         loadMessages();
         
-        // 2. Połączenie SignalR
+        // 2. SignalR connection
         const connection = createChatConnection();
 
         connection.start()
             .then(() => {
                 console.log("Connected to SignalR");
-                // Dołącz do "pokoju" tej konkretnej sesji
+                // Join the "room" for this specific session
                 connection.invoke("JoinSessionGroup", Number(sessionId));
             })
             .catch(err => console.error("SignalR Connection Error: ", err));
 
-        // 3. Nasłuchiwanie na nowe wiadomości
+        // 3. Listen for new messages
         connection.on("NewSessionMessage", (message) => {
             
-            // Dodaj nową wiadomość do listy
+            // Add new message to the list
             setMessages(prev => [...prev, message]);
             
-            // Scrolluj
+            // Scroll
             setTimeout(() => {
                 messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
             }, 100);
         });
 
-        // Sprzątanie przy wyjściu z komponentu
+        // Cleanup on component unmount
         return () => {
             connection.off("NewSessionMessage");
             connection.stop();
@@ -86,7 +88,7 @@ export const SessionChat = ({ sessionId }) => {
             await loadMessages(); 
             scrollToBottom();
         } catch (error) {
-            alert("Nie udało się wysłać wiadomości");
+            alert(t('featureComponents.sessions.sessionChat.alerts.sendFailed'));
         } finally {
             setSending(false);
             setTimeout(() => {
@@ -101,22 +103,22 @@ export const SessionChat = ({ sessionId }) => {
         }
     };
 
-    // Funkcja formatująca datę
+    // Date formatting function
 const formatMessageDate = (isoString) => {
     const date = new Date(isoString);
     const now = new Date();
 
-    // Sprawdzamy czy to ten sam dzień, miesiąc i rok
+    // Check whether it's the same day, month, and year
     const isToday = date.getDate() === now.getDate() &&
                     date.getMonth() === now.getMonth() &&
                     date.getFullYear() === now.getFullYear();
 
     if (isToday) {
-        // Tylko godzina (np. 15:30)
+        // Time only (e.g. 15:30)
         return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     }
     else if (date.getFullYear() === now.getFullYear()) {
-        // Data i godzina (np. 31.12, 15:30)
+        // Date and time (e.g. 31.12, 15:30)
         return date.toLocaleString([], {
         day: '2-digit',
         month: '2-digit',
@@ -125,7 +127,7 @@ const formatMessageDate = (isoString) => {
     });
     }
 
-    // Data i godzina (np. 31.12.2025, 15:30)
+    // Date and time (e.g. 31.12.2025, 15:30)
     return date.toLocaleString([], {
         day: '2-digit',
         month: '2-digit',
@@ -135,26 +137,26 @@ const formatMessageDate = (isoString) => {
     });
 };
 
-    if (loading && messages.length === 0) return <div className="p-8 text-center text-gray-400">Ładowanie czatu...</div>;
+    if (loading && messages.length === 0) return <div className="p-8 text-center text-gray-400">{t('featureComponents.sessions.sessionChat.loading')}</div>;
 
     return (
         <div className="flex flex-col h-[600px] bg-white dark:bg-surface-card rounded-b-2xl shadow-sm border border-t-0 border-gray-100 dark:border-gray-700">
             
-            {/* LISTA WIADOMOŚCI */}
+            {/* MESSAGE LIST */}
             <div className="flex-1 overflow-y-auto p-4 space-y-4">
-                {/* Przycisk do ładowania starszych */}
+                {/* Button to load older messages */}
                 <div className="text-center">
                     <button 
                         onClick={handleLoadOlder}
                         className="text-xs text-primary hover:underline pb-2"
                     >
-                        Załaduj starsze wiadomości
+                        {t('featureComponents.sessions.sessionChat.loadOlderMessages')}
                     </button>
                 </div>
 
                 {messages.length === 0 && (
                     <div className="text-center text-gray-400 mt-10">
-                        Brak wiadomości. Rozpocznij dyskusję! 👋
+                        {t('featureComponents.sessions.sessionChat.emptyChat')}
                     </div>
                 )}
 
@@ -171,26 +173,26 @@ const formatMessageDate = (isoString) => {
                                 {msg.userName ? msg.userName.charAt(0).toUpperCase() : '?'}
                             </div>
 
-                            {/* Kontener treści */}
+                            {/* Content container */}
                             <div className={`flex flex-col ${isMe ? 'items-end' : 'items-start'} max-w-[80%]`}>
                                 
-                                {/* Wiersz z metadanymi (Nick + Data) */}
+                                {/* Metadata row (Nick + Date) */}
                                 <div className={`flex items-baseline gap-2 mb-1 ${isMe ? 'flex-row-reverse' : 'flex-row'}`}>
                                     
-                                    {/* Wyświetl nick TYLKO jeśli to nie ja */}
+                                    {/* Show nick ONLY if it's not me */}
                                     {!isMe && (
                                         <span className="text-xs font-bold text-gray-600 dark:text-gray-300">
                                             {msg.userName}
                                         </span>
                                     )}
 
-                                    {/* Data / godzina wiadomości */}
+                                    {/* Message date / time */}
                                     <span className="text-[10px] text-gray-400 whitespace-nowrap">
                                         {formatMessageDate(msg.createdAt)}
                                     </span>
                                 </div>
 
-                                {/* Dymek wiadomości */}
+                                {/* Message bubble */}
                                 <div className={`px-4 py-2 rounded-2xl text-sm break-words ${
                                     isMe 
                                         ? 'bg-primary text-white rounded-tr-none' 
@@ -211,7 +213,7 @@ const formatMessageDate = (isoString) => {
                     type="text"
                     value={newMessage}
                     onChange={(e) => setNewMessage(e.target.value)}
-                    placeholder="Napisz wiadomość..."
+                    placeholder={t('featureComponents.sessions.sessionChat.messagePlaceholder')}
                     className="flex-1 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-2 focus:ring-2 focus:ring-primary/20 outline-none transition-all"
                 />
                 <button 

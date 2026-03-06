@@ -1,5 +1,6 @@
 // src/features/sessions/components/AvailabilityCalendar.jsx
 import React, { useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 
 export const AvailabilityCalendar = ({ 
     session, 
@@ -8,8 +9,9 @@ export const AvailabilityCalendar = ({
     participantsCount = 0, 
     onToggleDate 
 }) => {
+    const { t } = useTranslation();
 
-    // 1. Funkcja pomocnicza (teraz jest schowana wewnątrz komponentu)
+    // 1. Helper function (now defined inside the component)
     const getDaysArray = (startStr, endStr) => {
         if (!startStr || !endStr) return [];
         const arr = [];
@@ -25,11 +27,11 @@ export const AvailabilityCalendar = ({
         return arr;
     };
 
-    // 2. Obliczanie zakresu dat (używamy useMemo dla wydajności)
+    // 2. Calculate date range (useMemo for performance)
     const calendarDays = useMemo(() => {
         const defaultStart = new Date();
         const defaultEnd = new Date();
-        defaultEnd.setDate(defaultEnd.getDate() + 13); // Domyślnie 14 dni
+        defaultEnd.setDate(defaultEnd.getDate() + 13); // Default to 14 days
 
         const startRange = session?.availabilityFrom || defaultStart.toISOString();
         const endRange = session?.availabilityTo || defaultEnd.toISOString();
@@ -37,36 +39,36 @@ export const AvailabilityCalendar = ({
         return getDaysArray(startRange, endRange);
     }, [session?.availabilityFrom, session?.availabilityTo]);
 
-    // 3. Tekst nagłówka
+    // 3. Header text
     const headerText = session?.availabilityFrom && session?.availabilityTo 
         ? `${new Date(session.availabilityFrom).toLocaleDateString('pl-PL')} - ${new Date(session.availabilityTo).toLocaleDateString('pl-PL')}`
-        : "Najbliższe 14 dni";
+        : t('featureComponents.sessions.availabilityCalendar.nearest14Days');
 
     return (
         <div className="mt-8">
-            {/* Nagłówek sekcji */}
+            {/* Section header */}
             <div className="flex justify-between items-baseline mb-4">
-                <h3 className="font-bold font-display text-xl text-slate-900 dark:text-white">Dostępność</h3>
+                <h3 className="font-bold font-display text-xl text-slate-900 dark:text-white">{t('featureComponents.sessions.availabilityCalendar.title')}</h3>
                 <span className="text-xs font-bold text-primary bg-primary/10 px-2 py-1 rounded">
                     {headerText}
                 </span>
             </div>
 
             <p className="text-sm text-text-muted mb-6">
-                Kliknij w dzień, aby zaznaczyć swoją dostępność. Pasek na dole kafelka pokazuje popularność terminu.
+                {t('featureComponents.sessions.availabilityCalendar.description')}
             </p>
 
-            {/* Grid Kalendarza */}
+            {/* Calendar grid */}
             <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-7 gap-3">
                 {calendarDays.map((dateStr) => {
                     const dateObj = new Date(dateStr);
                     const monthName = dateObj.toLocaleDateString('pl-PL', { month: 'short' }); 
                     const cleanMonthName = monthName.replace('.', '');
                     const isSelected = myDates.includes(dateStr);
-                    // Szukamy liczby głosów dla danego dnia
+                    // Find vote count for the given day
                     const votes = summaryDates.find(d => d.date.startsWith(dateStr))?.availabilityCount || 0;
                     
-                    // Obliczamy szerokość paska (%)
+                    // Calculate bar width (%)
                     const percentage = participantsCount > 0 ? (votes / participantsCount) * 100 : 0;
 
                     return (
@@ -81,7 +83,7 @@ export const AvailabilityCalendar = ({
                                 }
                             `}
                         >
-                            {/* Pasek popularności */}
+                            {/* Popularity bar */}
                             <div 
                                 className="absolute bottom-0 left-0 right-0 h-1.5 bg-gradient-to-r from-emerald-400 to-emerald-600 rounded-b-2xl transition-all duration-500 ease-out"
                                 style={{ opacity: votes > 0 ? 1 : 0, width: `${percentage}%` }}
@@ -108,10 +110,10 @@ export const AvailabilityCalendar = ({
                 })}
             </div>
             
-            {/* Komunikat o pustym kalendarzu (opcjonalnie) */}
+            {/* Empty calendar message (optional) */}
             {calendarDays.length === 0 && (
                 <div className="text-center p-8 text-text-muted bg-gray-50 rounded-xl border border-dashed border-gray-200">
-                    Brak zdefiniowanego zakresu dat.
+                    {t('featureComponents.sessions.availabilityCalendar.emptyRange')}
                 </div>
             )}
         </div>

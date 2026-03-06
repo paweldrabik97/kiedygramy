@@ -74,7 +74,8 @@ namespace kiedygramy.Controllers
                 user.UserName!,
                 user.Email,
                 user.FullName,
-                user.City);
+                user.City,
+                user.PrefferedLanguage);
 
             return Ok(meDto);
         }

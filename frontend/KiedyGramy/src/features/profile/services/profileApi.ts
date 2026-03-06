@@ -34,4 +34,10 @@ export const profileApi = {
       method: "PATCH",
       body: JSON.stringify(dto),
     }),
+
+    changeLanguage: (langCode: string) =>
+    api<void>("/api/auth/language", {
+      method: "PATCH",
+      body: JSON.stringify({ language: langCode }),
+    }),
 };

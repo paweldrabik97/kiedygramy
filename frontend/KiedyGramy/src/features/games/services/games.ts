@@ -23,7 +23,7 @@ export type ImportBggGameDto = {
     localTitle?: string;
 };
 
-// To co wraca z backendu (lista gier)
+// What comes back from the backend (game list)
 export type Game = {
     id: number;
     title: string;
@@ -33,11 +33,24 @@ export type Game = {
     maxPlayers: number;
     imageUrl?: string;
     playTime?: string;
+    rating?: number;
+    isCustom: boolean;
+};
+
+export type UpdateGameDto = {
+    title?: string;
+    localTitle?: string;
+    genreIds?: number[];
+    minPlayers?: number;
+    maxPlayers?: number;
+    imageUrl?: string;
+    playTime?: string;
+    rating?: number;
 };
 
 export type BggGame = {
     title: string;
-    genres: string[]; // BGG zwraca stringi!
+    genres: string[]; // BGG returns strings!
     minPlayers: number;
     maxPlayers: number;
     imageUrl: string;
@@ -47,8 +60,8 @@ export type BggGame = {
 
 // --- SERWISY ---
 
-// 1. Pobieranie słownika gatunków (NOWE)
-// Zakładam, że masz taki endpoint. Jeśli nie, musisz go dorobić w backendzie.
+// 1. Fetch genre dictionary (NEW)
+// Assuming you have such an endpoint. If not, you need to add it in the backend.
 export async function getGenres() { 
     return api<Genre[]>("/api/genres", { method: "GET" });
 }
@@ -68,33 +81,33 @@ export async function deleteGame(id: number) {
     return api<void>(`/api/my/games/${id}`, { method: "DELETE" });
 }
 
-export async function updateGame(id: number, data: Partial<CreateCustomGameDto>) {
+export async function updateGame(id: number, data: Partial<UpdateGameDto>) {
     return api<Game>(`/api/my/games/${id}`, { 
         method: "PUT", 
         body: JSON.stringify(data) 
     });
 }
 
-// --- ZEWNĘTRZNE SERWISY (INTEGRACJE) ---
+// --- EXTERNAL SERVICES (INTEGRATIONS) ---
 
 /**
- * 1. Wyszukiwanie gier w BGG przez Twój backend (Proxy).
- * Zakładam, że stworzysz endpoint GET /api/bgg/search?query=...
- * Jeśli zrobisz to w kontrolerze gier, np. /api/games/lookup, to zmień tutaj URL.
+ * 1. Search games in BGG through your backend (Proxy).
+ * Assuming you create endpoint GET /api/bgg/search?query=...
+ * If you do it in the games controller, e.g. /api/games/lookup, change the URL here.
  */
 export async function searchBggGames(query: string, skip: number = 0, take: number = 10) {
     const params = new URLSearchParams({ query, skip: skip.toString(), take: take.toString() });
-    // Zwraca tablicę obiektów BggGame
+    // Returns an array of BggGame objects
     return api<BggGame[]>(`/api/external/games/search?${params.toString()}`, { method: "GET" });
 }
 
 /**
- * 2. Tłumaczenie tytułu przez Wikidata (SPARQL).
- * Wywoływane bezpośrednio z przeglądarki (Client-side fetch).
- * @param bggId - ID gry z BGG (sourceId)
+ * 2. Translate title through Wikidata (SPARQL).
+ * Called directly from the browser (client-side fetch).
+ * @param bggId - Game ID from BGG (sourceId)
  */
 export async function fetchWikiTitle(bggId: string): Promise<string | null> {
-    // Zapytanie SPARQL: Znajdź obiekt z property P2339 (BGG ID) == bggId i daj etykietę PL/EN
+    // SPARQL query: Find entity with property P2339 (BGG ID) == bggId and return PL/EN label
     const sparqlQuery = `
         SELECT ?gameLabel WHERE {
             ?game wdt:P2339 "${bggId}" .
@@ -118,13 +131,13 @@ export async function fetchWikiTitle(bggId: string): Promise<string | null> {
 
         const data = await response.json();
         
-        // Wyciągamy wartość z odpowiedzi Wikidaty
-        // Struktura: results -> bindings -> [0] -> gameLabel -> value
+        // Extract value from Wikidata response
+        // Structure: results -> bindings -> [0] -> gameLabel -> value
         const title = data.results?.bindings?.[0]?.gameLabel?.value;
         
         return title || null;
     } catch (error) {
-        console.warn("Błąd pobierania tytułu z Wikidaty:", error);
+        console.warn("Failed to fetch title from Wikidata:", error);
         return null;
     }
 }

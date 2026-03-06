@@ -22,6 +22,9 @@ namespace kiedygramy.DTO.Auth
         string? FullName,
 
         [MaxLength(100)]
-        string? City
+        string? City,
+
+        [MaxLength(3), MinLength(2)]
+        string? PrefferedLanguage
     );
 }

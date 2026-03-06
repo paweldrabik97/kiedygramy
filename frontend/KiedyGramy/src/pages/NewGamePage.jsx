@@ -3,9 +3,11 @@ import SubmitButton from '../components/ui/SubmitButton.jsx'
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { addGame } from '../features/games/services/games.ts';
+import { useTranslation } from 'react-i18next';
 
 
 const NewGamePage = () => {
+    const { t } = useTranslation();
 
     // State for form inputs
     const [formData, setFormData] = useState({
@@ -34,7 +36,7 @@ const NewGamePage = () => {
         setError(null);
 
         if(!formData.gameName) {
-            setError("Nazwa gry jest wymagana");
+            setError(t('newGamePage.errors.nameRequired'));
             return;
         }
 
@@ -48,8 +50,8 @@ const NewGamePage = () => {
             });
             navigate('/games');
         } catch (err) {
-            setError(`Dodanie gry nie powiodło się. Spróbuj ponownie. ${err}`);
-            console.error("Dodanie gry nie powiodło się:", err);
+            setError(t('newGamePage.errors.addFailed', { error: String(err) }));
+            console.error("Failed to add game:", err);
         } finally {
             setLoading(false);
         }
@@ -58,28 +60,28 @@ const NewGamePage = () => {
   return (
     <div className='z-10 absolute left-1/2 -translate-x-1/2 m-auto top-1/2 -translate-y-1/2 bg-gray-200 p-10 rounded-lg shadow-lg text-black'>
         <div>
-            <h1>Dodaj nową grę</h1>
+            <h1>{t('newGamePage.title')}</h1>
         </div>
         <div>
             <div>
                 <form>
                     <div>
-                        <label htmlFor='gameName'>Nazwa gry:</label>
+                        <label htmlFor='gameName'>{t('newGamePage.labels.gameName')}</label>
                         <input type="text" id="gameName" name="gameName" value={formData.gameName} onChange={handleInputChange} required />
                     </div>
                     <div>
-                        <label htmlFor='genre'>Gatunek:</label>
+                        <label htmlFor='genre'>{t('newGamePage.labels.genre')}</label>
                         <input type="text" id="genre" name="genre" value={formData.genre} onChange={handleInputChange} />
                     </div>
                     <div>
-                        <label htmlFor='minPlayers'>Minimalna liczba graczy:</label>
+                        <label htmlFor='minPlayers'>{t('newGamePage.labels.minPlayers')}</label>
                         <input type="number" id="minPlayers" name="minPlayers" value={formData.minPlayers} onChange={handleInputChange} />
                     </div>
                     <div>
-                        <label htmlFor='maxPlayers'>Maksymalna liczba graczy:</label>
+                        <label htmlFor='maxPlayers'>{t('newGamePage.labels.maxPlayers')}</label>
                         <input type="number" id="maxPlayers" name="maxPlayers" value={formData.maxPlayers} onChange={handleInputChange} />
                     </div>
-                    <SubmitButton onClick={handleSubmit}>Dodaj Grę</SubmitButton>
+                    <SubmitButton onClick={handleSubmit}>{t('newGamePage.addButton')}</SubmitButton>
                 </form>
             </div>
         </div>

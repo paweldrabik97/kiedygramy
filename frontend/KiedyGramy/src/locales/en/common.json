@@ -1,0 +1,439 @@
+{
+    "auth": {
+        "errors": {
+            "loginFailed": "Login failed. Please check your credentials.",
+            "passwordsDoNotMatch": "Passwords do not match.",
+            "registrationFailed": "Registration failed. Please try again."
+        },
+        "backToHome": "Back to home page",
+        "back": "Back",
+        "registrationSuccessTitle": "Registration successful!",
+        "welcomeBackTitle": "Welcome back!",
+        "loginSubtitle": "Log in to manage your sessions.",
+        "placeholders": {
+            "username": "Username",
+            "password": "Password",
+            "email": "Email",
+            "repeat": "Repeat password",
+            "fullName": "Full name",
+            "city": "City"
+        },
+        "forgotPassword": "Forgot password?",
+        "loginButton": "Log in",
+        "noAccount": "Don't have an account yet?",
+        "registerLink": "Sign up",
+        "registerTitle": "Create an account",
+        "registerSubtitle": "Join the KiedyGramy community.",
+        "creatingButton": "Creating...",
+        "registerButton": "Sign up",
+        "haveAccount": "Already have an account?",
+        "overlay": {
+            "titleHasAccount": "Already have an account?",
+            "titleNewPlayer": "New player?",
+            "descriptionHasAccount": "Return to the tavern and see what's new with your party.",
+            "descriptionNewPlayer": "Start your adventure, add games, and schedule sessions with your friends.",
+            "buttonLogin": "Log in",
+            "buttonCreateAccount": "Create an account"
+        }
+    },
+    "dashboard": {
+        "loadingData": "Loading data...",
+        "welcomeUser": "Welcome, {{name}}!",
+        "intro": "Let's take a look at what's happening in your campaigns.",
+        "stats": {
+            "upcomingSessions": "Upcoming sessions",
+            "yourGames": "Your games",
+            "hoursPlayed": "Hours played"
+        },
+        "newSessionCard": {
+            "title": "New Session",
+            "subtitle": "Schedule a date and invite players",
+            "createButton": "+ Create"
+        },
+        "upcomingSessionTitle": "Next session",
+        "calendarLink": "Calendar →",
+        "systemRpg": "RPG System",
+        "sessionDetails": "Session details",
+        "noSessionsTitle": "No scheduled sessions",
+        "noSessionsSubtitle": "Looks like you have a free evening. Want to plan something?",
+        "planGame": "Plan a game",
+        "recentGamesTitle": "Recently added games",
+        "addTitle": "Add title",
+        "emptyLibrary": "Your library is empty.",
+        "invitationsTitle": "Invitations",
+        "invitedBy": "Invited by:",
+        "accept": "Accept",
+        "reject": "Decline",
+        "noInvitations": "No new invitations.",
+        "systemStatusTitle": "System Status",
+        "allSystemsOperational": "All systems operational",
+        "systemStatusText": "Version {{version}}. Have an idea for a new feature?",
+        "reportSuggestion": "Submit a suggestion"
+    },
+    "gamesPage": {
+        "errors": {
+            "addGameFailed": "An error occurred while adding the game.",
+            "ratingSaveFailed": "Failed to save the rating.",
+            "saveChangesFailed": "Failed to save changes!"
+        },
+        "loadingLibrary": "Loading your library...",
+        "title": "My Games",
+        "addGame": "+ Add game",
+        "emptyLibrary": "Your library is empty.",
+        "addFirstBggGame": "Add your first game from BGG",
+        "noCover": "No cover",
+        "editGame": "Edit game",
+        "removeFromCollection": "Remove from collection",
+        "playersAndTime": "{{min}}-{{max}} players • {{playTime}}",
+        "unknownPlayTime": "?",
+        "yourRating": "Your rating",
+        "rateStar": "Rate {{star}} stars"
+    },
+    "landing": {
+        "nav": {
+            "login": "Log in",
+            "joinNow": "Join now"
+        },
+        "heroBadge": "The best platform for RPG and board game players",
+        "heroTitleLine1": "Gather your party",
+        "heroTitleHighlight": "without the scheduling hassle.",
+        "heroSubtitle": "No more endless chat discussions. Schedule dates, manage your game library, and send invites all in one place.",
+        "heroStartFree": "Start for free",
+        "heroSeeFeatures": "See features",
+        "socialProof": {
+            "sessionsPlayed": "Sessions played",
+            "availableGames": "Available games",
+            "activePlayers": "Active players",
+            "savedEvenings": "Saved evenings"
+        },
+        "features": {
+            "sectionTitle": "Everything your table needs",
+            "sectionSubtitle": "Focus on the game, leave the logistics to us. Here's how KiedyGramy helps Game Masters and players.",
+            "libraryTitle": "Game Library",
+            "libraryDescription": "Create a digital shelf with your titles. Quickly check what to play by filtering by player count or playtime.",
+            "scheduleTitle": "Smart Scheduler",
+            "scheduleDescription": "No more Doodle polls. Players mark their availability, and the system suggests the best date for the whole group.",
+            "teamHubTitle": "Party Hub",
+            "teamHubDescription": "Invite friends, create regular groups, and track your meeting history. See who the MVP of the month is."
+        },
+        "howItWorks": {
+            "title": "How to start in 3 steps?",
+            "step1Title": "Create an account",
+            "step1Description": "It takes less time than rolling a d6.",
+            "step2Title": "Add your games",
+            "step2Description": "Build a library of the titles you own.",
+            "step3Title": "Invite your crew",
+            "step3Description": "Send a link and set the date for your first session!"
+        },
+        "screenshotAlt": "KiedyGramy app screenshot",
+        "cta": {
+            "title": "Ready for your next adventure?",
+            "subtitle": "Join a community of gamers who value their time and love board games as much as you do.",
+            "button": "Join KiedyGramy",
+            "footnote": "No credit card required. Free starter account."
+        },
+        "footer": {
+            "copyright": "© {{year}} KiedyGramy. All rights reserved.",
+            "terms": "Terms of Service",
+            "privacy": "Privacy Policy",
+            "contact": "Contact"
+        }
+    },
+    "sessionsPage": {
+        "errors": {
+            "createSessionFailed": "Failed to create the session."
+        },
+        "loading": "Loading...",
+        "title": "My Sessions",
+        "planSession": "+ Plan Session",
+        "pendingInvites": "📩 Pending invites ({{count}})",
+        "participants": "👥 Participants: {{count}}",
+        "viewAndRespond": "View and respond",
+        "noPlannedSessions": "You don't have any scheduled sessions yet.",
+        "planFirst": "Plan your first one!",
+        "locationFallback": "Online / Not specified"
+    },
+    "sessionDetails": {
+        "errors": {
+            "loadAvailability": "Error loading availability:",
+            "criticalLoad": "Critical error loading session:",
+            "saveAvailability": "Error saving availability",
+            "inviteUserFailed": "Failed to invite the user.",
+            "kickPlayerFailed": "Failed to kick the player.",
+            "sessionLoadFailed": "Failed to load the session."
+        },
+        "inviteSent": "Invite sent!",
+        "kickConfirm": "Are you sure you want to kick {{name}} from the session?",
+        "loadingSession": "Loading session...",
+        "sessionNotFound": "Session not found.",
+        "hostLabel": "👑 Host:",
+        "respond": {
+            "accept": "I'm in!",
+            "decline": "I'll pass",
+            "acceptedBadge": "✅ Attending"
+        },
+        "tabs": {
+            "board": "📋 Board",
+            "discussion": "💬 Discussion"
+        },
+        "whatToPlayTitle": "What are we playing?",
+        "selectGames": "✏️ Select games",
+        "cancel": "❌ Cancel",
+        "noGamesYet": "The host hasn't selected any games yet.",
+        "clickToSelectByVotes": "Click here to select a game based on votes",
+        "undecided": {
+            "title": "Hey! Will you join?",
+            "description": "To see game suggestions, vote on a date, and join the discussion, you must confirm your attendance.",
+            "cta": "Count me in! 🚀"
+        },
+        "teamTitle": "Party ({{count}})",
+        "cancelButton": "Cancel",
+        "removePlayerFromSession": "Remove player from session",
+        "removeButton": "Remove",
+        "status": {
+            "pending": "Pending",
+            "accepted": "Attending",
+            "rejected": "Declined"
+        },
+        "organizer": "Host",
+        "inviteFriend": "Invite a friend",
+        "invitePlaceholder": "Username or email..."
+    },
+    "profile": {
+        "loading": "Loading...",
+        "errorTitle": "Error",
+        "savedTitle": "Saved",
+        "profileData": "Profile data",
+        "fields": {
+            "login": "Username",
+            "fullName": "Full name",
+            "city": "City",
+            "password": "Password",
+            "language": "Language"
+        },
+        "edit": {
+            "changeLogin": "Change username",
+            "changeName": "Change name",
+            "changeCity": "Change city",
+            "changePassword": "Change password",
+            "change": "Change"
+        },
+        "success": {
+            "usernameChanged": "Username changed successfully.",
+            "fullNameChanged": "Full name changed successfully.",
+            "cityChanged": "City changed successfully.",
+            "passwordChanged": "Password changed successfully."
+        },
+        "errors": {
+            "passwordsMustMatch": "New passwords must match.",
+            "newPasswordEmpty": "New password cannot be empty.",
+            "unknown": "Unknown error"
+        },
+        "placeholders": {
+            "newLogin": "New username",
+            "fullName": "Your full name",
+            "city": "Your city",
+            "currentPassword": "Current password",
+            "newPassword": "New password",
+            "repeatNewPassword": "Repeat new password"
+        },
+        "save": "Save",
+        "cancel": "Cancel"
+    },
+    "layout": {
+        "userFallback": "User",
+        "emailFallback": "no@email.com",
+        "nav": {
+            "home": "Home",
+            "myGames": "My Games",
+            "mySessions": "My Sessions",
+            "stats": "Stats",
+            "panel": "Panel"
+        },
+        "sidebar": {
+            "collapse": "Collapse",
+            "expand": "Expand"
+        },
+        "menu": {
+            "profileSettings": "Profile settings",
+            "changeTheme": "Change theme",
+            "logout": "Log out"
+        }
+    },
+    "featureComponents": {
+        "auth": {
+            "protectedRoute": {
+                "checkingPermissions": "Checking permissions..."
+            }
+        },
+        "games": {
+            "addGameModal": {
+                "headers": {
+                    "search": "Find a game on BGG",
+                    "edit": "Customize your title",
+                    "custom": "Add a custom game"
+                },
+                "search": {
+                    "placeholder": "Enter title (e.g., Catan)...",
+                    "manualTitle": "Not in the database? Add it manually!",
+                    "manualButtonShort": "+ Manual",
+                    "searching": "Searching BGG database...",
+                    "noImage": "None",
+                    "meta": "{{playTime}} • {{min}}-{{max}} players",
+                    "resultsNotMatch": "The results above aren't what you're looking for?",
+                    "addManually": "Add game manually",
+                    "notFound": "Couldn't find this game on BGG.",
+                    "addYourself": "Add it yourself"
+                },
+                "edit": {
+                    "noCover": "No Cover",
+                    "bggData": "Data from BoardGameGeek",
+                    "labels": {
+                        "genres": "Genres",
+                        "playersCount": "Player count",
+                        "nameInCollection": "Name in your collection"
+                    },
+                    "noData": "No data",
+                    "importedParamsNote": "These parameters were automatically imported from the database and cannot be changed.",
+                    "renameHint": "You can change the title to what you call it in your group (e.g., localized).",
+                    "backToResults": "Back to results",
+                    "addToLibrary": "Add to library"
+                },
+                "custom": {
+                    "labels": {
+                        "gameTitleRequired": "Game Title *",
+                        "minPlayers": "Min. players",
+                        "maxPlayers": "Max. players",
+                        "estimatedPlayTime": "Estimated play time (e.g., \"45-60 min\")",
+                        "coverUrlOptional": "Cover URL (Optional)"
+                    },
+                    "backToSearch": "Back to search",
+                    "addManualGame": "Add game manually"
+                }
+            }
+        },
+        "sessions": {
+            "availabilityCalendar": {
+                "nearest14Days": "Next 14 days",
+                "title": "Availability",
+                "description": "Click on a day to mark your availability. The bar at the bottom shows the date's popularity.",
+                "emptyRange": "No date range defined."
+            },
+            "availabilityWindowForm": {
+                "alerts": {
+                    "updated": "Timeframes have been updated!",
+                    "saveError": "An error occurred while saving the configuration."
+                },
+                "title": "Voting configuration",
+                "description": "As the host, you must define the timeframes.",
+                "labels": {
+                    "startFrom": "Start (From)",
+                    "endTo": "End (To)",
+                    "votingDeadline": "Voting deadline"
+                },
+                "buttons": {
+                    "saving": "Saving...",
+                    "updateWindow": "Update timeframes",
+                    "startVoting": "Start voting"
+                }
+            },
+            "createSessionModal": {
+                "title": "New Session",
+                "labels": {
+                    "sessionTitle": "Session title",
+                    "game": "Game",
+                    "dateTime": "Date and time",
+                    "location": "Location",
+                    "descriptionOptional": "Description (optional)"
+                },
+                "placeholders": {
+                    "sessionTitle": "E.g., Friday Game Night",
+                    "selectGame": "-- Select a game --",
+                    "location": "E.g., My place"
+                },
+                "buttons": {
+                    "cancel": "Cancel",
+                    "createSession": "Create session"
+                }
+            },
+            "gameVotingSection": {
+                "alerts": {
+                    "voteSaveFailed": "Failed to save vote."
+                },
+                "loadingGames": "Loading games...",
+                "emptyPool": "The host hasn't added any games to the pool yet.",
+                "title": "What are we playing?",
+                "clickToVote": "Click to vote"
+            },
+            "organizerDatePicker": {
+                "errors": {
+                    "invalidDateTime": "Please select a valid date and time.",
+                    "saveTermFailed": "An error occurred while saving the date."
+                },
+                "title": "Set the final date",
+                "description": "Choose a date and time based on the poll results. All participants will be notified.",
+                "labels": {
+                    "sessionDateTime": "Session date and time"
+                },
+                "buttons": {
+                    "saving": "Saving...",
+                    "confirmTerm": "Confirm date"
+                }
+            },
+            "organizerGamePicker": {
+                "alerts": {
+                    "saveGamesFailed": "Failed to save games."
+                },
+                "loadingSuggestions": "Loading suggestions...",
+                "emptyPool": "No games in the pool. Add something in the voting section!",
+                "selectGamesTitle": "Select games:",
+                "selectManyHint": "You can select multiple",
+                "ownerLabel": "Owner: {{owner}}",
+                "buttons": {
+                    "saving": "Saving...",
+                    "saveSelection": "Save selection ({{count}})"
+                }
+            },
+            "sessionChat": {
+                "alerts": {
+                    "sendFailed": "Failed to send message"
+                },
+                "loading": "Loading chat...",
+                "loadOlderMessages": "Load older messages",
+                "emptyChat": "No messages yet. Start the discussion! 👋",
+                "messagePlaceholder": "Write a message..."
+            }
+        },
+        "notifications": {
+            "page": {
+                "errors": {
+                    "acceptInviteFailed": "Failed to accept the invitation.",
+                    "rejectInviteFailed": "Failed to decline the invitation."
+                },
+                "title": "Notifications",
+                "subtitle": "Your notification history (click a tile to open).",
+                "unreadLabel": "Unread:",
+                "empty": "No notifications.",
+                "read": "Read",
+                "unread": "Unread",
+                "noContent": "(no content)",
+                "accept": "Accept",
+                "reject": "Decline"
+            }
+        }
+    },
+    "newGamePage": {
+        "errors": {
+            "nameRequired": "Game name is required",
+            "addFailed": "Failed to add the game. Please try again. {{error}}"
+        },
+        "title": "Add a new game",
+        "labels": {
+            "gameName": "Game name:",
+            "genre": "Genre:",
+            "minPlayers": "Minimum players:",
+            "maxPlayers": "Maximum players:"
+        },
+        "addButton": "Add Game"
+    }
+}

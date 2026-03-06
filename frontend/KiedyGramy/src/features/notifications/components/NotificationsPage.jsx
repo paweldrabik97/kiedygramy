@@ -2,6 +2,7 @@ import React, { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useNotifications } from "../contexts/NotificationsContext.jsx";
 import { respondToInvite } from "../../sessions/services/invitations.ts";
+import { useTranslation } from 'react-i18next';
 
 function formatTime(iso) {
   try {
@@ -19,6 +20,7 @@ function typeLabel(type) {
 }
 
 export default function NotificationsPage() {
+  const { t } = useTranslation();
   const { notifications, markRead } = useNotifications();
   const navigate = useNavigate();
 
@@ -49,7 +51,7 @@ export default function NotificationsPage() {
     if (!n.isRead) await markRead(n.id);
   } catch (e) {
     console.error(e);
-    alert(accept ? "Nie udało się zaakceptować zaproszenia." : "Nie udało się odrzucić zaproszenia.");
+    alert(accept ? t('featureComponents.notifications.page.errors.acceptInviteFailed') : t('featureComponents.notifications.page.errors.rejectInviteFailed'));
   }
 };
 
@@ -59,21 +61,21 @@ export default function NotificationsPage() {
         {/* Header */}
         <div className="flex flex-col gap-2 items-center text-center mb-5">
           <h1 className="text-xl sm:text-2xl font-extrabold text-gray-800">
-            Powiadomienia
+            {t('featureComponents.notifications.page.title')}
           </h1>
           <p className="text-sm text-gray-500">
-            Historia Twoich powiadomień (kliknij kafelek, aby otworzyć).
+            {t('featureComponents.notifications.page.subtitle')}
           </p>
           <div className="text-sm text-gray-600">
-            Nieprzeczytane:{" "}
+            {t('featureComponents.notifications.page.unreadLabel')}{" "}
             <span className="font-semibold text-gray-800">{unreadCount}</span>
           </div>
         </div>
 
-        {/* Lista */}
+        {/* List */}
         {notifications.length === 0 ? (
           <div className="rounded-xl p-4 border border-dashed border-gray-300 text-gray-600">
-            Brak powiadomień.
+            {t('featureComponents.notifications.page.empty')}
           </div>
         ) : (
           <div className="grid gap-2.5">
@@ -92,17 +94,17 @@ export default function NotificationsPage() {
                     n.isRead ? "border-gray-100" : "border-gray-200",
                   ].join(" ")}
                 >
-                  {/* Klikalny obszar (żeby menu + przyciski mogły stopPropagation) */}
+                  {/* Clickable area (so menu and buttons can use stopPropagation) */}
                   <button
                     type="button"
                     onClick={() => onOpen(n)}
                     className="w-full text-left"
                   >
                     <div className="grid grid-cols-1 sm:grid-cols-[110px_1fr_auto] gap-3 sm:gap-4 items-start">
-                      {/* Typ + kropka */}
+                      {/* Type + dot */}
                       <div className="flex items-center gap-3">
                         <span
-                          title={n.isRead ? "Przeczytane" : "Nieprzeczytane"}
+                          title={n.isRead ? t('featureComponents.notifications.page.read') : t('featureComponents.notifications.page.unread')}
                           className={[
                             "h-2.5 w-2.5 rounded-full flex-shrink-0",
                             n.isRead ? "bg-gray-200" : "bg-red-500",
@@ -113,7 +115,7 @@ export default function NotificationsPage() {
                         </span>
                       </div>
 
-                      {/* Treść */}
+                      {/* Content */}
                       <div className="min-w-0 pr-2 text-center w full">
                         <div
                           className={[
@@ -136,19 +138,19 @@ export default function NotificationsPage() {
                           </div>
                         ) : (
                           <div className="mt-1 text-sm text-gray-400 italic">
-                            (brak treści)
+                            {t('featureComponents.notifications.page.noContent')}
                           </div>
                         )}
                       </div>
 
-                      {/* Czas */}
+                      {/* Time */}
                       <div className="text-center sm:text-right text-xs sm:text-sm text-gray-500 whitespace-nowrap w-full">
                         {time}
                       </div>
                     </div>
                   </button>
                
-                  {/* Akcje INVITE */}
+                  {/* INVITE actions */}
                   {isInvite && (
                     <div className="mt-4 flex flex-col sm:flex-row justify-center items-stretch sm:items-center gap-3">
                       <button
@@ -166,7 +168,7 @@ export default function NotificationsPage() {
                           "transition-all",
                         ].join(" ")}
                       >
-                        Zaakceptuj
+                        {t('featureComponents.notifications.page.accept')}
                       </button>
 
                       <button
@@ -183,7 +185,7 @@ export default function NotificationsPage() {
                           "transition-all",
                         ].join(" ")}
                       >
-                        Odrzuć
+                        {t('featureComponents.notifications.page.reject')}
                       </button>
                     </div>
                   )}

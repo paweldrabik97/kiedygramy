@@ -1,6 +1,6 @@
 import React from 'react';
 
-export const Button = ({ variant = 'primary', children, className = '', ...props }) => {
+export const Button = ({ variant = 'primary', children, className = '', onClick, ...props }) => {
   
   const baseStyles = "px-6 py-3 rounded-xl font-bold transition-all duration-300 flex items-center justify-center gap-2 active:scale-95";
   
@@ -9,7 +9,7 @@ export const Button = ({ variant = 'primary', children, className = '', ...props
       bg-primary text-white shadow-lg shadow-primary/30 
       hover:bg-primary-hover 
       dark:shadow-primary/50 dark:hover:shadow-primary/70 
-      /* W dark mode primary button po prostu mocniej "świeci" */
+      /* In dark mode the primary button simply "glows" more strongly */
     `,
     secondary: `
       bg-secondary text-amber-900 
@@ -23,7 +23,7 @@ export const Button = ({ variant = 'primary', children, className = '', ...props
   };
 
   return (
-    <button className={`${baseStyles} ${variants[variant]} ${className}`} {...props}>
+    <button className={`${baseStyles} ${variants[variant]} ${className}`} {...props} onClick={onClick}>
       {children}
     </button>
   );

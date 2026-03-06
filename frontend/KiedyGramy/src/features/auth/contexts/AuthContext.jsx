@@ -1,6 +1,6 @@
 // src/context/AuthContext.jsx
 import React, { createContext, useContext, useState, useEffect } from 'react';
-// Importujemy Twoje funkcje API
+// Import your API functions
 import { me, login as apiLogin, logout as apiLogout, register as apiRegister } from '../services/auth.ts';
 
 const AuthContext = createContext();
@@ -9,14 +9,14 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // 1. Sprawdzanie sesji przy starcie
+  // 1. Check session on startup
   useEffect(() => {
     const initAuth = async () => {
       try {
-        const userData = await me(); // Używamy Twojej funkcji me()
+        const userData = await me(); // Use your me() function
         setUser(userData);
       } catch (err) {
-        // Użytkownik nie jest zalogowany
+        // User is not logged in
         setUser(null);
       } finally {
         setLoading(false);
@@ -25,31 +25,31 @@ export const AuthProvider = ({ children }) => {
     initAuth();
   }, []);
 
-  // 2. Wrapper na Logowanie
+  // 2. Login wrapper
   const login = async (username, password) => {
-    // Najpierw wołamy API (ustawia cookie)
+    // First call API (sets cookie)
     await apiLogin(username, password);
     
-    // Skoro apiLogin zwraca void, musimy ręcznie pobrać dane użytkownika
-    // żeby zaktualizować interfejs bez odświeżania strony
+    // Since apiLogin returns void, fetch user data manually
+    // to update the UI without refreshing the page
     const userData = await me(); 
     setUser(userData);
   };
 
-  // 3. Wrapper na Rejestrację
+  // 3. Registration wrapper
   const register = async (data) => {
     
     await apiRegister(data);
     
-    // Zakładamy, że po rejestracji backend automatycznie loguje (ustawia cookie).
-    // Jeśli tak, pobieramy dane usera.
-    // Jeśli backend NIE loguje po rejestracji, tutaj trzeba wywołać login() albo przekierować do logowania.
-    // Przyjmijmy wariant, że loguje:
+    // Assume backend auto-logs in after registration (sets cookie).
+    // If yes, fetch user data.
+    // If backend does NOT log in after registration, call login() here or redirect to login.
+    // Assuming it logs in:
     //const userData = await me();
     //setUser(userData);
   };
 
-  // 4. Wrapper na Wylogowanie
+  // 4. Logout wrapper
   const logout = async () => {
     await apiLogout();
     setUser(null);

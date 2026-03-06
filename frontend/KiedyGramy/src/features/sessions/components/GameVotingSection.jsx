@@ -1,7 +1,9 @@
 import { useState, useEffect } from "react";
 import { getSessionGamePool, voteForGames } from "../services/sessions";
+import { useTranslation } from 'react-i18next';
 
 export const GameVotingSection = ({ sessionId }) => {
+    const { t } = useTranslation();
     const [games, setGames] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
 
@@ -14,30 +16,30 @@ export const GameVotingSection = ({ sessionId }) => {
             const data = await getSessionGamePool(sessionId);
             setGames(data);
         } catch (error) {
-            console.error("Błąd pobierania gier:", error);
+            console.error("Failed to fetch games:", error);
         } finally {
             setIsLoading(false);
         }
     };
 
     const handleToggleVote = async (gameKey) => {
-        // 1. Zapamiętujemy, co zmieniamy (żeby wiedzieć co cofnąć w razie błędu)
+        // 1. Save what we change (to know what to roll back on error)
         const gameIndex = games.findIndex(g => g.key === gameKey);
         if (gameIndex === -1) return;
-        const originalGame = games[gameIndex]; // Kopia "starej" gry do rollbacku
+        const originalGame = games[gameIndex]; // Copy of the old game for rollback
 
-        // 2. Optimistic Update (bezpieczny)
+        // 2. Optimistic update (safe)
         setGames(currentGames => {
             const newGames = [...currentGames];
             const gameToUpdate = newGames[gameIndex];
             
-            // Obliczamy nowe wartości
+            // Calculate new values
             const newHasVoted = !gameToUpdate.hasVoted;
             const newVotesCount = newHasVoted 
                 ? gameToUpdate.votesCount + 1 
                 : gameToUpdate.votesCount - 1;
 
-            // Podmieniamy obiekt w tablicy
+            // Replace object in array
             newGames[gameIndex] = {
                 ...gameToUpdate,
                 hasVoted: newHasVoted,
@@ -47,13 +49,13 @@ export const GameVotingSection = ({ sessionId }) => {
             return newGames;
         });
 
-        // 3. Strzał do API
+        // 3. API call
         try {
             await voteForGames(sessionId, gameKey); 
         } catch (error) {
-            console.error("Błąd głosowania:", error);
+            console.error("Voting request failed:", error);
             
-            // 4. Rollback (bezpieczny)
+            // 4. Rollback (safe)
             setGames(latestGames => {
                 const rollbackArray = [...latestGames];
                 const indexToRollback = rollbackArray.findIndex(g => g.key === gameKey);
@@ -65,16 +67,16 @@ export const GameVotingSection = ({ sessionId }) => {
                 return rollbackArray;
             });
             
-            alert("Nie udało się zapisać głosu.");
+            alert(t('featureComponents.sessions.gameVotingSection.alerts.voteSaveFailed'));
         }
     };
 
-    if (isLoading) return <div className="text-center p-4 animate-pulse">Ładowanie gier...</div>;
+    if (isLoading) return <div className="text-center p-4 animate-pulse">{t('featureComponents.sessions.gameVotingSection.loadingGames')}</div>;
 
     if (games.length === 0) {
         return (
              <div className="text-gray-500 text-center py-6 border border-dashed border-gray-700 rounded-lg">
-                Host nie dodał jeszcze żadnych gier do puli.
+                {t('featureComponents.sessions.gameVotingSection.emptyPool')}
             </div>
         );
     }
@@ -82,13 +84,13 @@ export const GameVotingSection = ({ sessionId }) => {
     return (
         <div className="space-y-4">
             <div className="flex justify-between items-center">
-                <h3 className="text-xl font-bold text-white">W co gramy?</h3>
-                <span className="text-xs text-gray-400">Kliknij, aby zagłosować</span>
+                <h3 className="text-xl font-bold text-white">{t('featureComponents.sessions.gameVotingSection.title')}</h3>
+                <span className="text-xs text-gray-400">{t('featureComponents.sessions.gameVotingSection.clickToVote')}</span>
             </div>
             
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {games.map((game) => {
-                    const isSelected = game.hasVoted; // Stan bierzemy bezpośrednio z obiektu gry
+                    const isSelected = game.hasVoted; // State is read directly from the game object
                     
                     return (
                         <div 
@@ -101,7 +103,7 @@ export const GameVotingSection = ({ sessionId }) => {
                                     : "bg-gray-800/50 border-gray-700 hover:border-gray-600 hover:bg-gray-800"}
                             `}
                         >
-                            {/* Obrazek gry */}
+                            {/* Game image */}
                             <div className="flex-shrink-0">
                                 <img 
                                     src={game.imageUrl} 
@@ -110,14 +112,14 @@ export const GameVotingSection = ({ sessionId }) => {
                                 />
                             </div>
 
-                            {/* Treść */}
+                            {/* Content */}
                             <div className="flex-1 min-w-0 flex flex-col justify-center">
                                 <div className="flex justify-between items-start">
                                     <h4 className={`font-semibold truncate pr-2 ${isSelected ? "text-blue-100" : "text-gray-200"}`}>
                                         {game.title}
                                     </h4>
                                     
-                                    {/* Checkbox / Serduszko */}
+                                    {/* Checkbox / Heart */}
                                     <div className={`
                                         w-6 h-6 rounded-full border flex items-center justify-center flex-shrink-0 transition-all
                                         ${isSelected ? "bg-blue-500 border-blue-500 scale-110" : "border-gray-500 bg-gray-900"}
@@ -130,7 +132,7 @@ export const GameVotingSection = ({ sessionId }) => {
                                     </div>
                                 </div>
 
-                                {/* Metadane */}
+                                {/* Metadata */}
                                 <div className="flex items-center gap-2 mt-1 text-xs text-gray-400">
                                     <span className="flex items-center gap-1 bg-gray-900 px-1.5 py-0.5 rounded">
                                         👥 {game.minPlayers}-{game.maxPlayers}
@@ -143,7 +145,7 @@ export const GameVotingSection = ({ sessionId }) => {
                                 </div>
                             </div>
                             
-                            {/* Licznik głosów */}
+                            {/* Vote counter */}
                             {game.votesCount > 0 && (
                                 <div className={`
                                     absolute -top-2 -right-2 text-xs font-bold px-2 py-0.5 rounded-full shadow-sm border transition-colors

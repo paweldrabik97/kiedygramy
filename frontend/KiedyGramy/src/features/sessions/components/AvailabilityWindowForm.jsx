@@ -1,17 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import { setAvailabilityWindow } from '../services/sessions'; 
 import { Button } from '../../../components/ui/Button'; 
+import { useTranslation } from 'react-i18next';
 
 export const AvailabilityWindowForm = ({ sessionId, currentSettings, onSuccess }) => {
+    const { t } = useTranslation();
     
-    // Helper: Dodawanie dni do daty
+    // Helper: add days to a date
     const addDays = (dateStr, days) => {
         const result = new Date(dateStr);
         result.setDate(result.getDate() + days);
         return result.toISOString().split('T')[0];
     };
 
-    // Helper: Dzisiejsza data (string YYYY-MM-DD)
+    // Helper: today's date (YYYY-MM-DD string)
     const getTodayStr = () => new Date().toISOString().split('T')[0];
 
     const getDefaultState = () => {
@@ -36,13 +38,13 @@ export const AvailabilityWindowForm = ({ sessionId, currentSettings, onSuccess }
         }
     }, [currentSettings]);
 
-    // --- POPRAWIONA LOGIKA ---
+    // --- UPDATED LOGIC ---
     const handleFromChange = (e) => {
         const newFromDate = e.target.value;
         
         let nextState = { ...formState, from: newFromDate };
 
-        // Jeśli nowa data startu "przeskoczyła" datę końcową -> przesuń koniec o 14 dni
+        // If the new start date jumps past the end date, move end by 14 days
         if (formState.to && newFromDate > formState.to) {
             nextState.to = addDays(newFromDate, 14);
         }
@@ -56,10 +58,10 @@ export const AvailabilityWindowForm = ({ sessionId, currentSettings, onSuccess }
         try {
             await setAvailabilityWindow(sessionId, formState.from, formState.to, formState.deadline);
             if (onSuccess) onSuccess();
-            alert("Ramy czasowe zostały zaktualizowane!");
+            alert(t('featureComponents.sessions.availabilityWindowForm.alerts.updated'));
         } catch (error) {
             console.error(error);
-            alert("Wystąpił błąd podczas zapisywania konfiguracji.");
+            alert(t('featureComponents.sessions.availabilityWindowForm.alerts.saveError'));
         } finally {
             setIsLoading(false);
         }
@@ -73,16 +75,16 @@ export const AvailabilityWindowForm = ({ sessionId, currentSettings, onSuccess }
             <div className="flex items-start gap-3 mb-4">
                 <div className="flex items-center justify-center w-8 h-8 bg-primary/10 rounded-full text-lg">🛠</div>
                 <div>
-                    <h4 className="font-bold text-slate-900 dark:text-white text-base">Konfiguracja głosowania</h4>
+                    <h4 className="font-bold text-slate-900 dark:text-white text-base">{t('featureComponents.sessions.availabilityWindowForm.title')}</h4>
                     <p className="text-sm text-text-muted mt-1">
-                        Jako organizator musisz określić ramy czasowe.
+                        {t('featureComponents.sessions.availabilityWindowForm.description')}
                     </p>
                 </div>
             </div>
             
             <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="space-y-1">
-                    <label className="text-xs font-bold text-text-muted uppercase tracking-wider ml-1">Start (Od)</label>
+                    <label className="text-xs font-bold text-text-muted uppercase tracking-wider ml-1">{t('featureComponents.sessions.availabilityWindowForm.labels.startFrom')}</label>
                     <input 
                         type="date" 
                         required
@@ -92,11 +94,11 @@ export const AvailabilityWindowForm = ({ sessionId, currentSettings, onSuccess }
                     />
                 </div>
                 <div className="space-y-1">
-                    <label className="text-xs font-bold text-text-muted uppercase tracking-wider ml-1">Koniec (Do)</label>
+                    <label className="text-xs font-bold text-text-muted uppercase tracking-wider ml-1">{t('featureComponents.sessions.availabilityWindowForm.labels.endTo')}</label>
                     <input 
                         type="date" 
                         required
-                        // Opcjonalnie: Data "Do" nie powinna być wcześniejsza niż data "Od"
+                        // Optional: "To" date should not be earlier than "From" date
                         min={formState.from} 
                         className="w-full px-4 py-2.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-sm font-medium focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all shadow-sm"
                         value={formState.to}
@@ -104,11 +106,11 @@ export const AvailabilityWindowForm = ({ sessionId, currentSettings, onSuccess }
                     />
                 </div>
                 <div className="space-y-1">
-                    <label className="text-xs font-bold text-text-muted uppercase tracking-wider ml-1">Koniec głosowania</label>
+                    <label className="text-xs font-bold text-text-muted uppercase tracking-wider ml-1">{t('featureComponents.sessions.availabilityWindowForm.labels.votingDeadline')}</label>
                     <input 
                         type="date" 
                         required
-                        min={todayStr} // <--- BLOKADA: Nie można wybrać daty wcześniejszej niż dzisiaj
+                        min={todayStr} // <--- LOCK: cannot choose a date earlier than today
                         className="w-full px-4 py-2.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-sm font-medium focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all shadow-sm"
                         value={formState.deadline}
                         onChange={e => setFormState({...formState, deadline: e.target.value})}
@@ -121,7 +123,7 @@ export const AvailabilityWindowForm = ({ sessionId, currentSettings, onSuccess }
                         className="w-full justify-center"
                         disabled={isLoading}
                     >
-                        {isLoading ? 'Zapisywanie...' : (isConfigured ? 'Zaktualizuj ramy czasowe' : 'Uruchom głosowanie')}
+                        {isLoading ? t('featureComponents.sessions.availabilityWindowForm.buttons.saving') : (isConfigured ? t('featureComponents.sessions.availabilityWindowForm.buttons.updateWindow') : t('featureComponents.sessions.availabilityWindowForm.buttons.startVoting'))}
                     </Button>
                 </div>
             </form>

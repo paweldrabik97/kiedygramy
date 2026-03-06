@@ -4,8 +4,8 @@ import { Physics, useBox, usePlane } from '@react-three/cannon';
 import { RoundedBox, SoftShadows, Decal } from '@react-three/drei';
 import { CanvasTexture } from 'three';
 
-// --- ZMODYFIKOWANY GENERATOR TEKSTUR ---
-// Zmiana: Tło musi być PRZEZROCZYSTE, żeby było widać kolor kostki pod "naklejką".
+// --- MODIFIED TEXTURE GENERATOR ---
+// Change: the background must stay transparent so the die color is visible under the "sticker".
 const createDiceTexture = (number) => {
   const size = 512;
   const canvas = document.createElement('canvas');
@@ -13,14 +13,14 @@ const createDiceTexture = (number) => {
   canvas.height = size;
   const ctx = canvas.getContext('2d');
 
-  // 1. TŁO: Czyścimy canvas, żeby był przezroczysty
+  // 1. BACKGROUND: clear the canvas so it stays transparent
   ctx.clearRect(0, 0, size, size);
 
   ctx.strokeStyle = '#e0e0e0'; ctx.lineWidth = 10; ctx.strokeRect(5, 5, size-10, size-10);
 
-  // 2. Kropki (czarne)
+  // 2. Dots (black)
   ctx.fillStyle = '#000000';
-  const radius = 50; // Trochę większe kropki
+  const radius = 50; // Slightly larger dots
   
   const dot = (x, y) => {
     ctx.beginPath();
@@ -29,7 +29,7 @@ const createDiceTexture = (number) => {
   };
 
   const c = 0.5; 
-  const l = 0.22; // Trochę szerzej rozstawione
+  const l = 0.22; // Slightly wider spacing
   const r = 0.78;
   
   if (number % 2 === 1) dot(c, c);
@@ -40,7 +40,7 @@ const createDiceTexture = (number) => {
   return new CanvasTexture(canvas);
 };
 
-// --- Komponent Podłogi (bez zmian) ---
+// --- Floor component (unchanged) ---
 function Floor() {
   const [ref] = usePlane(() => ({
     rotation: [-Math.PI / 2, 0, 0], position: [0, 0, 0], material: { friction: 0.3 }
@@ -53,35 +53,35 @@ function Floor() {
   );
 }
 
-// --- Komponent Ścian (bez zmian) ---
+// --- Walls component (unchanged) ---
 function Walls({ topBarrierOffset = 0 }) {
   const { viewport } = useThree();
   const width = viewport.width / 2;
   const height = viewport.height / 2;
 
-  // --- OBLICZENIA DLA NAVBARA ---
-  // Przeliczamy pixele na jednostki sceny 3D
+  // --- NAVBAR CALCULATIONS ---
+  // Convert pixels to 3D scene units
   const pixelToUnit = viewport.height / window.innerHeight;
-  // Obliczamy o ile jednostek przesunąć ścianę w dół
+  // Compute how many units to move the wall down
   const offsetInUnits = topBarrierOffset * pixelToUnit;
-  // Nowa pozycja "sufitu" (górnej krawędzi ekranu)
+  // New "ceiling" position (top edge of the screen)
   const topWallZ = -height + offsetInUnits;
 
-  // Lewa
+  // Left
   usePlane(() => ({ position: [-width, 0, 0], rotation: [0, Math.PI / 2, 0] }));
-  // Prawa
+  // Right
   usePlane(() => ({ position: [width, 0, 0], rotation: [0, -Math.PI / 2, 0] }));
   
-  // GÓRA (Zmodyfikowana - uwzględnia navbar)
+  // TOP (modified - accounts for navbar)
   usePlane(() => ({ position: [0, 0, topWallZ], rotation: [0, 0, 0] }));
   
-  // Dół
+  // Bottom
   usePlane(() => ({ position: [0, 0, height], rotation: [Math.PI, 0, 0] }));
 
   return null;
 }
 
-// --- NOWY Komponent Kostki z RoundedBox i Decalami ---
+// --- NEW dice component with RoundedBox and Decals ---
 function Dice() {
   const [ref, api] = useBox(() => ({
     mass: 1, position: [0, 1, 0], args: [1, 1, 1], 
@@ -110,31 +110,31 @@ function Dice() {
     api.applyTorque([(Math.random()-.5)*t, (Math.random()-.5)*t, (Math.random()-.5)*t]);
   };
 
-  // Konfiguracja naklejek: Pozycja, Rotacja i Indeks tekstury dla każdej z 6 ścian
+  // Decal config: position, rotation, and texture index for each of 6 faces
   const decalsData = [
-    { pos: [0.5, 0, 0], rot: [0, Math.PI/2, 0], texIdx: 0 },  // Prawa (1)
-    { pos: [-0.5, 0, 0], rot: [0, -Math.PI/2, 0], texIdx: 1 }, // Lewa (6)
-    { pos: [0, 0.5, 0], rot: [-Math.PI/2, 0, 0], texIdx: 2 }, // Góra (2)
-    { pos: [0, -0.5, 0], rot: [Math.PI/2, 0, 0], texIdx: 3 },  // Dół (5)
-    { pos: [0, 0, 0.5], rot: [0, 0, 0], texIdx: 4 },           // Przód (3)
-    { pos: [0, 0, -0.5], rot: [Math.PI, 0, 0], texIdx: 5 },    // Tył (4)
+    { pos: [0.5, 0, 0], rot: [0, Math.PI/2, 0], texIdx: 0 },  // Right (1)
+    { pos: [-0.5, 0, 0], rot: [0, -Math.PI/2, 0], texIdx: 1 }, // Left (6)
+    { pos: [0, 0.5, 0], rot: [-Math.PI/2, 0, 0], texIdx: 2 }, // Top (2)
+    { pos: [0, -0.5, 0], rot: [Math.PI/2, 0, 0], texIdx: 3 },  // Bottom (5)
+    { pos: [0, 0, 0.5], rot: [0, 0, 0], texIdx: 4 },           // Front (3)
+    { pos: [0, 0, -0.5], rot: [Math.PI, 0, 0], texIdx: 5 },    // Back (4)
   ];
 
   return (
     <mesh ref={ref} onClick={throwDice}>
-      {/* 1. Używamy RoundedBox jako geometrii */}
+      {/* 1. Use RoundedBox as geometry */}
       <RoundedBox args={[1, 1, 1]} radius={0.15} smoothness={8} castShadow receiveShadow>
-        {/* 2. Jeden bazowy materiał dla całej kostki (np. biały plastik) */}
+        {/* 2. One base material for the whole die (e.g. white plastic) */}
         <meshStandardMaterial color="#ffffff" roughness={0.2} metalness={0.1} />
         
-        {/* 3. Naklejamy 6 Decali na ścianki */}
+        {/* 3. Apply 6 decals to the faces */}
         {decalsData.map((data, i) => (
             <Decal 
                 key={i}
-                position={data.pos} // Gdzie nakleić
-                rotation={data.rot} // Jak obrócić naklejkę
-                scale={[0.8, 0.8, 1]} // Skala (trochę mniejsza niż ścianka, żeby nie wchodzić na rogi)
-                map={textures[data.texIdx]} // Tekstura z kropkami (przezroczyste tło)
+                position={data.pos} // Where to apply
+                rotation={data.rot} // How to rotate the decal
+                scale={[0.8, 0.8, 1]} // Scale (slightly smaller than the face to avoid corners)
+                map={textures[data.texIdx]} // Dot texture (transparent background)
             />
         ))}
       </RoundedBox>
@@ -142,7 +142,7 @@ function Dice() {
   );
 }
 
-// --- Główna Scena (bez zmian) ---
+// --- Main scene (unchanged) ---
 export default function DiceArena( { topBarrierOffset = 0 } ) {
   return (
     <div className='w-screen h-screen bg-gradient-to-b from-blue-200 via-white to-blue-200 dark:from-gray-800 dark:via-gray-900 dark:to-gray-800'>

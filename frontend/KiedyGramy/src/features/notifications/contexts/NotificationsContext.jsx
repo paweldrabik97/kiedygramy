@@ -56,8 +56,8 @@ export const NotificationsProvider = ({ children }) => {
         })();
 
         conn.start()
-            .then(() => console.log("SignalR Połączono"))
-            .catch(err => console.error("SignalR Błąd:", err));
+            .then(() => console.log("SignalR connected"))
+            .catch(err => console.error("SignalR error:", err));
         return () => conn.stop();
         }, [user]);
 

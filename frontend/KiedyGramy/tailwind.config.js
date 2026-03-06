@@ -12,7 +12,7 @@ export default {
         display: ['Space Grotesk', 'sans-serif'],
       },
       colors: {
-        // Definicja Twojej palety z Brandbooka
+        // Definition of your brandbook palette
         primary: {
           DEFAULT: '#7C3AED', // Magic Violet
           hover: '#6D28D9',
@@ -24,13 +24,13 @@ export default {
         },
         surface: {
           light: '#F8FAFC', // Slate-50
-          dark: '#0F172A',  // Board Dark (Tło w trybie ciemnym)
-          card: '#1E293B',  // Slate-800 (Karty w trybie ciemnym)
+          dark: '#0F172A',  // Board Dark (background in dark mode)
+          card: '#1E293B',  // Slate-800 (cards in dark mode)
         },
         text: {
           main: '#1E293B',      // Slate-800
           muted: '#64748B',     // Slate-500
-          inverse: '#F1F5F9',   // Slate-100 (Tekst w trybie ciemnym)
+          inverse: '#F1F5F9',   // Slate-100 (text in dark mode)
         }
       },
       backgroundImage: {

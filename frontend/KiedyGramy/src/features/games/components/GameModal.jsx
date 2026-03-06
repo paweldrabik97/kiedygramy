@@ -1,192 +1,259 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 
-// Dodaj prop 'onUpdate' - funkcja, którą wywołamy po kliknięciu Zapisz
 const GameModal = ({ game, onClose, onUpdate }) => {
-  const [isEditing, setIsEditing] = useState(false);
-  const [formData, setFormData] = useState({
-    title: '',
-    genre: '',
-    minPlayers: '',
-    maxPlayers: ''
-  });
-
-  // Kiedy zmienia się gra (otwierasz modal) lub kończysz edycję, 
-  // zresetuj formularz do aktualnych danych gry.
-  useEffect(() => {
-    if (game) {
-      setFormData({
-        title: game.title || '',
-        genre: game.genre || '',
-        minPlayers: game.minPlayers || '',
-        maxPlayers: game.maxPlayers || ''
-      });
-      setIsEditing(false); // Zawsze otwieraj w trybie podglądu
-    }
-  }, [game]);
-
-  if (!game) return null;
-
-  // Obsługa pisania w polach input
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
-  };
-
-  // Obsługa zapisu
-  const handleSave = () => {
-    onUpdate(game.id, formData); 
-    setIsEditing(false);
-  };
-
-  // Obsługa anulowania edycji (cofnij zmiany)
-  const handleCancel = () => {
-    setIsEditing(false);
-    // Przywróć stare dane
-    setFormData({
-        title: game.title,
-        genre: game.genre,
-        minPlayers: game.minPlayers,
-        maxPlayers: game.maxPlayers
+    const [isEditing, setIsEditing] = useState(false);
+    
+    const [formData, setFormData] = useState({
+        localTitle: '',
+        title: '',
+        minPlayers: '',
+        maxPlayers: '',
+        playTime: ''
     });
-  };
 
-  return (
-    <div 
-      className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 backdrop-blur-sm"
-      onClick={onClose}
-    >
-      <div 
-        className="bg-white rounded-xl shadow-2xl max-w-md w-full p-6 relative"
-        onClick={(e) => e.stopPropagation()}
-      >
-        {/* --- PRZYCISKI GÓRNE (Pokaż ołówek tylko, gdy NIE edytujemy) --- */}
-        {!isEditing && (
-            <button 
-                onClick={() => setIsEditing(true)}
-                className="absolute top-4 left-4 text-gray-400 hover:text-blue-600 transition-colors"
-                title="Edytuj"
-            >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                </svg>
-            </button>
-        )}
+    const isMouseDownOnBackdrop = useRef(false);
 
-        <button 
-            onClick={onClose}
-            className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors"
+    useEffect(() => {
+        if (game) {
+            setFormData({
+                localTitle: game.localTitle || game.title || '',
+                title: game.title || '',
+                minPlayers: game.minPlayers || '',
+                maxPlayers: game.maxPlayers || '',
+                playTime: game.playTime || ''
+            });
+            setIsEditing(false); 
+        }
+    }, [game]);
+
+    if (!game) return null;
+
+    const handleChange = (e) => {
+        const { name, value } = e.target;
+        setFormData(prev => ({
+            ...prev,
+            [name]: value
+        }));
+    };
+
+    const handleSave = () => {
+        const payload = {
+            ...formData,
+            minPlayers: parseInt(formData.minPlayers, 10) || 1,
+            maxPlayers: parseInt(formData.maxPlayers, 10) || 4
+        };
+        onUpdate(game.id, payload); 
+        setIsEditing(false);
+    };
+
+    const handleCancel = () => {
+        setIsEditing(false);
+        setFormData({
+            localTitle: game.localTitle || game.title || '',
+            title: game.title || '',
+            minPlayers: game.minPlayers || '',
+            maxPlayers: game.maxPlayers || '',
+            playTime: game.playTime || ''
+        });
+    };
+    
+    const handleMouseDown = (e) => {
+        if (e.target === e.currentTarget) {
+            isMouseDownOnBackdrop.current = true;
+        }
+    };
+
+    const handleMouseUp = (e) => {
+        if (isMouseDownOnBackdrop.current && e.target === e.currentTarget) {
+            onClose();
+        }
+        isMouseDownOnBackdrop.current = false;
+    };
+
+    // Helper variable to make conditions cleaner
+    const isImported = !game.isCustom;
+
+    return (
+        <div 
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+            onMouseDown={handleMouseDown}
+            onMouseUp={handleMouseUp}
         >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-        </button>
-
-
-        {/* --- TREŚĆ MODALA (Zmienna w zależności od isEditing) --- */}
-        
-        <div className="mt-8">
-            {isEditing ? (
-                // === TRYB EDYCJI ===
-                <div className="space-y-4">
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700">Tytuł gry</label>
-                        <input 
-                            type="text" 
-                            name="title"
-                            value={formData.title} 
-                            onChange={handleChange}
-                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm border p-2 text-gray-400"
-                        />
-                    </div>
+            <div 
+                className="bg-white dark:bg-slate-900 w-full max-w-lg rounded-2xl shadow-2xl relative overflow-hidden flex flex-col max-h-[90vh]"
+                onClick={(e) => e.stopPropagation()}
+            >
+                <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-slate-50/50 dark:bg-slate-900/50">
+                    <h2 className="text-xl font-bold font-display text-slate-900 dark:text-white line-clamp-1 pr-4">
+                        {isEditing ? 'Edit Game Details' : (game.localTitle || game.title)}
+                    </h2>
                     
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700">Gatunek</label>
-                        <input 
-                            type="text" 
-                            name="genre"
-                            value={formData.genre} 
-                            onChange={handleChange}
-                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm border p-2 text-gray-400"
-                        />
-                    </div>
-
-                    <div className="flex gap-4">
-                        <div className="w-1/2">
-                            <label className="block text-sm font-medium text-gray-700">Min. graczy</label>
-                            <input 
-                                type="number" 
-                                name="minPlayers"
-                                value={formData.minPlayers} 
-                                onChange={handleChange}
-                                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm border p-2 text-gray-400"
-                            />
-                        </div>
-                        <div className="w-1/2">
-                            <label className="block text-sm font-medium text-gray-700">Max. graczy</label>
-                            <input 
-                                type="number" 
-                                name="maxPlayers"
-                                value={formData.maxPlayers} 
-                                onChange={handleChange}
-                                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm border p-2   text-gray-400"
-                            />
-                        </div>
+                    <div className="flex items-center gap-2">
+                        {!isEditing && (
+                            <button 
+                                onClick={() => setIsEditing(true)}
+                                className="p-2 text-slate-400 hover:text-violet-600 dark:hover:text-violet-400 transition-colors rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800"
+                                title="Edit game"
+                            >
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                </svg>
+                            </button>
+                        )}
+                        <button 
+                            onClick={onClose}
+                            className="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800"
+                            title="Close"
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
                     </div>
                 </div>
-            ) : (
-                // === TRYB PODGLĄDU (Stary kod) ===
-                <>
-                    <h2 className="text-2xl font-bold text-gray-800 mb-1 pr-8">{game.title}</h2>
-                    <span className="inline-block bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full mb-4">
-                        ID: {game.id}
-                    </span>
-                    <div className="space-y-3 text-gray-600">
-                        <div className="flex justify-between border-b pb-2">
-                            <span className="font-semibold text-gray-700">Gatunek:</span>
-                            <span>{game.genre || 'Nie podano'}</span>
-                        </div>
-                        <div className="flex justify-between border-b pb-2">
-                            <span className="font-semibold text-gray-700">Liczba graczy:</span>
-                            <span>{game.minPlayers} - {game.maxPlayers}</span>
-                        </div>
-                    </div>
-                </>
-            )}
-        </div>
 
-        {/* --- STOPKA Z PRZYCISKAMI --- */}
-        <div className="mt-8 flex justify-end gap-3">
-            {isEditing ? (
-                <>
-                    <button 
-                        onClick={handleCancel}
-                        className="px-4 py-2 text-gray-600 hover:text-gray-800 transition-colors"
-                    >
-                        Anuluj
-                    </button>
-                    <button 
-                        onClick={handleSave}
-                        className="px-5 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium shadow-md"
-                    >
-                        Zapisz
-                    </button>
-                </>
-            ) : (
-                <button 
-                    onClick={onClose} 
-                    className="px-5 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors font-medium"
-                >
-                    Zamknij
-                </button>
-            )}
-        </div>
+                <div className="p-6 overflow-y-auto">
+                    {!isEditing && game.imageUrl && (
+                        <div className="w-full h-48 mb-6 rounded-xl overflow-hidden shadow-sm border border-slate-100 dark:border-slate-800">
+                            <img src={game.imageUrl} alt="Cover" className="w-full h-full object-cover" />
+                        </div>
+                    )}
 
-      </div>
-    </div>
-  );
+                    {isEditing ? (
+                        <div className="space-y-4">
+                            <div>
+                                <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">
+                                    Name in your collection
+                                </label>
+                                <input 
+                                    type="text" 
+                                    name="localTitle"
+                                    value={formData.localTitle} 
+                                    onChange={handleChange}
+                                    className="w-full bg-slate-50 border border-slate-200 text-slate-900 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-100 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-violet-500 transition-colors"
+                                />
+                            </div>
+
+                            <div>
+                                <div className="flex justify-between items-center mb-1">
+                                    <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                                        Original Title
+                                    </label>
+                                    {isImported && <span className="text-[10px] text-violet-500 font-bold uppercase tracking-widest bg-violet-100 dark:bg-violet-900/30 px-2 py-0.5 rounded">Locked (BGG)</span>}
+                                </div>
+                                <input 
+                                    type="text" 
+                                    name="title"
+                                    value={formData.title} 
+                                    onChange={handleChange}
+                                    disabled={isImported}
+                                    className="w-full bg-slate-50 border border-slate-200 text-slate-900 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-100 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-violet-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-slate-100 dark:disabled:bg-slate-900"
+                                />
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Min Players</label>
+                                    <input 
+                                        type="number" 
+                                        name="minPlayers"
+                                        min="1"
+                                        value={formData.minPlayers} 
+                                        onChange={handleChange}
+                                        disabled={isImported}
+                                        className="w-full bg-slate-50 border border-slate-200 text-slate-900 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-100 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-violet-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-slate-100 dark:disabled:bg-slate-900"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Max Players</label>
+                                    <input 
+                                        type="number" 
+                                        name="maxPlayers"
+                                        min="1"
+                                        value={formData.maxPlayers} 
+                                        onChange={handleChange}
+                                        disabled={isImported}
+                                        className="w-full bg-slate-50 border border-slate-200 text-slate-900 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-100 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-violet-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-slate-100 dark:disabled:bg-slate-900"
+                                    />
+                                </div>
+                            </div>
+
+                            <div>
+                                <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">
+                                    Estimated Play Time (min)
+                                </label>
+                                <input 
+                                    type="text" 
+                                    name="playTime"
+                                    value={formData.playTime} 
+                                    onChange={handleChange}
+                                    disabled={isImported}
+                                    className="w-full bg-slate-50 border border-slate-200 text-slate-900 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-100 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-violet-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-slate-100 dark:disabled:bg-slate-900"
+                                />
+                            </div>
+                        </div>
+                    ) : (
+                        <div className="space-y-4">
+                            {game.localTitle && game.localTitle !== game.title && (
+                                <div className="flex justify-between items-center py-3 border-b border-slate-100 dark:border-slate-800">
+                                    <span className="text-sm font-bold text-slate-400 uppercase tracking-wider">Original Title</span>
+                                    <span className="text-sm font-medium text-slate-800 dark:text-slate-200">{game.title}</span>
+                                </div>
+                            )}
+
+                            <div className="flex justify-between items-center py-3 border-b border-slate-100 dark:border-slate-800">
+                                <span className="text-sm font-bold text-slate-400 uppercase tracking-wider">Player Count</span>
+                                <span className="text-sm font-medium text-slate-800 dark:text-slate-200">
+                                    {game.minPlayers} - {game.maxPlayers}
+                                </span>
+                            </div>
+
+                            <div className="flex justify-between items-center py-3 border-b border-slate-100 dark:border-slate-800">
+                                <span className="text-sm font-bold text-slate-400 uppercase tracking-wider">Play Time</span>
+                                <span className="text-sm font-medium text-slate-800 dark:text-slate-200">
+                                    {game.playTime ? `${game.playTime} min` : 'Not specified'}
+                                </span>
+                            </div>
+
+                            <div className="flex justify-between items-center py-3 border-b border-slate-100 dark:border-slate-800">
+                                <span className="text-sm font-bold text-slate-400 uppercase tracking-wider">Genres</span>
+                                <span className="text-sm font-medium text-slate-800 dark:text-slate-200 text-right">
+                                    {game.genres?.join(', ') || 'No data'}
+                                </span>
+                            </div>
+                        </div>
+                    )}
+                </div>
+
+                <div className="p-6 border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 flex justify-end gap-3">
+                    {isEditing ? (
+                        <>
+                            <button 
+                                onClick={handleCancel}
+                                className="px-5 py-2.5 text-slate-600 dark:text-slate-300 font-bold hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors"
+                            >
+                                Cancel
+                            </button>
+                            <button 
+                                onClick={handleSave}
+                                className="px-5 py-2.5 bg-violet-600 hover:bg-violet-700 text-white rounded-xl font-bold dark:shadow-[0_0_20px_rgba(124,58,237,0.3)] transition-all"
+                            >
+                                Save Changes
+                            </button>
+                        </>
+                    ) : (
+                        <button 
+                            onClick={onClose} 
+                            className="w-full py-3 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-white rounded-xl font-bold transition-colors"
+                        >
+                            Close
+                        </button>
+                    )}
+                </div>
+
+            </div>
+        </div>
+    );
 };
 
 export default GameModal;

@@ -5,12 +5,12 @@ export default function useDarkMode() {
 
   useEffect(() => {
     const root = window.document.documentElement;
-    // Usuń starą klasę
+    // Remove old class
     root.classList.remove(theme === 'dark' ? 'light' : 'dark');
-    // Dodaj nową
+    // Add new class
     root.classList.add(theme);
     
-    // Zapisz w pamięci przeglądarki
+    // Save in browser storage
     localStorage.setItem('theme', theme);
   }, [theme]);
 

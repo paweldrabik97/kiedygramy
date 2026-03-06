@@ -19,12 +19,12 @@ namespace kiedygramy.Services.Games
             _bgg = bgg;
         }
 
-        // 1. TWORZENIE GRY NIESTANDARDOWEJ (Całkowicie z palca przez użytkownika)
+        // 1. CREATE CUSTOM GAME (Entirely user-created from scratch)
         public async Task<(Game? game, ErrorResponseDto? error)> CreateAsync(CreateGameRequest dto, int userId)
         {
             var title = dto.Title.Trim();
 
-            // 1. Sprawdzamy, czy gra o takim tytule już istnieje w globalnej bazie
+            // 1. Check if a game with this title already exists in the global database
             var existingGame = await _db.Games
                 .FirstOrDefaultAsync(g => g.Title.ToLower() == title.ToLower());
 
@@ -32,7 +32,7 @@ namespace kiedygramy.Services.Games
 
             if (existingGame is not null)
             {
-                // Gra istnieje. Sprawdzamy, czy użytkownik ma ją w kolekcji.
+                // Game exists. Check if the user already has it in their collection.
                 bool alreadyInCollection = await _db.UserGames
                     .AnyAsync(ug => ug.UserId == userId && ug.GameId == existingGame.Id);
 
@@ -43,7 +43,7 @@ namespace kiedygramy.Services.Games
             }
             else
             {
-                // Gry nie ma. Walidacja DTO.
+                // Game doesn't exist. Validate DTO.
                 if (dto.MaxPlayers < dto.MinPlayers)
                     return (null, Errors.Game.MaxPlayersMustBeGreaterOrEqualMin());
 
@@ -59,7 +59,7 @@ namespace kiedygramy.Services.Games
                 if (genres.Count != genreIds.Count)
                     return (null, Errors.General.Validation("Wybrano nieistniejącą kategorię.", "GenreIds"));
 
-                // Tworzymy nową, NIESTANDARDOWĄ grę w globalnym katalogu
+                // Create a new CUSTOM game in the global catalog
                 gameToLink = new Game
                 {
                     Title = title,
@@ -75,7 +75,7 @@ namespace kiedygramy.Services.Games
                 _db.Games.Add(gameToLink);
             }
 
-            // Dodajemy do kolekcji (bez LocalTitle, bo gracz podał sam tytuł jako 'title')
+            // Add to collection (without LocalTitle, because the player provided the title themselves)
             var userGame = new UserGame
             {
                 UserId = userId,
@@ -88,9 +88,10 @@ namespace kiedygramy.Services.Games
             return (gameToLink, null);
         }
 
-        // 2. EDYCJA (Zostawiłem tu Twoją logikę, ale pamiętaj - bez pola LocalTitle na razie pozwala na zmianę danych ogólnej gry)
+        // 2. UPDATE
         public async Task<ErrorResponseDto?> UpdateAsync(int gameId, UpdateGameRequest dto, int userId)
         {
+            // Fetch the user's game linking entity along with global game details and genres
             var userGame = await _db.UserGames
                 .Include(ug => ug.Game).ThenInclude(g => g.GameGenres)
                 .FirstOrDefaultAsync(ug => ug.UserId == userId && ug.GameId == gameId);
@@ -99,45 +100,87 @@ namespace kiedygramy.Services.Games
                 return Errors.Game.NotFound();
 
             var game = userGame.Game;
-            var title = dto.Title.Trim();
 
-            bool exists = await _db.Games
-                .AnyAsync(g => g.Title.ToLower() == title.ToLower() && g.Id != gameId);
+            // --- 1. USER-SPECIFIC DATA UPDATE ---
+            // These fields belong to the user's personal collection, so they can always be edited.
 
-            if (exists)
-                return Errors.Game.DuplicateTitle();
+            if (dto.LocalTitle is not null)
+                userGame.LocalTitle = dto.LocalTitle.Trim();
 
-            if (dto.MaxPlayers < dto.MinPlayers)
-                return Errors.Game.MaxPlayersMustBeGreaterOrEqualMin();
+            if (dto.Rating.HasValue)
+                userGame.Rating = dto.Rating.Value;
 
-            if (dto.MinPlayers <= 0)
-                return Errors.Game.MinPlayersMustBeGreaterThanZero();
-
-            var genreIds = (dto.GenreIds ?? new List<int>()).Distinct().ToList();
-
-            var genres = await _db.Genres
-                .Where(g => genreIds.Contains(g.Id))
-                .ToListAsync();
-
-            if (genres.Count != genreIds.Count)
-                return Errors.General.Validation("Wybrano nieistniejącą kategorię.", "GenreIds");
-
-            game.Title = title;
-            game.GameGenres.Clear();
-
-            foreach (var genre in genres)
+            // --- 2. GLOBAL DATA UPDATE SECURITY CHECK ---
+            // If the game was imported from an external source (BGG), it shouldn't be fully editable.
+            // We save the user-specific changes and return early.
+            if (!game.IsCustom)
             {
-                game.GameGenres.Add(new GameGenre { GameId = game.Id, GenreId = genre.Id });
+                await _db.SaveChangesAsync();
+                return null;
             }
 
-            game.MinPlayers = dto.MinPlayers;
-            game.MaxPlayers = dto.MaxPlayers;
+            // --- 3. GLOBAL DATA UPDATE (ONLY FOR CUSTOM GAMES) ---
 
+            // Title validation and update
+            if (!string.IsNullOrWhiteSpace(dto.Title))
+            {
+                var title = dto.Title.Trim();
+                bool exists = await _db.Games
+                    .AnyAsync(g => g.Title.ToLower() == title.ToLower() && g.Id != gameId);
+
+                if (exists)
+                    return Errors.Game.DuplicateTitle();
+
+                game.Title = title;
+            }
+
+            // Players count validation and update
+            // We resolve the values (either from DTO or keep existing) to validate properly
+            int minPlayers = dto.MinPlayers ?? game.MinPlayers;
+            int maxPlayers = dto.MaxPlayers ?? game.MaxPlayers;
+
+            if (maxPlayers < minPlayers)
+                return Errors.Game.MaxPlayersMustBeGreaterOrEqualMin();
+
+            if (minPlayers <= 0)
+                return Errors.Game.MinPlayersMustBeGreaterThanZero();
+
+            game.MinPlayers = minPlayers;
+            game.MaxPlayers = maxPlayers;
+
+            // Optional fields update
+            if (dto.PlayTime is not null)
+                game.PlayTime = dto.PlayTime;
+
+            if (dto.ImageUrl is not null)
+                game.ImageUrl = dto.ImageUrl;
+
+            // Genres validation and update
+            if (dto.GenreIds is not null)
+            {
+                var genreIds = dto.GenreIds.Distinct().ToList();
+
+                var genres = await _db.Genres
+                    .Where(g => genreIds.Contains(g.Id))
+                    .ToListAsync();
+
+                if (genres.Count != genreIds.Count)
+                    return Errors.General.Validation("Selected category does not exist.", "GenreIds");
+
+                game.GameGenres.Clear();
+
+                foreach (var genre in genres)
+                {
+                    game.GameGenres.Add(new GameGenre { GameId = game.Id, GenreId = genre.Id });
+                }
+            }
+
+            // Save all changes to the database
             await _db.SaveChangesAsync();
             return null;
         }
 
-        // 3. USUWANIE (Usuwamy tylko powiązanie z tabeli łączącej, chyba że gracz był autorem gry IsCustom)
+        // 3. DELETE (Remove only the link from the junction table, unless the player was the author of the IsCustom game)
         public async Task<ErrorResponseDto?> DeleteAsync(int gameId, int userId)
         {
             var userGame = await _db.UserGames
@@ -149,7 +192,6 @@ namespace kiedygramy.Services.Games
 
             _db.UserGames.Remove(userGame);
 
-            // Dodatkowo: Jeśli to była "Prywatna gra", którą on stworzył, i on ją teraz usuwa z kolekcji, możemy ją usunąć całkowicie.
             if (userGame.Game.IsCustom && userGame.Game.CreatedById == userId)
             {
                 _db.Games.Remove(userGame.Game);
@@ -159,47 +201,50 @@ namespace kiedygramy.Services.Games
             return null;
         }
 
-        // 4. POBIERANIE LISTY (Zwracamy LocalTitle jeśli istnieje, inaczej tytuł z globalnej tabeli)
+        // 4. GET LIST
         public async Task<IEnumerable<GameListItemResponse>> GetAllAsync(int userId)
         {
             return await _db.UserGames
                 .AsNoTracking()
                 .Where(ug => ug.UserId == userId)
-                .Include(ug => ug.Game)
-                    .ThenInclude(g => g.GameGenres)
-                        .ThenInclude(gg => gg.Genre)
+                // Note: Include() and ThenInclude() are removed because .Select() 
+                // automatically handles the required SQL JOINs.
                 .Select(ug => new GameListItemResponse(
                     ug.Game.Id,
-                    ug.LocalTitle ?? ug.Game.Title, // Coalescing dla LocalTitle
-                    ug.Game.GameGenres.Select(x => x.Genre.Name).ToList(),
+                    ug.Game.Title,                                         // Global Title
+                    ug.LocalTitle,                                         // User's Local Title
+                    ug.Game.GameGenres.Select(x => x.Genre.Name).ToList(), // Genres
                     ug.Game.MinPlayers,
                     ug.Game.MaxPlayers,
                     ug.Game.ImageUrl,
-                    ug.Game.PlayTime))
+                    ug.Game.PlayTime,
+                    ug.Rating,                                        // Default to 0 if no rating
+                    ug.Game.IsCustom                                       // Custom game flag
+                ))
                 .ToListAsync();
         }
 
-        // 5. POBIERANIE POJEDYNCZEJ GRY
+        // 5. GET SINGLE GAME
         public async Task<GameListItemResponse?> GetByIdAsync(int gameId, int userId)
         {
             return await _db.UserGames
                 .AsNoTracking()
                 .Where(ug => ug.UserId == userId && ug.GameId == gameId)
-                .Include(ug => ug.Game)
-                    .ThenInclude(g => g.GameGenres)
-                        .ThenInclude(gg => gg.Genre)
                 .Select(ug => new GameListItemResponse(
                     ug.Game.Id,
-                    ug.LocalTitle ?? ug.Game.Title, // Coalescing dla LocalTitle
+                    ug.Game.Title,
+                    ug.LocalTitle,
                     ug.Game.GameGenres.Select(x => x.Genre.Name).ToList(),
                     ug.Game.MinPlayers,
                     ug.Game.MaxPlayers,
                     ug.Game.ImageUrl,
-                    ug.Game.PlayTime))
+                    ug.Game.PlayTime,
+                    ug.Rating,                                        // Default to 0 if no rating
+                    ug.Game.IsCustom
+                ))
                 .FirstOrDefaultAsync();
         }
 
-        // ZMIANA: Dodano parametr "string? localTitle"
         public async Task<(Game? Game, ErrorResponseDto? Error)> ImportFromExternalAsync(string sourceId, string? localTitle, int userId, CancellationToken ct = default)
         {
             if (string.IsNullOrWhiteSpace(sourceId))
@@ -214,13 +259,13 @@ namespace kiedygramy.Services.Games
             if (globalTitle.Length == 0)
                 return (null, Errors.Game.ExternalInvalidData());
 
-            // 1. Sprawdzamy czy gra z tego BGG ID już istnieje u nas w słowniku globalnym.
-            int numericSourceId = int.Parse(sourceId); // Jeśli BGG Id to u Ciebie int
+            // 1. Check if a game with this BGG ID already exists in our global dictionary.
+            int numericSourceId = int.Parse(sourceId); // If BGG Id is an int in your system
             var game = await _db.Games
                 .Include(g => g.GameGenres)
                 .FirstOrDefaultAsync(g => g.BggId == numericSourceId, ct);
 
-            // Jeśli gry NIE MA w globalnej bazie, dodajemy ją na podstawie danych BGG.
+            // If the game does NOT exist in the global database, add it based on BGG data.
             if (game is null)
             {
                 var minPlayers = external.MinPlayers;
@@ -244,7 +289,7 @@ namespace kiedygramy.Services.Games
                 game = new Game
                 {
                     BggId = numericSourceId,
-                    Title = globalTitle, // Zostawiamy w globalnej bazie oryginalny tytuł z BGG
+                    Title = globalTitle, // Keep the original BGG title in the global database
                     IsCustom = false,
                     MinPlayers = minPlayers,
                     MaxPlayers = maxPlayers,
@@ -270,7 +315,7 @@ namespace kiedygramy.Services.Games
                 _db.Games.Add(game);
             }
 
-            // 2. Niezależnie czy grę pobraliśmy przed chwilą z BGG, czy już tam była, dodajemy ją do kolekcji gracza
+            // 2. Regardless of whether we just fetched the game from BGG or it was already there, add it to the player's collection
             bool alreadyInCollection = await _db.UserGames
                 .AnyAsync(ug => ug.UserId == userId && (game.Id != 0 && ug.GameId == game.Id), ct);
 
@@ -281,7 +326,7 @@ namespace kiedygramy.Services.Games
             {
                 UserId = userId,
                 Game = game,
-                LocalTitle = localTitle // <--- ZMIANA: Przypisujemy polski tytuł z frontendu do tabeli łączącej!
+                LocalTitle = localTitle 
             };
 
             _db.UserGames.Add(userGame);

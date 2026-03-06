@@ -1,0 +1,439 @@
+{
+	"auth": {
+		"errors": {
+			"loginFailed": "Błąd logowania. Sprawdź swoje dane.",
+			"passwordsDoNotMatch": "Hasła nie są identyczne.",
+			"registrationFailed": "Rejestracja nieudana. Spróbuj ponownie."
+		},
+		"backToHome": "Wróć na stronę główną",
+		"back": "Wróć",
+		"registrationSuccessTitle": "Rejestracja udana!",
+		"welcomeBackTitle": "Witaj ponownie!",
+		"loginSubtitle": "Zaloguj się, aby zarządzać sesjami.",
+		"placeholders": {
+			"username": "Nazwa użytkownika",
+			"password": "Hasło",
+			"email": "Email",
+			"repeat": "Powtórz",
+			"fullName": "Pełne imię",
+			"city": "Miasto"
+		},
+		"forgotPassword": "Zapomniałeś hasła?",
+		"loginButton": "Zaloguj się",
+		"noAccount": "Nie masz jeszcze konta?",
+		"registerLink": "Zarejestruj się",
+		"registerTitle": "Stwórz konto",
+		"registerSubtitle": "Dołącz do społeczności KiedyGramy.",
+		"creatingButton": "Tworzenie...",
+		"registerButton": "Zarejestruj się",
+		"haveAccount": "Masz już konto?",
+		"overlay": {
+			"titleHasAccount": "Masz już konto?",
+			"titleNewPlayer": "Nowy gracz?",
+			"descriptionHasAccount": "Wróć do karczmy i sprawdź, co nowego u Twojej drużyny.",
+			"descriptionNewPlayer": "Rozpocznij swoją przygodę, twórz gry i umawiaj sesje z przyjaciółmi.",
+			"buttonLogin": "Zaloguj się",
+			"buttonCreateAccount": "Załóż konto"
+		}
+	},
+	"dashboard": {
+		"loadingData": "Ładowanie danych...",
+		"welcomeUser": "Witaj, {{name}}!",
+		"intro": "Rzućmy okiem na to, co dzieje się w Twoich kampaniach.",
+		"stats": {
+			"upcomingSessions": "Nadchodzące sesje",
+			"yourGames": "Twoje gry",
+			"hoursPlayed": "Rozegrane godziny"
+		},
+		"newSessionCard": {
+			"title": "Nowa Sesja",
+			"subtitle": "Zaplanuj termin i zaproś graczy",
+			"createButton": "+ Utwórz"
+		},
+		"upcomingSessionTitle": "Najbliższa sesja",
+		"calendarLink": "Kalendarz →",
+		"systemRpg": "System RPG",
+		"sessionDetails": "Szczegóły sesji",
+		"noSessionsTitle": "Brak zaplanowanych sesji",
+		"noSessionsSubtitle": "Wygląda na to, że masz wolny wieczór. Może coś zaplanujesz?",
+		"planGame": "Zaplanuj grę",
+		"recentGamesTitle": "Ostatnio dodane gry",
+		"addTitle": "Dodaj tytuł",
+		"emptyLibrary": "Twoja biblioteka jest pusta.",
+		"invitationsTitle": "Zaproszenia",
+		"invitedBy": "Zaprasza:",
+		"accept": "Akceptuj",
+		"reject": "Odrzuć",
+		"noInvitations": "Brak nowych zaproszeń.",
+		"systemStatusTitle": "Status Systemu",
+		"allSystemsOperational": "Wszystkie systemy sprawne",
+		"systemStatusText": "Wersja {{version}}. Masz pomysł na nową funkcję?",
+		"reportSuggestion": "Zgłoś sugestię"
+	},
+	"gamesPage": {
+		"errors": {
+			"addGameFailed": "Wystąpił błąd podczas dodawania gry.",
+			"ratingSaveFailed": "Nie udało się zapisać oceny.",
+			"saveChangesFailed": "Nie udało się zapisać zmian!"
+		},
+		"loadingLibrary": "Ładowanie Twojej biblioteki...",
+		"title": "Moje Gry",
+		"addGame": "+ Dodaj grę",
+		"emptyLibrary": "Twoja biblioteka jest pusta.",
+		"addFirstBggGame": "Dodaj pierwszą grę z BGG",
+		"noCover": "Brak okładki",
+		"editGame": "Edytuj grę",
+		"removeFromCollection": "Usuń z kolekcji",
+		"playersAndTime": "{{min}}-{{max}} graczy • {{playTime}}",
+		"unknownPlayTime": "?",
+		"yourRating": "Twoja ocena",
+		"rateStar": "Oceń na {{star}}"
+	},
+	"landing": {
+		"nav": {
+			"login": "Zaloguj się",
+			"joinNow": "Dołącz teraz"
+		},
+		"heroBadge": "Najlepsza platforma dla graczy RPG i planszówek",
+		"heroTitleLine1": "Zgrywaj się z ekipą",
+		"heroTitleHighlight": "bez rzucania kłód.",
+		"heroSubtitle": "Koniec z niekończącymi się dyskusjami na czacie. Ustalaj terminy, zarządzaj biblioteką gier i wysyłaj zaproszenia w jednym miejscu.",
+		"heroStartFree": "Rozpocznij za darmo",
+		"heroSeeFeatures": "Zobacz funkcje",
+		"socialProof": {
+			"sessionsPlayed": "Rozegranych sesji",
+			"availableGames": "Dostępnych gier",
+			"activePlayers": "Aktywnych graczy",
+			"savedEvenings": "Uratowanych wieczorów"
+		},
+		"features": {
+			"sectionTitle": "Wszystko, czego potrzebuje Twój stół",
+			"sectionSubtitle": "Skup się na grze, a logistykę zostaw nam. Oto jak KiedyGramy pomaga mistrzom gry i graczom.",
+			"libraryTitle": "Biblioteka Gier",
+			"libraryDescription": "Stwórz cyfrową półkę ze swoimi tytułami. Szybko sprawdzaj, w co możecie zagrać, filtrując po liczbie graczy czy czasie gry.",
+			"scheduleTitle": "Inteligentny Terminarz",
+			"scheduleDescription": "Koniec z Doodle. Gracze zaznaczają dostępność, a system sam proponuje najlepszy termin dla całej grupy.",
+			"teamHubTitle": "Hub Drużyny",
+			"teamHubDescription": "Zapraszaj znajomych, twórz stałe ekipy i śledź historię waszych spotkań. Zobacz kto jest MVP miesiąca."
+		},
+		"howItWorks": {
+			"title": "Jak zacząć w 3 krokach?",
+			"step1Title": "Załóż konto",
+			"step1Description": "To zajmie mniej niż rzut k6.",
+			"step2Title": "Dodaj swoje gry",
+			"step2Description": "Zbuduj bibliotekę tytułów, które posiadasz.",
+			"step3Title": "Zaproś ekipę",
+			"step3Description": "Wyślij link i ustalcie datę pierwszej sesji!"
+		},
+		"screenshotAlt": "Screenshot aplikacji KiedyGramy",
+		"cta": {
+			"title": "Gotowy na kolejną przygodę?",
+			"subtitle": "Dołącz do społeczności graczy, którzy cenią swój czas i kochają planszówki tak samo jak Ty.",
+			"button": "Dołącz do KiedyGramy",
+			"footnote": "Nie wymagamy karty kredytowej. Darmowe konto na start."
+		},
+		"footer": {
+			"copyright": "© {{year}} KiedyGramy. Wszystkie prawa zastrzeżone.",
+			"terms": "Regulamin",
+			"privacy": "Prywatność",
+			"contact": "Kontakt"
+		}
+	},
+	"sessionsPage": {
+		"errors": {
+			"createSessionFailed": "Nie udało się utworzyć sesji."
+		},
+		"loading": "Ładowanie...",
+		"title": "Moje Sesje",
+		"planSession": "+ Zaplanuj Sesję",
+		"pendingInvites": "📩 Oczekujące zaproszenia ({{count}})",
+		"participants": "👥 Uczestników: {{count}}",
+		"viewAndRespond": "Zobacz i odpowiedz",
+		"noPlannedSessions": "Nie masz jeszcze żadnych zaplanowanych sesji.",
+		"planFirst": "Zaplanuj pierwszą!",
+		"locationFallback": "Online / Nie podano"
+	},
+	"sessionDetails": {
+		"errors": {
+			"loadAvailability": "Błąd pobierania dostępności:",
+			"criticalLoad": "Krytyczny błąd pobierania sesji:",
+			"saveAvailability": "Błąd zapisu dostępności",
+			"inviteUserFailed": "Nie udało się zaprosić użytkownika.",
+			"kickPlayerFailed": "Nie udało się wyrzucić gracza.",
+			"sessionLoadFailed": "Nie udało się załadować sesji."
+		},
+		"inviteSent": "Zaproszenie wysłane!",
+		"kickConfirm": "Czy na pewno chcesz wyrzucić gracza {{name}} z sesji?",
+		"loadingSession": "Ładowanie sesji...",
+		"sessionNotFound": "Nie znaleziono sesji.",
+		"hostLabel": "👑 Host:",
+		"respond": {
+			"accept": "Będę!",
+			"decline": "Odpuszczam",
+			"acceptedBadge": "✅ Bierzesz udział"
+		},
+		"tabs": {
+			"board": "📋 Tablica",
+			"discussion": "💬 Dyskusja"
+		},
+		"whatToPlayTitle": "W co gramy?",
+		"selectGames": "✏️ Wybierz gry",
+		"cancel": "❌ Anuluj",
+		"noGamesYet": "Organizator jeszcze nie wybrał gier.",
+		"clickToSelectByVotes": "Kliknij tutaj, aby wybrać grę na podstawie głosów",
+		"undecided": {
+			"title": "Cześć! Wpadniesz?",
+			"description": "Aby zobaczyć propozycje gier, zagłosować na termin i uczestniczyć w dyskusji, musisz potwierdzić swoją obecność.",
+			"cta": "Wchodzę w to! 🚀"
+		},
+		"teamTitle": "Drużyna ({{count}})",
+		"cancelButton": "Anuluj",
+		"removePlayerFromSession": "Wyrzuć gracza z sesji",
+		"removeButton": "Wyrzuć",
+		"status": {
+			"pending": "Oczekuje",
+			"accepted": "Będzie",
+			"rejected": "Odpada"
+		},
+		"organizer": "Organizator",
+		"inviteFriend": "Zaproś znajomego",
+		"invitePlaceholder": "Nick lub email..."
+	},
+	"profile": {
+		"loading": "Ładowanie...",
+		"errorTitle": "Błąd",
+		"savedTitle": "Zapisano",
+		"profileData": "Dane profilu",
+		"fields": {
+			"login": "Login",
+			"fullName": "Imię i nazwisko",
+			"city": "Miasto",
+			"password": "Hasło",
+            "language": "Język"
+		},
+		"edit": {
+			"changeLogin": "Zmień login",
+			"changeName": "Zmień nazwę",
+			"changeCity": "Zmień miasto",
+			"changePassword": "Zmień hasło",
+			"change": "Zmień"
+		},
+		"success": {
+			"usernameChanged": "Zmieniono login.",
+			"fullNameChanged": "Zmieniono imię i nazwisko.",
+			"cityChanged": "Zmieniono miasto.",
+			"passwordChanged": "Zmieniono hasło."
+		},
+		"errors": {
+			"passwordsMustMatch": "Nowe hasła muszą być identyczne.",
+			"newPasswordEmpty": "Nowe hasło nie może być puste.",
+			"unknown": "Unknown error"
+		},
+		"placeholders": {
+			"newLogin": "Nowy login",
+			"fullName": "Twoje imię i nazwisko",
+			"city": "Twoje miasto",
+			"currentPassword": "Aktualne hasło",
+			"newPassword": "Nowe hasło",
+			"repeatNewPassword": "Powtórz nowe hasło"
+		},
+		"save": "Zapisz",
+		"cancel": "Anuluj"
+	},
+	"layout": {
+		"userFallback": "Użytkownik",
+		"emailFallback": "brak@email.com",
+		"nav": {
+			"home": "Start",
+			"myGames": "Moje Gry",
+			"mySessions": "Moje Sesje",
+			"stats": "Statystyki",
+			"panel": "Panel"
+		},
+		"sidebar": {
+			"collapse": "Zwiń",
+			"expand": "Rozwiń"
+		},
+		"menu": {
+			"profileSettings": "Ustawienia profilu",
+			"changeTheme": "Zmień motyw",
+			"logout": "Wyloguj się"
+		}
+	},
+	"featureComponents": {
+		"auth": {
+			"protectedRoute": {
+				"checkingPermissions": "Sprawdzanie uprawnień..."
+			}
+		},
+		"games": {
+			"addGameModal": {
+				"headers": {
+					"search": "Znajdź grę na BGG",
+					"edit": "Dostosuj swój tytuł",
+					"custom": "Dodaj własną grę"
+				},
+				"search": {
+					"placeholder": "Wpisz tytuł (np. Catan)...",
+					"manualTitle": "Brak w bazie? Dodaj z palca!",
+					"manualButtonShort": "+ Ręcznie",
+					"searching": "Szukam w bazie BGG...",
+					"noImage": "Brak",
+					"meta": "{{playTime}} • {{min}}-{{max}} graczy",
+					"resultsNotMatch": "Wyniki powyżej to nie to, czego szukasz?",
+					"addManually": "Dodaj grę ręcznie",
+					"notFound": "Nie znalazłem takiej gry na BGG.",
+					"addYourself": "Dodaj ją samodzielnie"
+				},
+				"edit": {
+					"noCover": "Brak Okładki",
+					"bggData": "Dane z BoardGameGeek",
+					"labels": {
+						"genres": "Gatunki",
+						"playersCount": "Liczba graczy",
+						"nameInCollection": "Nazwa w Twojej kolekcji"
+					},
+					"noData": "Brak danych",
+					"importedParamsNote": "Te parametry zostały automatycznie zaimportowane z bazy i nie można ich zmienić.",
+					"renameHint": "Możesz zmienić tytuł na taki, pod jakim znasz tę grę (np. spolszczony).",
+					"backToResults": "Wróć do wyników",
+					"addToLibrary": "Dodaj do biblioteki"
+				},
+				"custom": {
+					"labels": {
+						"gameTitleRequired": "Tytuł Gry *",
+						"minPlayers": "Min. graczy",
+						"maxPlayers": "Max. graczy",
+						"estimatedPlayTime": "Szacowany czas gry (np. \"45-60 min\")",
+						"coverUrlOptional": "URL okładki (Opcjonalne)"
+					},
+					"backToSearch": "Wróć do wyszukiwania",
+					"addManualGame": "Dodaj grę ręcznie"
+				}
+			}
+		},
+		"sessions": {
+			"availabilityCalendar": {
+				"nearest14Days": "Najbliższe 14 dni",
+				"title": "Dostępność",
+				"description": "Kliknij w dzień, aby zaznaczyć swoją dostępność. Pasek na dole kafelka pokazuje popularność terminu.",
+				"emptyRange": "Brak zdefiniowanego zakresu dat."
+			},
+			"availabilityWindowForm": {
+				"alerts": {
+					"updated": "Ramy czasowe zostały zaktualizowane!",
+					"saveError": "Wystąpił błąd podczas zapisywania konfiguracji."
+				},
+				"title": "Konfiguracja głosowania",
+				"description": "Jako organizator musisz określić ramy czasowe.",
+				"labels": {
+					"startFrom": "Start (Od)",
+					"endTo": "Koniec (Do)",
+					"votingDeadline": "Koniec głosowania"
+				},
+				"buttons": {
+					"saving": "Zapisywanie...",
+					"updateWindow": "Zaktualizuj ramy czasowe",
+					"startVoting": "Uruchom głosowanie"
+				}
+			},
+			"createSessionModal": {
+				"title": "Nowa Sesja",
+				"labels": {
+					"sessionTitle": "Tytuł sesji",
+					"game": "Gra",
+					"dateTime": "Data i godzina",
+					"location": "Lokalizacja",
+					"descriptionOptional": "Opis (opcjonalnie)"
+				},
+				"placeholders": {
+					"sessionTitle": "Np. Piątkowe granie",
+					"selectGame": "-- Wybierz grę --",
+					"location": "Np. U mnie w domu"
+				},
+				"buttons": {
+					"cancel": "Anuluj",
+					"createSession": "Utwórz sesję"
+				}
+			},
+			"gameVotingSection": {
+				"alerts": {
+					"voteSaveFailed": "Nie udało się zapisać głosu."
+				},
+				"loadingGames": "Ładowanie gier...",
+				"emptyPool": "Host nie dodał jeszcze żadnych gier do puli.",
+				"title": "W co gramy?",
+				"clickToVote": "Kliknij, aby zagłosować"
+			},
+			"organizerDatePicker": {
+				"errors": {
+					"invalidDateTime": "Wybierz poprawną datę i godzinę.",
+					"saveTermFailed": "Wystąpił błąd podczas zapisywania terminu."
+				},
+				"title": "Ustal ostateczny termin",
+				"description": "Wybierz datę i godzinę na podstawie wyników ankiety. Wszyscy uczestnicy zostaną o tym poinformowani.",
+				"labels": {
+					"sessionDateTime": "Data i godzina sesji"
+				},
+				"buttons": {
+					"saving": "Zapisywanie...",
+					"confirmTerm": "Zatwierdź termin"
+				}
+			},
+			"organizerGamePicker": {
+				"alerts": {
+					"saveGamesFailed": "Nie udało się zapisać gier."
+				},
+				"loadingSuggestions": "Ładowanie propozycji...",
+				"emptyPool": "Brak gier w puli. Dodaj coś w sekcji głosowania!",
+				"selectGamesTitle": "Wybierz gry:",
+				"selectManyHint": "Możesz zaznaczyć wiele",
+				"ownerLabel": "Właściciel: {{owner}}",
+				"buttons": {
+					"saving": "Zapisywanie...",
+					"saveSelection": "Zapisz wybór ({{count}})"
+				}
+			},
+			"sessionChat": {
+				"alerts": {
+					"sendFailed": "Nie udało się wysłać wiadomości"
+				},
+				"loading": "Ładowanie czatu...",
+				"loadOlderMessages": "Załaduj starsze wiadomości",
+				"emptyChat": "Brak wiadomości. Rozpocznij dyskusję! 👋",
+				"messagePlaceholder": "Napisz wiadomość..."
+			}
+		},
+		"notifications": {
+			"page": {
+				"errors": {
+					"acceptInviteFailed": "Nie udało się zaakceptować zaproszenia.",
+					"rejectInviteFailed": "Nie udało się odrzucić zaproszenia."
+				},
+				"title": "Powiadomienia",
+				"subtitle": "Historia Twoich powiadomień (kliknij kafelek, aby otworzyć).",
+				"unreadLabel": "Nieprzeczytane:",
+				"empty": "Brak powiadomień.",
+				"read": "Przeczytane",
+				"unread": "Nieprzeczytane",
+				"noContent": "(brak treści)",
+				"accept": "Zaakceptuj",
+				"reject": "Odrzuć"
+			}
+		}
+	},
+	"newGamePage": {
+		"errors": {
+			"nameRequired": "Nazwa gry jest wymagana",
+			"addFailed": "Dodanie gry nie powiodło się. Spróbuj ponownie. {{error}}"
+		},
+		"title": "Dodaj nową grę",
+		"labels": {
+			"gameName": "Nazwa gry:",
+			"genre": "Gatunek:",
+			"minPlayers": "Minimalna liczba graczy:",
+			"maxPlayers": "Maksymalna liczba graczy:"
+		},
+		"addButton": "Dodaj Grę"
+	}
+}
