@@ -15,7 +15,10 @@ builder.Services.AddAppRateLimiting();
 
 var app = builder.Build();
 
-app.UseAppSwagger();
+if (app.Environment.IsDevelopment())
+{
+    app.UseAppSwagger();
+}
 
 await app.MigrateDatabaseAsync();
 

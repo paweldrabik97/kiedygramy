@@ -3,6 +3,7 @@ import { useAuth } from "../features/auth/contexts/AuthContext.jsx";
 import { useNavigate, useLocation, Link } from "react-router-dom";
 import { Button } from "../components/ui/Button.jsx";
 import { useTranslation } from "react-i18next";
+import { GoogleLogin } from "@react-oauth/google";
 
 const AuthPage = () => {
   const { t } = useTranslation();
@@ -180,6 +181,34 @@ const AuthPage = () => {
                 {t("auth.loginButton")}
               </Button>
             </form>
+
+            <div className="mt-6">
+              <div className="relative mb-6">
+                  <div className="absolute inset-0 flex items-center">
+                      <div className="w-full border-t border-slate-200 dark:border-slate-700"></div>
+                  </div>
+                  <div className="relative flex justify-center text-sm">
+                      <span className="px-2 bg-white dark:bg-slate-900 text-slate-500">
+                          lub zaloguj się przez
+                      </span>
+                  </div>
+              </div>
+
+              <div className="flex justify-center">
+                  <GoogleLogin
+                      onSuccess={credentialResponse => {
+                          // TEN TOKEN WYŚLEMY DO C# W NASTĘPNYM KROKU
+                          console.log("Sukces! Token Google JWT:", credentialResponse.credential);
+                      }}
+                      onError={() => {
+                          console.log('Logowanie Google zakończone błędem');
+                      }}
+                      useOneTap={false} // Zmień na true, jeśli chcesz ten wyskakujący dymek Google w rogu ekranu
+                      theme="filled_black" // Możesz zmienić na "outline" albo "filled_blue"
+                      shape="pill" // Zaokrąglone rogi (pasuje do KiedyGramy!)
+                  />
+              </div>
+            </div>
 
             {/* Toggle link visible ONLY on mobile (md:hidden) */}
             <div className="mt-8 text-center md:hidden">
