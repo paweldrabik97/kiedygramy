@@ -6,7 +6,7 @@ namespace kiedygramy.Domain
     {         
         public string? FullName { get; set; }       
         public string? City { get; set; }
-        public string PrefferedLanguage { get; set; } = "pl";
+        public string PreferredLanguage { get; set; } = "pl";
 
         public ICollection<UserGame> UserGames { get; set; } = new List<UserGame>();
         public ICollection<Session> OwnedSessions { get; set; } = new List<Session>();

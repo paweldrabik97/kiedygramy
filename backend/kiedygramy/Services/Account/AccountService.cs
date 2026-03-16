@@ -144,7 +144,7 @@ namespace kiedygramy.Services.Account
             if (!supportedLanguages.Contains(requestedLanguage))
                 return Errors.General.Validation("Unsupported language.", "Language");
 
-            user.PrefferedLanguage = requestedLanguage;
+            user.PreferredLanguage = requestedLanguage;
 
             var result = await _userManager.UpdateAsync(user);
             if (!result.Succeeded)

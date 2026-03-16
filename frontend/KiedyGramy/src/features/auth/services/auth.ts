@@ -31,6 +31,20 @@ export async function login(usernameOrEmail: string, password: string) {
   });
 }
 
+export async function googleLogin(credential: string) {
+  return api<void>("/api/auth/google", {
+    method: "POST",
+    body: JSON.stringify({ credential }),
+  });
+}
+
+export async function discordLogin(code: string, language: string) {
+  return api<void>("/api/auth/discord", {
+    method: "POST",
+    body: JSON.stringify({ code, language }),
+  });
+}
+
 export async function me() {
   return api<Me>("/api/auth/me");
 }

@@ -40,7 +40,7 @@ namespace kiedygramy.Services.Auth
                 Email = dto.Email,
                 FullName = dto.FullName,
                 City = dto.City,
-                PrefferedLanguage = dto.PrefferedLanguage ?? "en"
+                PreferredLanguage = dto.PrefferedLanguage ?? "en"
             };
 
             var result = await _userManager.CreateAsync(user, dto.Password);
@@ -65,7 +65,7 @@ namespace kiedygramy.Services.Auth
                 Email: user.Email,
                 FullName: user.FullName,
                 City: user.City,
-                PrefferedLanguage: user.PrefferedLanguage
+                PreferredLanguage: user.PreferredLanguage
             );
 
             return (meDto, null);

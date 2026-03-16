@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
 import { useTheme } from '../context/ThemeContext';
 import { useAuth } from '../features/auth/contexts/AuthContext';
@@ -7,7 +7,7 @@ import { useTranslation } from 'react-i18next';
 
 const Layout = () => {
   const navigate = useNavigate();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   // Sidebar state (expanded?)
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   
@@ -23,9 +23,11 @@ const Layout = () => {
   // Get user and logout function from context
   const { user, logout } = useAuth();
 
-    if (user.preferredLanguage && user.preferredLanguage !== i18n.language) {
+  useEffect(() => {
+    if (user?.preferredLanguage && user.preferredLanguage !== i18n.language) {
         i18n.changeLanguage(user.preferredLanguage);
     }
+  }, [user, i18n]);
 
   const handleLogout = () => {
     logout();

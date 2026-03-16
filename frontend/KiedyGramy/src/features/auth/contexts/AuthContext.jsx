@@ -1,7 +1,7 @@
 // src/context/AuthContext.jsx
 import React, { createContext, useContext, useState, useEffect } from 'react';
 // Import your API functions
-import { me, login as apiLogin, logout as apiLogout, register as apiRegister } from '../services/auth.ts';
+import { me, login as apiLogin, logout as apiLogout, register as apiRegister, googleLogin as apiGoogleLogin, discordLogin as apiDiscordLogin } from '../services/auth.ts';
 
 const AuthContext = createContext();
 
@@ -55,8 +55,23 @@ export const AuthProvider = ({ children }) => {
     setUser(null);
   };
 
+  // 5. Google Login wrapper
+  const googleLogin = async (credential) => {
+    await apiGoogleLogin(credential);
+    
+    // After Google login, fetch user data to update UI
+    const userData = await me();
+    setUser(userData);
+  }
+
+  const discordLogin = async (code, language) => {
+    await apiDiscordLogin(code, language);
+    const userData = await me();
+    setUser(userData);
+};
+
   return (
-    <AuthContext.Provider value={{ user, login, register, logout, loading }}>
+    <AuthContext.Provider value={{ user, login, register, logout, loading, googleLogin, discordLogin }}>
       {!loading && children}
     </AuthContext.Provider>
   );
