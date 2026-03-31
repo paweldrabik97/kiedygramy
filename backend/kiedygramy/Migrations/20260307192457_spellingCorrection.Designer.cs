@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using kiedygramy.Data;
@@ -11,9 +12,11 @@ using kiedygramy.Data;
 namespace kiedygramy.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260307192457_spellingCorrection")]
+    partial class spellingCorrection
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -244,35 +247,6 @@ namespace kiedygramy.Migrations
                         .IsUnique();
 
                     b.ToTable("Genres");
-                });
-
-            modelBuilder.Entity("kiedygramy.Domain.GenreTranslation", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("GenreId")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("LanguageCode")
-                        .IsRequired()
-                        .HasMaxLength(5)
-                        .HasColumnType("character varying(5)");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(80)
-                        .HasColumnType("character varying(80)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("GenreId", "LanguageCode")
-                        .IsUnique();
-
-                    b.ToTable("GenreTranslations", (string)null);
                 });
 
             modelBuilder.Entity("kiedygramy.Domain.Notification", b =>
@@ -687,17 +661,6 @@ namespace kiedygramy.Migrations
                     b.Navigation("Genre");
                 });
 
-            modelBuilder.Entity("kiedygramy.Domain.GenreTranslation", b =>
-                {
-                    b.HasOne("kiedygramy.Domain.Genre", "Genre")
-                        .WithMany("Translations")
-                        .HasForeignKey("GenreId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Genre");
-                });
-
             modelBuilder.Entity("kiedygramy.Domain.Notification", b =>
                 {
                     b.HasOne("kiedygramy.Domain.User", "User")
@@ -825,8 +788,6 @@ namespace kiedygramy.Migrations
             modelBuilder.Entity("kiedygramy.Domain.Genre", b =>
                 {
                     b.Navigation("GameGenres");
-
-                    b.Navigation("Translations");
                 });
 
             modelBuilder.Entity("kiedygramy.Domain.Session", b =>

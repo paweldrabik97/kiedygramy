@@ -10,5 +10,10 @@ public class GenreConfiguration : IEntityTypeConfiguration<Genre>
     {
         b.Property(x => x.Name).IsRequired().HasMaxLength(80);
         b.HasIndex(x => x.Name).IsUnique();
+
+        b.HasMany(x => x.Translations)
+            .WithOne(t => t.Genre)
+            .HasForeignKey(t => t.GenreId)
+            .OnDelete(DeleteBehavior.Cascade);
     }
 }

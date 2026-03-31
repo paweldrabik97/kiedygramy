@@ -4,12 +4,13 @@ import { useNavigate, useLocation, Link } from "react-router-dom";
 import { Button } from "../components/ui/Button.jsx";
 import { useTranslation } from "react-i18next";
 import { GoogleLogin } from "@react-oauth/google";
+import DiscordLoginButton from "../features/auth/components/DiscordLoginButton.jsx";
 
 const AuthPage = () => {
   const { t } = useTranslation();
 
   // --- STATE ---
-  const { login, register, user } = useAuth();
+  const { login, register, user, googleLogin, discordLogin } = useAuth();
   const [isRegisterActive, setIsRegisterActive] = useState(false);
   const [formData, setFormData] = useState({
     username: "",
@@ -33,6 +34,7 @@ const AuthPage = () => {
 
   const navigate = useNavigate();
   const location = useLocation();
+
 
   const from = location.state?.from?.pathname || "/dashboard";
 
@@ -91,6 +93,8 @@ const AuthPage = () => {
       setLoading(false);
     }
   };
+
+ 
 
   // Helper to switch mode (clears errors)
   const toggleMode = () => {
@@ -196,17 +200,24 @@ const AuthPage = () => {
 
               <div className="flex justify-center">
                   <GoogleLogin
-                      onSuccess={credentialResponse => {
-                          // TEN TOKEN WYŚLEMY DO C# W NASTĘPNYM KROKU
-                          console.log("Sukces! Token Google JWT:", credentialResponse.credential);
+                      onSuccess={async (credentialResponse) => {
+                        try {
+                          if (credentialResponse.credential) {
+                            await googleLogin(credentialResponse.credential);
+                            navigate("/dashboard");
+                          }
+                        } catch (err) {
+                          console.error("Google login failed:", err);
+                        }
                       }}
-                      onError={() => {
-                          console.log('Logowanie Google zakończone błędem');
-                      }}
-                      useOneTap={false} // Zmień na true, jeśli chcesz ten wyskakujący dymek Google w rogu ekranu
-                      theme="filled_black" // Możesz zmienić na "outline" albo "filled_blue"
-                      shape="pill" // Zaokrąglone rogi (pasuje do KiedyGramy!)
+                      onError={() => console.error("Google login failed")}
+                      useOneTap={true} 
+                      theme="filled_black" 
+                      shape="pill" 
                   />
+              </div>
+              <div className="flex justify-center mt-3">
+                  <DiscordLoginButton />
               </div>
             </div>
 

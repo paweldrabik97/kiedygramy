@@ -30,6 +30,7 @@ namespace kiedygramy.Infrastructure
             services.AddScoped<ISessionService, SessionService>();
             services.AddScoped<ISessionChatService, SessionChatService>();
             services.AddScoped<IGenreService, GenreService>();
+            services.AddScoped<IGeminiTranslationService, GeminiTranslationService>();
 
             services.AddScoped<ISessionChatHubService, SessionChatHubService>();
             services.AddScoped<INotificationService, NotificationService>();
