@@ -27,8 +27,8 @@ namespace kiedygramy.Controllers
         private readonly IEmailService _emailService;
         private readonly IConfiguration _configuration;
 
-        public AuthController(UserManager<User> userManager, SignInManager<User> signInManager, IAccountService accountService, IAuthService authService, IConfiguration configuration)
-        public AuthController(UserManager<User> userManager, SignInManager<User> signInManager, IAccountService accountService, IAuthService authService, IEmailService emailService)
+        
+        public AuthController(UserManager<User> userManager, SignInManager<User> signInManager, IAccountService accountService, IAuthService authService, IEmailService emailService, IConfiguration configuration)
         {
             _userManager = userManager;
             _signInManager = signInManager;
