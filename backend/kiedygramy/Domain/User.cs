@@ -8,6 +8,10 @@ namespace kiedygramy.Domain
         public string? City { get; set; }
         public string PrefferedLanguage { get; set; } = "pl";
 
+        public bool IsGuest { get; set; } = false;
+        public string? GuestCode { get; set; }   
+        public string? GuestToken { get; set; }
+
         public ICollection<UserGame> UserGames { get; set; } = new List<UserGame>();
         public ICollection<Session> OwnedSessions { get; set; } = new List<Session>();
         public ICollection<SessionParticipant> SessionParticipants { get; set; } = new List<SessionParticipant>();
