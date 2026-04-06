@@ -264,6 +264,10 @@
 		"auth": {
 			"protectedRoute": {
 				"checkingPermissions": "Sprawdzanie uprawnień..."
+			},
+			"discordCallback": {
+				"connectingTitle": "Łączenie z Discordem...",
+				"connectingDescription": "Trwa weryfikacja Twojego konta, to potrwa tylko chwilę."
 			}
 		},
 		"games": {

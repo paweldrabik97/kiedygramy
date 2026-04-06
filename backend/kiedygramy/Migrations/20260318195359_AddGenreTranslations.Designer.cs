@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using kiedygramy.Data;
@@ -11,13 +12,15 @@ using kiedygramy.Data;
 namespace kiedygramy.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260318195359_AddGenreTranslations")]
+    partial class AddGenreTranslations
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "8.0.25")
+                .HasAnnotation("ProductVersion", "8.0.24")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
@@ -360,9 +363,6 @@ namespace kiedygramy.Migrations
                     b.Property<string>("Description")
                         .HasColumnType("text");
 
-                    b.Property<bool>("IsOpen")
-                        .HasColumnType("boolean");
-
                     b.Property<string>("Location")
                         .HasColumnType("text");
 
@@ -433,35 +433,6 @@ namespace kiedygramy.Migrations
                         .IsUnique();
 
                     b.ToTable("SessionGameVotes");
-                });
-
-            modelBuilder.Entity("kiedygramy.Domain.SessionInviteLink", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<DateTime?>("ExpiresAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<int>("SessionId")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("Token")
-                        .IsRequired()
-                        .HasMaxLength(128)
-                        .HasColumnType("character varying(128)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("SessionId");
-
-                    b.HasIndex("Token")
-                        .IsUnique();
-
-                    b.ToTable("SessionInviteLinks");
                 });
 
             modelBuilder.Entity("kiedygramy.Domain.SessionMessage", b =>
@@ -560,15 +531,6 @@ namespace kiedygramy.Migrations
                         .HasMaxLength(200)
                         .IsUnicode(true)
                         .HasColumnType("character varying(200)");
-
-                    b.Property<string>("GuestCode")
-                        .HasColumnType("text");
-
-                    b.Property<string>("GuestToken")
-                        .HasColumnType("text");
-
-                    b.Property<bool>("IsGuest")
-                        .HasColumnType("boolean");
 
                     b.Property<bool>("LockoutEnabled")
                         .HasColumnType("boolean");
@@ -799,17 +761,6 @@ namespace kiedygramy.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("kiedygramy.Domain.SessionInviteLink", b =>
-                {
-                    b.HasOne("kiedygramy.Domain.Session", "Session")
-                        .WithMany("InviteLinks")
-                        .HasForeignKey("SessionId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Session");
-                });
-
             modelBuilder.Entity("kiedygramy.Domain.SessionMessage", b =>
                 {
                     b.HasOne("kiedygramy.Domain.Session", "Session")
@@ -884,8 +835,6 @@ namespace kiedygramy.Migrations
             modelBuilder.Entity("kiedygramy.Domain.Session", b =>
                 {
                     b.Navigation("Availabilities");
-
-                    b.Navigation("InviteLinks");
 
                     b.Navigation("Messages");
 

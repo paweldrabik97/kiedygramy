@@ -7,6 +7,6 @@
         string? Email,
         string? FullName,
         string? City,
-        string? PrefferedLanguage
+        string? PreferredLanguage
     );
 }

@@ -4,6 +4,7 @@ using kiedygramy.Domain;
 using kiedygramy.DTO.Common;
 using kiedygramy.DTO.Game;
 using kiedygramy.Services.External;
+using kiedygramy.Services.Genre;
 using Microsoft.EntityFrameworkCore;
 
 namespace kiedygramy.Services.Games
@@ -12,11 +13,13 @@ namespace kiedygramy.Services.Games
     {
         private readonly AppDbContext _db;
         private readonly IBoardGameGeekClientService _bgg;
+        private readonly IGeminiTranslationService _gemini;
 
-        public GameService(AppDbContext db, IBoardGameGeekClientService bgg)
+        public GameService(AppDbContext db, IBoardGameGeekClientService bgg, IGeminiTranslationService gemini)
         {
             _db = db;
             _bgg = bgg;
+            _gemini = gemini;
         }
 
         // 1. CREATE CUSTOM GAME (Entirely user-created from scratch)
@@ -283,6 +286,7 @@ namespace kiedygramy.Services.Games
                 var lowered = genreNames.Select(n => n.ToLower()).ToList();
 
                 var existingGenres = await _db.Genres
+                    .Include(g => g.Translations)
                     .Where(g => lowered.Contains(g.Name.ToLower()))
                     .ToListAsync(ct);
 
@@ -304,7 +308,33 @@ namespace kiedygramy.Services.Games
 
                     if (genre is null)
                     {
-                        genre = new Domain.Genre { Name = name };
+                        genre = new Domain.Genre { 
+                            Name = name,
+                            Translations = new List<GenreTranslation>()
+                        };
+
+                        genre.Translations.Add(new GenreTranslation
+                        {
+                            Genre = genre,
+                            LanguageCode = "en",
+                            Name = name 
+                        });
+
+                        // request to AI
+                        var translationDict = await _gemini.TranslateGenreToMultipleLanguagesAsync(name);
+
+                        if (translationDict is not null)
+                        {
+                            foreach (var kvp in translationDict)
+                            {
+                                genre.Translations.Add(new GenreTranslation
+                                {
+                                    Genre = genre,
+                                    LanguageCode = kvp.Key,
+                                    Name = kvp.Value
+                                });
+                            }
+                        }    
                         _db.Genres.Add(genre);
                         existingGenres.Add(genre);
                     }

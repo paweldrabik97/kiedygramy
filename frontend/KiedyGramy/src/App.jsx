@@ -12,6 +12,7 @@ import LandingPage from "./pages/LandingPage.jsx";
 import NotificationsPage from "./features/notifications/components/NotificationsPage";
 import { ProtectedRoute } from "./features/auth/components/ProtectedRoute.jsx";
 import  ProfilePage from "./pages/ProfilePage.jsx";
+import DiscordCallback from "./features/auth/components/DiscordCallback.jsx";
 
 function App() {
   return (
@@ -20,6 +21,7 @@ function App() {
       <Routes>
         <Route path="/" element={<LandingPage />} />
         <Route path="/auth" element={<AuthPage />} />
+        <Route path="/auth/discord/callback" element={<DiscordCallback />} />
         <Route 
           path="/*" 
           element={ 

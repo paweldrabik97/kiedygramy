@@ -2,10 +2,10 @@
 
 namespace kiedygramy.DTO.Auth
 {
-    public class UpdateLanguageRequest
+    public record UpdateLanguageRequest
     {
         [Required(ErrorMessage ="Language is required")]
         [StringLength(5, MinimumLength = 2, ErrorMessage = "Invalid format")]
-        public string Language { get; set; } = null!;
+        public string Language { get; init; } = null!;
     }
 }

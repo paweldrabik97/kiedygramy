@@ -6,7 +6,7 @@ namespace kiedygramy.Domain
     {         
         public string? FullName { get; set; }       
         public string? City { get; set; }
-        public string PrefferedLanguage { get; set; } = "pl";
+        public string PreferredLanguage { get; set; } = "pl";
 
         public bool IsGuest { get; set; } = false;
         public string? GuestCode { get; set; }   

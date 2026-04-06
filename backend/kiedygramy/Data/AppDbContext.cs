@@ -15,6 +15,7 @@ public class AppDbContext : IdentityDbContext<User, IdentityRole<int>, int>
     public DbSet<SessionMessage> SessionMessages => Set<SessionMessage>();
     public DbSet<SessionAvailability> SessionAvailabilities => Set<SessionAvailability>();
     public DbSet<Genre> Genres => Set<Genre>();
+    public DbSet<GenreTranslation> GenreTranslations => Set<GenreTranslation>();
     public DbSet<GameGenre> GameGenres => Set<GameGenre>();
     public DbSet<Notification> Notifications => Set<Notification>();
     public DbSet<SessionGameVote> SessionGameVotes => Set<SessionGameVote>();
