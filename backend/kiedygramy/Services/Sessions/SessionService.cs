@@ -17,35 +17,33 @@ namespace kiedygramy.Services.Sessions
     {
         private readonly AppDbContext _db;
         private readonly INotificationService _notification;
+        private readonly ILogger<SessionService> _logger;
 
-        public SessionService(AppDbContext db, INotificationService notification)
+        public SessionService(AppDbContext db, INotificationService notification, ILogger<SessionService> logger)
         {
             _db = db;
             _notification = notification;
+            _logger = logger;
         }
 
         public async Task<(SessionDetailsResponse? Session, ErrorResponseDto? Error)> CreateAsync(CreateSessionRequest dto, int userId)
         {
             var title = dto.Title?.Trim() ?? string.Empty;
 
-            // Przygotowujemy pustą listę gier, do której za chwilę dodamy gry wybrane przez gracza
             List<Game> sessionGames = new List<Game>();
 
             if (dto.GameIds is not null && dto.GameIds.Any())
             {
-                // ZMIANA: Pytamy nową tabelę łączącą (UserGames), czy gracz posiada te gry
-                // Od razu używamy Include, aby zaciągnąć pełne dane gry (Title, ImageUrl) potrzebne do stworzenia sesji
+
                 var validUserGames = await _db.UserGames
                     .Include(ug => ug.Game)
                     .Where(ug => ug.UserId == userId && dto.GameIds.Contains(ug.GameId))
                     .ToListAsync();
-
-                // Jeśli znaleźliśmy mniej gier w kolekcji niż gracz wysłał w requeście, 
-                // to znaczy, że próbuje dodać do sesji grę, której nie ma
+               
                 if (validUserGames.Count != dto.GameIds.Count())
                     return (null, Errors.Session.GameNotFound());
 
-                // Wyciągamy same obiekty Game z tabeli łączącej
+                
                 sessionGames = validUserGames.Select(ug => ug.Game).ToList();
             }
 
@@ -56,7 +54,8 @@ namespace kiedygramy.Services.Sessions
                 Location = dto.Location?.Trim(),
                 Description = dto.Description?.Trim(),
                 OwnerId = userId,
-                Games = sessionGames // NAPRAWA BŁĘDU LOGICZNEGO: Dodajemy zweryfikowane gry do sesji!
+                Games = sessionGames,
+                IsOpen = true,              
             };
 
             var ownerParticipant = new SessionParticipant
@@ -94,63 +93,6 @@ namespace kiedygramy.Services.Sessions
 
             return (details, null);
         }
-
-        //public async Task<(SessionDetailsResponse? Session, ErrorResponseDto? Error)> CreateAsync(CreateSessionRequest dto, int userId)
-        //{
-        //    var title = dto.Title?.Trim() ?? string.Empty;          
-
-        //    if (dto.GameIds is not null)
-        //    {
-        //        var gameExists = await _db.Games.AnyAsync(g => dto.GameIds.Contains(g.Id) && g.OwnerId == userId);
-
-        //        if (!gameExists)
-        //            return (null, Errors.Session.GameNotFound());
-        //    }
-
-        //    var session = new Session 
-        //    {
-        //        Title = title,
-        //        Date = dto.Date,
-        //        Location = dto.Location?.Trim(),
-        //        Description = dto.Description?.Trim(),
-        //        OwnerId = userId
-        //    };
-
-        //    var ownerParticipant = new SessionParticipant
-        //    {
-        //        Session = session,
-        //        UserId = userId,
-        //        Role = SessionParticipantRole.Host,
-        //        Status = SessionParticipantStatus.Confirmed
-        //    };
-
-        //    _db.Sessions.Add(session);
-        //    _db.SessionParticipants.Add(ownerParticipant);
-
-        //    await _db.SaveChangesAsync();
-
-        //    var owner = await _db.Users.FindAsync(userId);
-
-        //    var details = new SessionDetailsResponse(
-        //        Id: session.Id,
-        //        Title: session.Title,
-        //        Date: session.Date,
-        //        Location: session.Location,
-        //        Description: session.Description,
-        //        OwnerId: session.OwnerId,
-        //        OwnerUserName: owner!.UserName!, 
-        //        Games: session.Games.Select(g => new SessionGameDto(
-        //            g.Id,
-        //            g.Title,
-        //            g.ImageUrl
-        //        )).ToList(),
-        //        AvailabilityFrom: session.AvailabilityFrom,
-        //        AvailabilityTo: session.AvailabilityTo,
-        //        AvailabilityDeadline: session.AvailabilityDeadline
-        //    );
-
-        //    return (details, null);
-        //}
 
         public async Task<SessionDetailsResponse?> GetByIdAsync(int id, int userId)
         {
@@ -243,9 +185,9 @@ namespace kiedygramy.Services.Sessions
                     ct: CancellationToken.None
                 );
             }
-            catch
+            catch(Exception ex)
             {
-                // ignorujemy błędy publikacji powiadomień, kiedyś doda się loga
+                _logger.LogError(ex, "powiadomienie o wysłaniu zaproszenia do sesji nie zostało wysłane");
             }
 
             return null;
@@ -314,7 +256,7 @@ namespace kiedygramy.Services.Sessions
 
         public async Task<(IEnumerable<SessionParticipantDto> Participants, ErrorResponseDto? Error)> RemoveParticipantAsync(int sessionId, int organizerId, int targetUserId)
         {
-            // 1. Sprawdź czy sesja istnieje
+            
             var session = await _db.Sessions
                 .AsNoTracking()
                 .FirstOrDefaultAsync(s => s.Id == sessionId);
@@ -322,32 +264,27 @@ namespace kiedygramy.Services.Sessions
             if (session is null)
                 return (Enumerable.Empty<SessionParticipantDto>(), Errors.Session.NotFound());
 
-            // 2. Autoryzacja: Czy usuwający (organizerId) jest właścicielem sesji?
-            // (Chyba że pozwalasz użytkownikowi usunąć samego siebie - wtedy warunek: organizerId == session.OwnerId || organizerId == targetUserId)
+           
             if (session.OwnerId != organizerId)
-                return (Enumerable.Empty<SessionParticipantDto>(), Errors.Session.Forbidden("Tylko organizator może wyrzucać graczy."));
+                return (Enumerable.Empty<SessionParticipantDto>(), Errors.General.Forbidden("Tylko organizator może wyrzucać graczy."));
 
-            // 3. Zabezpieczenie: Nie można wyrzucić samego siebie (jeśli jesteś właścicielem)
+           
             if (session.OwnerId == targetUserId)
-                return (Enumerable.Empty<SessionParticipantDto>(), Errors.Session.Forbidden("Organizator nie może wyrzucić samego siebie."));
+                return (Enumerable.Empty<SessionParticipantDto>(), Errors.General.Forbidden("Organizator nie może wyrzucić samego siebie."));
 
-            // 4. Znajdź konkretnego uczestnika do usunięcia
+            
             var participantToRemove = await _db.SessionParticipants
                 .FirstOrDefaultAsync(p => p.SessionId == sessionId && p.UserId == targetUserId);
 
             if (participantToRemove is null)
-                return (Enumerable.Empty<SessionParticipantDto>(), Errors.Session.ParticipantNotFound()); // Lub po prostu zwróć listę, jeśli już go nie ma
+                return (Enumerable.Empty<SessionParticipantDto>(), Errors.Session.ParticipantNotFound()); 
 
-            // 5. Usuń gracza
+           
             _db.SessionParticipants.Remove(participantToRemove);
-
-            // Opcjonalnie: Usuń też jego głosy na gry i dostępność (jeśli nie masz Cascade Delete w bazie)
-            // var votes = _db.SessionGameVotes.Where(...)
-            // _db.SessionGameVotes.RemoveRange(votes);
 
             await _db.SaveChangesAsync();
 
-            // 6. Zwróć zaktualizowaną listę
+           
             var remainingParticipants = await _db.SessionParticipants
                 .AsNoTracking()
                 .Where(p => p.SessionId == sessionId)
@@ -490,7 +427,7 @@ namespace kiedygramy.Services.Sessions
 
         public async Task<(AvailabilitySummaryResponse? Summary, ErrorResponseDto? Error)> GetAvailabilitySummaryAsync(int sessionId, int userId)
         {
-            // Walidacja sesji 
+           
             var session = await _db.Sessions
                 .AsNoTracking()
                 .Include(s => s.Participants)
@@ -501,16 +438,13 @@ namespace kiedygramy.Services.Sessions
 
             var isOwner = session.OwnerId == userId;
 
-            // Sprawdzamy czy user jest na liście uczestników z potwierdzonym statusem
+           
             var isParticipant = session.Participants
                 .Any(p => p.UserId == userId && p.Status == SessionParticipantStatus.Confirmed);
 
-            // Jeśli nie jest ani właścicielem, ani uczestnikiem -> BŁĄD
+           
             if (!isOwner && !isParticipant)
-            {
-                // Najlepiej zwrócić tu błąd typu Forbidden / AccessDenied.
-                // Jeśli nie masz takiej metody w Errors, możesz użyć tymczasowo NotOwner
-                // lub stworzyć Errors.Session.Forbidden()
+            {             
                 return (null, Errors.Session.NotOwner());
             }
 
@@ -534,7 +468,7 @@ namespace kiedygramy.Services.Sessions
                 .OrderBy(x => x.Date)
                 .ToListAsync();
 
-            // Mapowanie na DTO w pamięci (C#)
+          
             var dayList = rawData
                 .Select(x => new AvailabilitySummaryDayDto(x.Date, x.Count))
                 .ToList();

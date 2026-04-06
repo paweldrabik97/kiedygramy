@@ -1,0 +1,75 @@
+﻿<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Potwierdź email</title>
+    <style>
+        @media only screen and (max-width: 620px) {
+            .card {
+                width: 100% !important;
+            }
+            .content {
+                padding: 24px 16px !important;
+            }
+            .footer {
+                padding: 16px !important;
+            }
+            .btn {
+                padding: 12px 20px !important;
+                font-size: 14px !important;
+            }
+        }
+    </style>
+</head>
+<body style="margin:0; padding:0; background-color:#f4f4f4; font-family:Arial, sans-serif;">
+
+    <!-- Wrapper -->
+    <table width="100%" cellpadding="0" cellspacing="0">
+        <tr>
+            <td align="center" style="padding:40px 0;">
+
+                <!-- Karta -->
+                <table class="card" width="600" cellpadding="0" cellspacing="0" style="background-color:#ffffff; border-radius:8px; overflow:hidden;">
+
+                    <!-- Nagłówek z logo -->
+                    <tr>
+                        <td align="center" style="background-color:#1a1a2e; padding:30px;">                           
+                            <h1 style="color:#ffffff; margin:10px 0 0 0; font-size:24px;">KiedyGramy</h1>
+                        </td>
+                    </tr>
+
+                    <!-- Treść -->
+                    <tr>
+                        <td class="content" align="center" style="padding:40px 30px;">
+                            <h2 style="color:#1a1a2e; margin:0 0 16px 0;">Potwierdź swój adres email</h2>
+                            <p style="color:#555555; font-size:16px; line-height:1.6; margin:0 0 30px 0;">
+                                Dziękujemy za rejestrację! Kliknij poniższy przycisk aby aktywować swoje konto.
+                            </p>
+
+                            <!-- Przycisk -->
+                            <a href="{{confirmUrl}}" class="btn"
+                               style="background-color:#e63946; color:#ffffff; text-decoration:none; padding:14px 32px; border-radius:6px; font-size:16px; font-weight:bold; display:inline-block;">
+                                Potwierdź email
+                            </a>
+                        </td>
+                    </tr>
+
+                    <!-- Stopka -->
+                    <tr>
+                        <td class="footer" align="center" style="background-color:#f4f4f4; padding:20px 30px;">
+                            <p style="color:#999999; font-size:12px; margin:0;">
+                                Jeśli nie zakładałeś konta w KiedyGramy, zignoruj tę wiadomość.
+                            </p>
+                            <!-- linki do kontaktu i regulaminu -->
+                        </td>
+                    </tr>
+
+                </table>
+
+            </td>
+        </tr>
+    </table>
+
+</body>
+</html>

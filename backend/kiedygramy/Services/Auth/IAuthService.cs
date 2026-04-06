@@ -8,6 +8,8 @@ namespace kiedygramy.Services.Auth
     {
         Task<(MeResponse? User, ErrorResponseDto? Error)> RegisterAsync(RegisterRequest dto);
         Task<ErrorResponseDto?> LoginAsync(LoginRequest dto);
+        Task<ErrorResponseDto?> ConfirmEmailAsync(string email, string token);
+        Task<ErrorResponseDto?> ResendConfiramtionEmailAsync(string email);
         
     }
 }

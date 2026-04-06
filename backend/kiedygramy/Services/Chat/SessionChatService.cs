@@ -79,10 +79,6 @@ namespace kiedygramy.Services.Chat
                .Group($"session-{sessionId}")
                .SendAsync("NewSessionMessage", messageDto, ct);
 
-            //await _hubContext.Clients
-            //   .All
-            //   .SendAsync("NewSessionMessage", messageDto, CancellationToken.None);
-
             try
             {
                 var recipientIds = session.Participants
@@ -110,7 +106,7 @@ namespace kiedygramy.Services.Chat
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex,"Failed to create chat notification for sessionId={SessionId}, messageId={MessageId}, authorId={UserId}",sessionId, message.Id, userId);
+                _logger.LogError(ex,$"Failed to create chat notification for sessionId={sessionId}, messageId={message.Id}, authorId={userId}");
             }
 
             return (messageDto, null);

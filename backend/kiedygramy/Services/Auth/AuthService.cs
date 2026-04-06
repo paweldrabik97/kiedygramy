@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Identity;
 using kiedygramy.Application.Errors;    
 using kiedygramy.Services.Notifications;
 using kiedygramy.Domain.Enums;
+using kiedygramy.Services.Email;
 
 
 namespace kiedygramy.Services.Auth
@@ -14,12 +15,16 @@ namespace kiedygramy.Services.Auth
         private readonly UserManager<User> _userManager;
         private readonly SignInManager<User> _signInManager;
         private readonly INotificationService _notificationService;
+        private readonly ILogger<AuthService> _logger;
+        private readonly IEmailService _emailService;
 
-        public AuthService(UserManager<User> userManager, SignInManager<User> signInManager, INotificationService notification)
+        public AuthService(UserManager<User> userManager, SignInManager<User> signInManager, INotificationService notification, ILogger<AuthService> logger, IEmailService emailService)
         {
             _userManager = userManager;
             _signInManager = signInManager;
             _notificationService = notification;
+            _logger = logger;
+            _emailService = emailService;
         }
 
 
@@ -47,17 +52,33 @@ namespace kiedygramy.Services.Auth
 
             if (!result.Succeeded)
                 return (null, Errors.Auth.IdentityValidation(result.Errors));
+                    
+            var confirmationToken = await _userManager.GenerateEmailConfirmationTokenAsync(user);
+            var emailError = await _emailService.SendConfirmationEmailAsync(user.Email!, confirmationToken);
+               
+            if(emailError is not null)
+                _logger.LogError($"failed to send confirmation email for UserId: {user.Id}");
+            
 
-            await _notificationService.CreateAsync(
-               userId: user.Id,
-                type: NotificationType.Welcome,
-                title: "Witamy na KiedyGramy!",
-                message: "Dziekujemy za Rejestracje... blblblbl",
-                url: "/welcome", // tutaj moze byc link do jakiegos welcome page
-                sessionId: null,
-                key: "welcome",
-                ct: CancellationToken.None
-            );
+            try
+            {
+
+
+                await _notificationService.CreateAsync(
+                   userId: user.Id,
+                    type: NotificationType.Welcome,
+                    title: "Witamy na KiedyGramy!",
+                    message: "Dziekujemy za Rejestracje... blblblbl",
+                    url: "/welcome", // tutaj moze byc link do jakiegos welcome page
+                    sessionId: null,
+                    key: "welcome",
+                    ct: CancellationToken.None
+                );
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"failed to create register notification for UserId: {user.Id}");
+            }
 
             var meDto = new MeResponse(
                 Id: user.Id,
@@ -91,18 +112,50 @@ namespace kiedygramy.Services.Auth
 
             return null; 
         }
-        // Przyda się do zmiany hasła itp.
-        private static string MapIdentityCodeToField(string code)
-        {
-            if (code.StartsWith("Password", StringComparison.OrdinalIgnoreCase))
-                return "Password";
-            if (code.StartsWith("Email", StringComparison.OrdinalIgnoreCase))
-                return "Email";
-            if (code.StartsWith("UserName", StringComparison.OrdinalIgnoreCase) ||
-                code.StartsWith("User", StringComparison.OrdinalIgnoreCase))
-                return "Username";
 
-            return "General";
-        }     
+        public async Task<ErrorResponseDto?> ConfirmEmailAsync(string email, string token)
+        {
+            var user = await _userManager.FindByEmailAsync(email);
+
+            if (user is null)
+                return Errors.Auth.EmailNotFound();
+
+            var alreadyConfirmed = await _userManager.IsEmailConfirmedAsync(user);
+
+            if(alreadyConfirmed)
+                return Errors.Auth.EmailAlreadyConfirmed();
+
+            var encodedToken = Uri.UnescapeDataString(token);
+            var result = await _userManager.ConfirmEmailAsync(user, encodedToken);
+
+            if (!result.Succeeded)
+                return Errors.Auth.UnableToConfirm(); 
+
+            return null;
+        }
+
+        public async Task<ErrorResponseDto?> ResendConfiramtionEmailAsync(string email)
+        {
+            var user = await _userManager.FindByEmailAsync(email);
+
+            if (user is null)
+                return Errors.Auth.EmailNotFound();
+
+            var alreadyConfirmed = await _userManager.IsEmailConfirmedAsync(user);
+
+            if (alreadyConfirmed)
+                return Errors.Auth.EmailAlreadyConfirmed();
+
+            var token = await _userManager.GenerateEmailConfirmationTokenAsync(user);
+            var emailError = await _emailService.SendConfirmationEmailAsync(email, token);
+
+            if (emailError is not null)
+            {
+                _logger.LogError($"failed to send confirmation email for UserId: {user.Id}");
+                return Errors.Auth.UnableToConfirm();
+            }
+
+            return null;
+        }
     }
 }

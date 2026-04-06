@@ -3,6 +3,7 @@ using kiedygramy.Domain;
 using kiedygramy.DTO.Auth;
 using kiedygramy.Services.Account;
 using kiedygramy.Services.Auth;
+using kiedygramy.Services.Email;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -19,13 +20,15 @@ namespace kiedygramy.Controllers
         private readonly SignInManager<User> _signInManager;
         private readonly IAuthService _authService;
         private readonly IAccountService _accountService;
+        private readonly IEmailService _emailService;
 
-        public AuthController(UserManager<User> userManager, SignInManager<User> signInManager, IAccountService accountService, IAuthService authService)
+        public AuthController(UserManager<User> userManager, SignInManager<User> signInManager, IAccountService accountService, IAuthService authService, IEmailService emailService)
         {
             _userManager = userManager;
             _signInManager = signInManager;
             _accountService = accountService;
             _authService = authService;
+            _emailService = emailService;
         }
 
         [HttpPost("register")]
@@ -42,6 +45,36 @@ namespace kiedygramy.Controllers
                 return Problem(error);
 
             return Ok(user);
+        }
+        
+        [HttpPost("confirmation-email")]
+        [AllowAnonymous]
+        public async Task<IActionResult> ConfirmationEmail([FromQuery] string email, [FromQuery] string token)
+        {
+            if(!ModelState.IsValid)
+                return ValidationProblemFromModelState();
+
+            var error = await _authService.ConfirmEmailAsync(email, token);
+
+            if (error is not null)
+                return Problem(error);
+
+            return NoContent();
+        }
+
+        [HttpPost("resend-confirmation-email")]
+        [AllowAnonymous]
+        public async Task<IActionResult> ResendConfirationEmail([FromQuery] string email)
+        {
+            if (!ModelState.IsValid)
+                return ValidationProblemFromModelState();
+
+            var error = await _authService.ResendConfiramtionEmailAsync(email);
+
+            if(error is not null)
+                return Problem(error);
+
+            return NoContent();
         }
 
         [HttpPost("login")]

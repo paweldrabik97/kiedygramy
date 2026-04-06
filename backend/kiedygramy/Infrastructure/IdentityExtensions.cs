@@ -15,7 +15,8 @@ namespace kiedygramy.Infrastructure
                 options.Password.RequireNonAlphanumeric = false;
                 options.Password.RequireUppercase = false;
                 options.Password.RequiredLength = 6;
-                options.User.RequireUniqueEmail = true;
+                options.User.RequireUniqueEmail = true;   
+                options.SignIn.RequireConfirmedEmail = true;
             })
             .AddRoles<IdentityRole<int>>()
             .AddEntityFrameworkStores<AppDbContext>()

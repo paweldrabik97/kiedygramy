@@ -2,9 +2,11 @@
 using kiedygramy.Services.Account;
 using kiedygramy.Services.Auth;
 using kiedygramy.Services.Chat;
+using kiedygramy.Services.Email;
 using kiedygramy.Services.External;
 using kiedygramy.Services.Games;
 using kiedygramy.Services.Genre;
+using kiedygramy.Services.Guest;
 using kiedygramy.Services.Notifications;
 using kiedygramy.Services.Sessions;
 using Microsoft.EntityFrameworkCore;
@@ -25,6 +27,7 @@ namespace kiedygramy.Infrastructure
         {
             services.AddScoped<IAuthService, AuthService>();
             services.AddScoped<IAccountService, AccountService>();
+            services.AddScoped<IGuestService, GuestService>();
 
             services.AddScoped<IGameService, GameService>();
             services.AddScoped<ISessionService, SessionService>();
@@ -34,6 +37,7 @@ namespace kiedygramy.Infrastructure
             services.AddScoped<ISessionChatHubService, SessionChatHubService>();
             services.AddScoped<INotificationService, NotificationService>();
             services.AddScoped<INotificationPublisher, SignalRNotificationPublisher>();
+            services.AddTransient<IEmailService, EmailService>();
 
             services.AddSingleton<TimeProvider>(TimeProvider.System);
             services.AddDataProtection();
@@ -52,6 +56,14 @@ namespace kiedygramy.Infrastructure
                     new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", config["BGG:Token"]);
                 client.Timeout = TimeSpan.FromSeconds(10);
             });
+
+            return services;
+        }
+
+        public static IServiceCollection AddAppOptions(this IServiceCollection services, IConfiguration configuration)
+        {
+            services.Configure<EmailOptions>(configuration.GetSection("Email"));
+            services.Configure<FrontendOptions>(configuration.GetSection("Frontend"));
 
             return services;
         }
