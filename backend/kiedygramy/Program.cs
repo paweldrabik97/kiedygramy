@@ -1,7 +1,6 @@
 using kiedygramy.Hubs;
 using kiedygramy.Infrastructure;
 
-
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddAppDb(builder.Configuration);
@@ -12,8 +11,10 @@ builder.Services.AddAppControllersAndSignalR();
 builder.Services.AddAppSwagger();
 builder.Services.AddAppCors(builder.Configuration);
 builder.Services.AddAppRateLimiting();
+builder.Services.AddAppOptions(builder.Configuration);
 
 var app = builder.Build();
+
 
 if (app.Environment.IsDevelopment())
 {
@@ -39,3 +40,5 @@ app.MapHub<NotificationHub>("/notificationHub").RequireCors("AllowFrontend");
 app.MapControllers();
 
 await app.RunAsync();
+
+public partial class Program { }

@@ -14,7 +14,7 @@ public class GameGenreConfiguration : IEntityTypeConfiguration<GameGenre>
          .WithMany(x => x.GameGenres)
          .HasForeignKey(x => x.GameId);
 
-        b.HasOne(x => x.Genre)
+        b.HasOne(x => x.Genre) 
          .WithMany(x => x.GameGenres)
          .HasForeignKey(x => x.GenreId);
     }

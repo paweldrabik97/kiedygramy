@@ -19,6 +19,7 @@ public class AppDbContext : IdentityDbContext<User, IdentityRole<int>, int>
     public DbSet<Notification> Notifications => Set<Notification>();
     public DbSet<SessionGameVote> SessionGameVotes => Set<SessionGameVote>();
     public DbSet<UserGame> UserGames => Set<UserGame>();
+    public DbSet<SessionInviteLink> SessionInviteLinks => Set<SessionInviteLink>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

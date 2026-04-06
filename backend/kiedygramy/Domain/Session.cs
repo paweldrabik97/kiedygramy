@@ -9,6 +9,7 @@ namespace kiedygramy.Domain
         public DateTime? Date { get; set; }
         public string? Location { get; set; } = default!;
         public string? Description { get; set; } = default!;
+        public bool IsOpen { get; set; } = true;
 
         public int OwnerId { get; set; }
         public User Owner { get; set; } = default!; 
@@ -24,5 +25,7 @@ namespace kiedygramy.Domain
         public DateTime? AvailabilityDeadline { get; set; }
 
         public ICollection<SessionAvailability> Availabilities { get; set; } = new List<SessionAvailability>();
+
+        public ICollection<SessionInviteLink> InviteLinks { get; set; } = new List<SessionInviteLink>();
     }
 }
