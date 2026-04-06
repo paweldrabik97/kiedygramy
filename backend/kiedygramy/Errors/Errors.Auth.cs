@@ -16,6 +16,15 @@ namespace kiedygramy.Application.Errors
             public static ErrorResponseDto EmailTaken() =>
                 General.Validation("Użytkownik o podanym e-mailu już istnieje.", field: "Email");
 
+            public static ErrorResponseDto EmailAlreadyConfirmed() =>
+                General.Validation("konto zostało już aktywowane");
+
+            public static ErrorResponseDto EmailNotFound() =>
+                General.NotFound("użytkownik o takim adresie email nie istnieje");
+
+            public static ErrorResponseDto UnableToConfirm() =>
+                General.Validation("nie udało się potwierdzić konta");
+
             public static ErrorResponseDto IdentityValidation(IEnumerable<IdentityError> identityErrors)
             {
 

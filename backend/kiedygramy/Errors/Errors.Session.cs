@@ -7,6 +7,8 @@ namespace kiedygramy.Application.Errors
         public static class Session
         {
 
+            public static ErrorResponseDto SessionIsClosed() =>
+                General.Validation("sesja została zamknięta", "IsOpen");
             public static ErrorResponseDto NotFound() =>
                     General.NotFound("Sesja");
             public static ErrorResponseDto GameNotFound() =>
@@ -52,7 +54,7 @@ namespace kiedygramy.Application.Errors
                     detail: "Dostępność nie została skonfigurowana"
                 );
             public static ErrorResponseDto InvalidParticipant() =>
-                General.Forbidden("detail");
+                General.Forbidden("Nie masz dostępy do tej sesji");
             public static ErrorResponseDto FinalDateInPast() =>
                General.Validation(
                    detail: "Ostateczna data i godzina muszą być w przyszłości.",
@@ -89,16 +91,6 @@ namespace kiedygramy.Application.Errors
                     detail: "Sesja już się odbyła, nie można zmienić statusu",
                     field: "DateTime"
                 );
-
-            public static ErrorResponseDto Forbidden(string detail)
-            {
-                return new ErrorResponseDto(
-                    status: 403,
-                    title: "Brak dostępu",
-                    detail: detail
-                );
-            }
-
             public static ErrorResponseDto ParticipantNotFound()
             {
                 return new ErrorResponseDto(

@@ -17,7 +17,7 @@ namespace kiedygramy.Application.Errors
             public static ErrorResponseDto Forbidden(string detail = "Brak uprawnień") =>
                 new(
                     status: 403,
-                    title: "Forbiden",
+                    title: "Forbidden",
                     detail: detail
                 );
 
@@ -34,6 +34,13 @@ namespace kiedygramy.Application.Errors
                     title: "Unauthorized",
                     detail: detail
                 );
+            public static ErrorResponseDto Gone(string detail) =>
+                new(
+                    status: 410,
+                    title: "Gone",
+                    detail: detail
+                );
+
 
             public static ErrorResponseDto Validation(string detail, string? field = null)
             {

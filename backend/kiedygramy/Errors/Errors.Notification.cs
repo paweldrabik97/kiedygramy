@@ -7,16 +7,16 @@ namespace kiedygramy.Application.Errors
         public static class Notifications
         {            
             public static ErrorResponseDto NotificationNotExists() =>
-                General.NotFound("Notification");
+                General.NotFound("Nie znaleziono takiego powiadomienia");
 
             public static ErrorResponseDto InvalidUserId() =>
-                General.Validation("User");
+                General.Validation("Nieprawidłowy identifikator użytkownika", "UserId");
 
             public static ErrorResponseDto InvalidSessionId() =>
-                General.Validation("Session");
+                General.Validation("Nieprawidłowy identifikator sesji", "SessionId");
 
             public static ErrorResponseDto TitleRequired() =>
-                General.Validation("Title");
+                General.Validation("Tytuł jest wymagany", "Title");
         }
     }
 }
