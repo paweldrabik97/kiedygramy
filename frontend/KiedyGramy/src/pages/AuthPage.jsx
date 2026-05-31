@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useAuth } from "../features/auth/contexts/AuthContext.jsx";
+import { resendConfirmationEmail } from "../features/auth/services/auth.ts";
 import { useNavigate, useLocation, Link } from "react-router-dom";
 import { Button } from "../components/ui/Button.jsx";
 import { useTranslation } from "react-i18next";
@@ -31,6 +32,8 @@ const AuthPage = () => {
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
   const [registerSuccess, setRegisterSuccess] = useState(false);
+  const [resendLoading, setResendLoading] = useState(false);
+  const [resendSent, setResendSent] = useState(false);
 
   const navigate = useNavigate();
   const location = useLocation();
@@ -86,11 +89,28 @@ const AuthPage = () => {
         city: newFormData.newCity,
       });
       setRegisterSuccess(true);
-      toggleMode();
     } catch (err) {
       setError(t("auth.errors.registrationFailed"));
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleCloseSuccessModal = () => {
+    setRegisterSuccess(false);
+    toggleMode();
+  };
+
+  const handleResendEmail = async () => {
+    setResendLoading(true);
+    try {
+      await resendConfirmationEmail(newFormData.newEmail);
+      setResendSent(true);
+      setTimeout(() => setResendSent(false), 4000);
+    } catch {
+      // ignore
+    } finally {
+      setResendLoading(false);
     }
   };
 
@@ -108,6 +128,57 @@ const AuthPage = () => {
 
   return (
     <div className="min-h-screen bg-surface-light dark:bg-surface-dark font-sans flex items-center justify-center p-4 relative overflow-hidden">
+
+      {/* --- REGISTRATION SUCCESS MODAL --- */}
+      {registerSuccess && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+          {/* Backdrop */}
+          <div
+            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+            onClick={handleCloseSuccessModal}
+          />
+          {/* Modal box */}
+          <div className="relative bg-white dark:bg-surface-card rounded-2xl shadow-2xl p-8 max-w-sm w-full flex flex-col items-center text-center animate-fadeInUp">
+            {/* Icon */}
+            <div className="w-20 h-20 mb-5 rounded-full bg-primary/10 dark:bg-primary/20 flex items-center justify-center">
+              <svg xmlns="http://www.w3.org/2000/svg" className="w-10 h-10 text-primary" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="2" y="4" width="20" height="16" rx="2" />
+                <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
+              </svg>
+            </div>
+            {/* Title */}
+            <h3 className="text-2xl font-bold font-display text-slate-900 dark:text-white mb-2">
+              {t("auth.registrationSuccessModal.title")}
+            </h3>
+            {/* Description */}
+            <p className="text-text-muted dark:text-slate-400 text-sm leading-relaxed mb-2">
+              {t("auth.registrationSuccessModal.description")}
+            </p>
+            {/* Spam note */}
+            <p className="text-text-muted dark:text-slate-500 text-xs mb-7 italic">
+              {t("auth.registrationSuccessModal.spamNote")}
+            </p>
+            {/* Button */}
+            <button
+              onClick={handleCloseSuccessModal}
+              className="w-full py-3 bg-primary hover:bg-primary-hover text-white rounded-xl shadow-lg shadow-primary/30 transition-all font-bold text-base"
+            >
+              {t("auth.registrationSuccessModal.button")}
+            </button>
+            <button
+              onClick={handleResendEmail}
+              disabled={resendLoading || resendSent}
+              className="w-full py-2.5 mt-3 border-2 border-primary/30 hover:border-primary text-primary disabled:opacity-60 rounded-xl transition-all font-medium text-sm"
+            >
+              {resendSent
+                ? t("auth.registrationSuccessModal.resendButtonSent")
+                : resendLoading
+                ? t("auth.registrationSuccessModal.resendButtonSending")
+                : t("auth.registrationSuccessModal.resendButton")}
+            </button>
+          </div>
+        </div>
+      )}
       
       {/* Decorative background */}
       <div className="absolute top-0 left-0 w-full h-full pointer-events-none overflow-hidden">

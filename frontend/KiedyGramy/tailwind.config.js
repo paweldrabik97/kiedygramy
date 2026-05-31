@@ -35,7 +35,18 @@ export default {
       },
       backgroundImage: {
         'fantasy-flow': 'linear-gradient(to right, #7C3AED, #D946EF, #FBBF24)',
-      }
+        'app-light': 'linear-gradient(135deg, #F8FAFC 0%, #F5F3FF 100%)',
+        'app-dark':  'linear-gradient(135deg, #0F172A 0%, #1E1B4B 100%)',
+      },
+      keyframes: {
+        fadeInUp: {
+          '0%': { opacity: '0', transform: 'translateY(24px) scale(0.97)' },
+          '100%': { opacity: '1', transform: 'translateY(0) scale(1)' },
+        },
+      },
+      animation: {
+        'fadeInUp': 'fadeInUp 0.3s ease-out',
+      },
     },
   },
   plugins: [],

@@ -6,14 +6,15 @@ export const Button = ({ variant = 'primary', children, className = '', onClick,
   
   const variants = {
     primary: `
-      bg-primary text-white shadow-lg shadow-primary/30 
-      hover:bg-primary-hover 
-      dark:shadow-primary/50 dark:hover:shadow-primary/70 
-      /* In dark mode the primary button simply "glows" more strongly */
+      bg-gradient-to-r from-primary to-fuchsia-500 text-white
+      shadow-lg shadow-primary/30
+      hover:from-primary-hover hover:to-fuchsia-600
+      dark:shadow-primary/50
     `,
     secondary: `
-      bg-secondary text-amber-900 
-      hover:bg-yellow-400
+      bg-gradient-to-r from-secondary to-amber-300 text-amber-900
+      shadow-md shadow-amber-200/50
+      hover:from-yellow-400 hover:to-amber-400
     `,
     outline: `
       border-2 border-primary text-primary

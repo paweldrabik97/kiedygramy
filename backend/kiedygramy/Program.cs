@@ -23,11 +23,17 @@ if (app.Environment.IsDevelopment())
 
 await app.MigrateDatabaseAsync();
 
-app.UseHttpsRedirection();
+
 app.UseStaticFiles();
 
 app.UseRouting();
 app.UseCors("AllowFrontend");
+
+if (!app.Environment.IsDevelopment())
+{
+    app.UseHttpsRedirection();
+}
+
 
 app.UseAuthentication();
 app.UseAuthorization();

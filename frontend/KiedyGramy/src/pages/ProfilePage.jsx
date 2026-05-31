@@ -70,7 +70,7 @@ export default function ProfilePage() {
   return (
     <div className="p-8 max-w-3xl mx-auto">
       {loading && (
-        <div className="mt-10 rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-surface-card p-6 text-base opacity-80 text-center">
+        <div className="mt-10 rounded-2xl border border-gray-200 dark:border-gray-700 bg-gradient-to-b from-slate-100 to-white dark:from-slate-800 dark:to-surface-card shadow-md p-6 text-base opacity-80 text-center">
           {t("profile.loading")}
         </div>
       )}
@@ -93,7 +93,7 @@ export default function ProfilePage() {
       )}
 
       {!loading && me && (
-        <div className="rounded-3xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-surface-card shadow-xl p-10 mt-10">
+        <div className="rounded-3xl border border-gray-200 dark:border-gray-700 bg-gradient-to-b from-slate-100 to-white dark:from-slate-800 dark:to-surface-card shadow-xl p-10 mt-10">
           {/* Header in the same block */}
           <div className="flex flex-col items-center text-center mb-10">
             <div className="w-36 h-36 rounded-full bg-primary/10 flex items-center justify-center shadow-md">
@@ -319,7 +319,7 @@ function ProfileFieldCard({
   const { t } = useTranslation();
 
   return (
-    <div className="rounded-3xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-surface-card p-7">
+    <div className="rounded-3xl border border-gray-200 dark:border-gray-700 bg-gradient-to-b from-slate-100 to-white dark:from-slate-700/50 dark:to-surface-card shadow-md p-7">
       <div className="flex items-start justify-between gap-4">
         <div>
           <div className="text-sm uppercase tracking-wide text-text-muted">{title}</div>
@@ -345,7 +345,7 @@ function ProfileFieldCard({
 
           <div className="flex gap-2">
             <button
-              className="px-6 py-3 rounded-2xl bg-black text-white text-base font-semibold hover:opacity-90 transition disabled:opacity-60 disabled:cursor-not-allowed"
+              className="px-6 py-3 rounded-2xl bg-gradient-to-r from-primary to-fuchsia-500 hover:from-primary-hover hover:to-fuchsia-600 text-white text-base font-semibold shadow-lg shadow-primary/30 transition-all active:scale-95 disabled:opacity-60 disabled:cursor-not-allowed"
               onClick={onSave}
               disabled={disabled}
             >

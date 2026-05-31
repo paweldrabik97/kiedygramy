@@ -170,7 +170,7 @@ const SessionDetailsPage = () => {
         <div className="max-w-6xl mx-auto p-4 sm:p-6 space-y-8 pb-20">
             
             {/* --- HEADER --- */}
-            <header className="bg-white dark:bg-surface-card p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700">
+            <header className="bg-gradient-to-b from-slate-100 to-white dark:from-slate-800 dark:to-surface-card p-6 rounded-2xl shadow-md border border-gray-200 dark:border-gray-700">
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                     <div>
                         <h1 className="text-3xl font-bold font-display text-slate-900 dark:text-white mb-2">{session.title}</h1>
@@ -256,7 +256,7 @@ const SessionDetailsPage = () => {
 
 
                                 {/* SECTION 1: GAME SELECTION */}
-                                <section className="bg-white dark:bg-surface-card p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
+                                <section className="bg-gradient-to-b from-slate-100 to-white dark:from-slate-800 dark:to-surface-card p-6 rounded-2xl shadow-md border border-gray-200 dark:border-gray-700 overflow-hidden">
                                     <div className="flex justify-between items-center mb-4">
                                         <h3 className="font-bold font-display text-xl text-slate-900 dark:text-white">{t('sessionDetails.whatToPlayTitle')}</h3>
                                         {isOrganizer && (
@@ -283,7 +283,7 @@ const SessionDetailsPage = () => {
                                     {session.games && session.games.length > 0 ? (
                                         <div className="grid grid-cols-1 gap-3">
                                             {session.games.map(game => (
-                                                <div key={game.id} className="flex items-center gap-4 bg-white dark:bg-gray-800 p-4 rounded-xl border">
+                                                <div key={game.id} className="flex items-center gap-4 bg-gradient-to-r from-amber-50 to-white dark:from-gray-800 dark:to-gray-800/80 p-4 rounded-xl border border-amber-100 dark:border-gray-700 shadow-sm">
                                                     {game.imageUrl ? (
                                                         <img src={game.imageUrl} className="w-12 h-12 rounded object-cover" />
                                                     ) : (
@@ -308,7 +308,7 @@ const SessionDetailsPage = () => {
                                 </section>
 
                                 {/* SECTION 2: AVAILABILITY */}
-                                <section className="bg-white dark:bg-surface-card p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700">
+                                <section className="bg-gradient-to-b from-slate-100 to-white dark:from-slate-800 dark:to-surface-card p-6 rounded-2xl shadow-md border border-gray-200 dark:border-gray-700">
                                     {isOrganizer && (
                                         <div className="mb-6 pb-6 border-b border-gray-100 dark:border-gray-700">
                                             <AvailabilityWindowForm 
@@ -363,7 +363,7 @@ const SessionDetailsPage = () => {
 
                 {/* 2. SIDEBAR COLUMN - PARTICIPANTS */}
                 <div className="space-y-6">
-                    <section className="bg-white dark:bg-surface-card p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 sticky top-6">
+                    <section className="bg-gradient-to-b from-slate-100 to-white dark:from-slate-800 dark:to-surface-card p-6 rounded-2xl shadow-md border border-gray-200 dark:border-gray-700 sticky top-6">
                         {/* TEAM SECTION HEADER */}
                         <div className="flex items-center justify-between mb-4 relative">
                             <h3 className="font-bold font-display text-lg text-slate-900 dark:text-white">{t('sessionDetails.teamTitle', { count: participants.length })}</h3>
@@ -453,7 +453,7 @@ const SessionDetailsPage = () => {
                                         value={inviteQuery}
                                         onChange={e => setInviteQuery(e.target.value)}
                                     />
-                                    <button type="submit" className="bg-primary hover:bg-primary-hover text-white px-3 py-2 rounded-lg text-sm font-bold shadow-sm transition-all">
+                                    <button type="submit" className="bg-gradient-to-r from-primary to-fuchsia-500 hover:from-primary-hover hover:to-fuchsia-600 text-white px-3 py-2 rounded-lg text-sm font-bold shadow-md shadow-primary/30 transition-all active:scale-95">
                                         +
                                     </button>
                                 </form>

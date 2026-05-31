@@ -27,6 +27,15 @@
         "creatingButton": "Creating...",
         "registerButton": "Sign up",
         "haveAccount": "Already have an account?",
+        "registrationSuccessModal": {
+            "title": "Confirm your account",
+            "description": "An activation link has been sent to your email address. Click the link to activate your account.",
+            "spamNote": "Can't see the email? Check your spam folder.",
+            "button": "Got it",
+            "resendButton": "Resend activation link",
+            "resendButtonSending": "Sending...",
+            "resendButtonSent": "Link sent!"
+        },
         "overlay": {
             "titleHasAccount": "Already have an account?",
             "titleNewPlayer": "New player?",
@@ -35,6 +44,15 @@
             "buttonLogin": "Log in",
             "buttonCreateAccount": "Create an account"
         }
+    },
+    "confirmEmail": {
+        "activating": "Activating your account...",
+        "errorTitle": "Account activation failed",
+        "failed": "The activation link is invalid or has expired. Request a new one and try again.",
+        "resendLink": "Send new link",
+        "resendSending": "Sending...",
+        "resendSent": "Link sent!",
+        "backToLogin": "Back to login"
     },
     "dashboard": {
         "loadingData": "Loading data...",
@@ -54,8 +72,8 @@
         "calendarLink": "Calendar →",
         "systemRpg": "RPG System",
         "sessionDetails": "Session details",
-        "noSessionsTitle": "No scheduled sessions",
-        "noSessionsSubtitle": "Looks like you have a free evening. Want to plan something?",
+        "noSessionsTitle": "No upcoming sessions",
+        "noSessionsSubtitle": "You have no sessions planned. Time to organize one!",
         "planGame": "Plan a game",
         "recentGamesTitle": "Recently added games",
         "addTitle": "Add title",
@@ -80,7 +98,7 @@
         "title": "My Games",
         "addGame": "+ Add game",
         "emptyLibrary": "Your library is empty.",
-        "addFirstBggGame": "Add your first game from BGG",
+        "addFirstBggGame": "Add your first game!",
         "noCover": "No cover",
         "editGame": "Edit game",
         "removeFromCollection": "Remove from collection",

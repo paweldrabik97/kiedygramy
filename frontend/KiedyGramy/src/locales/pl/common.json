@@ -27,6 +27,15 @@
 		"creatingButton": "Tworzenie...",
 		"registerButton": "Zarejestruj się",
 		"haveAccount": "Masz już konto?",
+		"registrationSuccessModal": {
+			"title": "Potwierdź swoje konto",
+			"description": "Na Twój e-mail został wysłany link aktywacyjny. Kliknij w link, aby aktywować konto.",
+			"spamNote": "Nie widzisz wiadomości? Sprawdź folder spam.",
+			"button": "Rozumiem",
+			"resendButton": "Wyślij link ponownie",
+			"resendButtonSending": "Wysyłanie...",
+			"resendButtonSent": "Link wysłany!"
+		},
 		"overlay": {
 			"titleHasAccount": "Masz już konto?",
 			"titleNewPlayer": "Nowy gracz?",
@@ -35,6 +44,15 @@
 			"buttonLogin": "Zaloguj się",
 			"buttonCreateAccount": "Załóż konto"
 		}
+	},
+	"confirmEmail": {
+		"activating": "Aktywacja konta...",
+		"errorTitle": "Nie udało się aktywować konta",
+		"failed": "Link aktywacyjny jest nieprawidłowy lub wygasł. Wyślij nowy i spróbuj ponownie.",
+		"resendLink": "Wyślij nowy link",
+		"resendSending": "Wysyłanie...",
+		"resendSent": "Link wysłany!",
+		"backToLogin": "Wróć do logowania"
 	},
 	"dashboard": {
 		"loadingData": "Ładowanie danych...",
@@ -54,8 +72,8 @@
 		"calendarLink": "Kalendarz →",
 		"systemRpg": "System RPG",
 		"sessionDetails": "Szczegóły sesji",
-		"noSessionsTitle": "Brak zaplanowanych sesji",
-		"noSessionsSubtitle": "Wygląda na to, że masz wolny wieczór. Może coś zaplanujesz?",
+		"noSessionsTitle": "Brak sesji w najbliższym czasie",
+		"noSessionsSubtitle": "Nie masz żadnych zaplanowanych sesji. Czas coś zorganizować!",
 		"planGame": "Zaplanuj grę",
 		"recentGamesTitle": "Ostatnio dodane gry",
 		"addTitle": "Dodaj tytuł",
@@ -80,7 +98,7 @@
 		"title": "Moje Gry",
 		"addGame": "+ Dodaj grę",
 		"emptyLibrary": "Twoja biblioteka jest pusta.",
-		"addFirstBggGame": "Dodaj pierwszą grę z BGG",
+		"addFirstBggGame": "Dodaj pierwszą grę!",
 		"noCover": "Brak okładki",
 		"editGame": "Edytuj grę",
 		"removeFromCollection": "Usuń z kolekcji",

@@ -86,15 +86,15 @@ export const OrganizerDatePicker = ({ sessionId, currentFinalDate, onSuccess }) 
         <button
           type="submit"
           disabled={isSubmitting || !selectedDate}
-          className={`w-full py-3 px-4 rounded-xl font-bold transition-all duration-300 flex items-center justify-center gap-2
-            ${isSubmitting || !selectedDate 
-              // Disabled button
-              ? 'bg-slate-100 text-slate-400 dark:bg-slate-800 border border-transparent dark:border-slate-700 dark:text-slate-500 cursor-not-allowed' 
-              // Active button
-              : 'bg-violet-600 text-white hover:bg-violet-700 dark:shadow-[0_0_20px_rgba(124,58,237,0.4)] dark:hover:shadow-[0_0_30px_rgba(124,58,237,0.6)] dark:hover:bg-violet-500'
-            }`}
+          className={`w-full py-3 rounded-xl font-bold text-sm transition-all active:scale-95 ${
+            isSubmitting || !selectedDate
+              ? 'bg-slate-100 text-slate-400 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 dark:text-slate-500 cursor-not-allowed'
+              : 'bg-gradient-to-r from-primary to-fuchsia-500 hover:from-primary-hover hover:to-fuchsia-600 text-white shadow-lg shadow-primary/30'
+          }`}
         >
-          {isSubmitting ? t('featureComponents.sessions.organizerDatePicker.buttons.saving') : t('featureComponents.sessions.organizerDatePicker.buttons.confirmTerm')}
+          {isSubmitting
+            ? t('featureComponents.sessions.organizerDatePicker.buttons.saving')
+            : t('featureComponents.sessions.organizerDatePicker.buttons.confirmTerm')}
         </button>
       </form>
     </div>

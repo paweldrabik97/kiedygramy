@@ -57,24 +57,24 @@ export default function NotificationsPage() {
 
   return (
     <div className="w-full p-6">
-      <div className="max-w-5xl mx-auto rounded-2xl border border-gray-200 bg-white shadow-sm p-5 sm:p-6">
+      <div className="max-w-5xl mx-auto rounded-2xl border border-gray-200 dark:border-gray-700 bg-gradient-to-b from-slate-100 to-white dark:from-slate-800 dark:to-surface-card shadow-md p-5 sm:p-6">
         {/* Header */}
         <div className="flex flex-col gap-2 items-center text-center mb-5">
-          <h1 className="text-xl sm:text-2xl font-extrabold text-gray-800">
+          <h1 className="text-xl sm:text-2xl font-extrabold text-gray-800 dark:text-white">
             {t('featureComponents.notifications.page.title')}
           </h1>
-          <p className="text-sm text-gray-500">
+          <p className="text-sm text-gray-500 dark:text-gray-400">
             {t('featureComponents.notifications.page.subtitle')}
           </p>
-          <div className="text-sm text-gray-600">
+          <div className="text-sm text-gray-600 dark:text-gray-400">
             {t('featureComponents.notifications.page.unreadLabel')}{" "}
-            <span className="font-semibold text-gray-800">{unreadCount}</span>
+            <span className="font-semibold text-gray-800 dark:text-white">{unreadCount}</span>
           </div>
         </div>
 
         {/* List */}
         {notifications.length === 0 ? (
-          <div className="rounded-xl p-4 border border-dashed border-gray-300 text-gray-600">
+          <div className="rounded-xl p-4 border border-dashed border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-400">
             {t('featureComponents.notifications.page.empty')}
           </div>
         ) : (
@@ -89,9 +89,9 @@ export default function NotificationsPage() {
                 <div
                   key={n.id}
                   className={[
-                    "group relative rounded-xl border bg-white p-4 shadow-sm transition-all",
+                    "group relative rounded-xl border bg-gradient-to-b from-slate-100 to-white dark:from-slate-700/50 dark:to-surface-card p-4 shadow-sm transition-all",
                     "hover:-translate-y-[1px] hover:shadow-md",
-                    n.isRead ? "border-gray-100" : "border-gray-200",
+                    n.isRead ? "border-gray-100 dark:border-gray-700" : "border-gray-200 dark:border-gray-600",
                   ].join(" ")}
                 >
                   {/* Clickable area (so menu and buttons can use stopPropagation) */}
@@ -107,10 +107,10 @@ export default function NotificationsPage() {
                           title={n.isRead ? t('featureComponents.notifications.page.read') : t('featureComponents.notifications.page.unread')}
                           className={[
                             "h-2.5 w-2.5 rounded-full flex-shrink-0",
-                            n.isRead ? "bg-gray-200" : "bg-red-500",
+                            n.isRead ? "bg-gray-200 dark:bg-gray-600" : "bg-red-500",
                           ].join(" ")}
                         />
-                        <span className="text-xs font-extrabold tracking-widest text-gray-700">
+                        <span className="text-xs font-extrabold tracking-widest text-gray-700 dark:text-gray-300">
                           {label}
                         </span>
                       </div>
@@ -120,7 +120,7 @@ export default function NotificationsPage() {
                         <div
                           className={[
                             "font-semibold truncate",
-                            n.isRead ? "text-gray-800" : "text-red-600",
+                            n.isRead ? "text-gray-800 dark:text-gray-100" : "text-red-600 dark:text-red-400",
                           ].join(" ")}
                         >
                           {n.title} {n.count > 1 ? `(${n.count})` : ""}
@@ -130,26 +130,26 @@ export default function NotificationsPage() {
                           <div
                             className={[
                               "mt-1 text-sm",
-                              n.isRead ? "text-gray-600" : "text-gray-700 font-medium",
+                              n.isRead ? "text-gray-600 dark:text-gray-400" : "text-gray-700 dark:text-gray-300 font-medium",
                               "line-clamp-2 break-words",
                             ].join(" ")}
                           >
                             {n.message}
                           </div>
                         ) : (
-                          <div className="mt-1 text-sm text-gray-400 italic">
+                          <div className="mt-1 text-sm text-gray-400 dark:text-gray-500 italic">
                             {t('featureComponents.notifications.page.noContent')}
                           </div>
                         )}
                       </div>
 
                       {/* Time */}
-                      <div className="text-center sm:text-right text-xs sm:text-sm text-gray-500 whitespace-nowrap w-full">
+                      <div className="text-center sm:text-right text-xs sm:text-sm text-gray-500 dark:text-gray-400 whitespace-nowrap w-full">
                         {time}
                       </div>
                     </div>
                   </button>
-               
+
                   {/* INVITE actions */}
                   {isInvite && (
                     <div className="mt-4 flex flex-col sm:flex-row justify-center items-stretch sm:items-center gap-3">
@@ -162,9 +162,9 @@ export default function NotificationsPage() {
                         }}
                         className={[
                           "w-full sm:w-auto sm:min-w-[140px] px-4 py-2 rounded-xl text-sm font-bold",
-                          "border border-green-200",
-                          "bg-green-50 text-green-900",
-                          "hover:bg-green-100 hover:-translate-y-[1px] hover:shadow-md",
+                          "border border-green-200 dark:border-green-700",
+                          "bg-green-50 dark:bg-green-900/20 text-green-900 dark:text-green-300",
+                          "hover:bg-green-100 dark:hover:bg-green-900/40 hover:-translate-y-[1px] hover:shadow-md",
                           "transition-all",
                         ].join(" ")}
                       >
@@ -179,9 +179,9 @@ export default function NotificationsPage() {
                         }}
                         className={[
                           "min-w-[140px] px-4 py-2 rounded-xl text-sm font-bold",
-                          "border border-red-200",
-                          "bg-red-50 text-red-900",
-                          "hover:bg-red-100 hover:-translate-y-[1px] hover:shadow-md",
+                          "border border-red-200 dark:border-red-700",
+                          "bg-red-50 dark:bg-red-900/20 text-red-900 dark:text-red-300",
+                          "hover:bg-red-100 dark:hover:bg-red-900/40 hover:-translate-y-[1px] hover:shadow-md",
                           "transition-all",
                         ].join(" ")}
                       >

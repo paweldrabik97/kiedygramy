@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 
-const GameModal = ({ game, onClose, onUpdate }) => {
+const GameModal = ({ game, onClose, onUpdate, onDelete }) => {
     const [isEditing, setIsEditing] = useState(false);
     
     const [formData, setFormData] = useState({
@@ -83,7 +83,7 @@ const GameModal = ({ game, onClose, onUpdate }) => {
                 className="bg-white dark:bg-slate-900 w-full max-w-lg rounded-2xl shadow-2xl relative overflow-hidden flex flex-col max-h-[90vh]"
                 onClick={(e) => e.stopPropagation()}
             >
-                <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-slate-50/50 dark:bg-slate-900/50">
+                <div className="p-6 shadow-sm flex justify-between items-center bg-gradient-to-r from-violet-100/60 to-slate-50 dark:from-violet-900/30 dark:to-slate-800/60">
                     <h2 className="text-xl font-bold font-display text-slate-900 dark:text-white line-clamp-1 pr-4">
                         {isEditing ? 'Edit Game Details' : (game.localTitle || game.title)}
                     </h2>
@@ -225,7 +225,7 @@ const GameModal = ({ game, onClose, onUpdate }) => {
                     )}
                 </div>
 
-                <div className="p-6 border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 flex justify-end gap-3">
+                <div className="p-6 shadow-[0_-1px_0_rgba(0,0,0,0.04)] bg-slate-50/60 dark:bg-slate-800/60 flex justify-end gap-3">
                     {isEditing ? (
                         <>
                             <button 
@@ -236,18 +236,28 @@ const GameModal = ({ game, onClose, onUpdate }) => {
                             </button>
                             <button 
                                 onClick={handleSave}
-                                className="px-5 py-2.5 bg-violet-600 hover:bg-violet-700 text-white rounded-xl font-bold dark:shadow-[0_0_20px_rgba(124,58,237,0.3)] transition-all"
+                                className="px-5 py-2.5 bg-gradient-to-r from-primary to-fuchsia-500 hover:from-primary-hover hover:to-fuchsia-600 text-white rounded-xl font-bold shadow-lg shadow-primary/30 transition-all active:scale-95"
                             >
                                 Save Changes
                             </button>
                         </>
                     ) : (
-                        <button 
-                            onClick={onClose} 
-                            className="w-full py-3 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-white rounded-xl font-bold transition-colors"
-                        >
-                            Close
-                        </button>
+                        <div className="flex flex-col w-full gap-3">
+                            <button
+                                onClick={onClose}
+                                className="w-full py-3 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-white rounded-xl font-bold transition-colors"
+                            >
+                                Close
+                            </button>
+                            {onDelete && (
+                                <button
+                                    onClick={() => onDelete(game.id)}
+                                    className="w-full py-3 bg-red-50 dark:bg-red-900/20 hover:bg-red-100 dark:hover:bg-red-900/40 text-red-600 dark:text-red-400 rounded-xl font-bold transition-colors"
+                                >
+                                    Delete
+                                </button>
+                            )}
+                        </div>
                     )}
                 </div>
 

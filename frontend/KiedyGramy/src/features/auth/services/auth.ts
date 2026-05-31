@@ -52,3 +52,17 @@ export async function me() {
 export async function logout() {
   return api<void>("/api/auth/logout", { method: "POST" });
 }
+
+export async function confirmEmail(email: string, token: string) {
+  return api<void>(
+    `/api/auth/confirmation-email?email=${encodeURIComponent(email)}&token=${encodeURIComponent(token)}`,
+    { method: "POST" }
+  );
+}
+
+export async function resendConfirmationEmail(email: string) {
+  return api<void>(
+    `/api/auth/resend-confirmation-email?email=${encodeURIComponent(email)}`,
+    { method: "POST" }
+  );
+}

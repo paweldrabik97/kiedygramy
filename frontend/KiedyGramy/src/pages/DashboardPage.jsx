@@ -1,9 +1,15 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "../features/auth/contexts/AuthContext.jsx";
 import { Button } from "../components/ui/Button.jsx";
 import { useTranslation } from "react-i18next";
+import { getGames, addGame, importBggGame, updateGame, deleteGame } from "../features/games/services/games.ts";
+import GameModal from "../features/games/components/GameModal.jsx";
+import { getSessions } from "../features/sessions/services/sessions.ts";
+import AddGameModal from "../features/games/components/AddGameModal.jsx";
 
 const DashboardPage = () => {
+  const navigate = useNavigate();
   const { user } = useAuth();
   const { t } = useTranslation();
   
@@ -18,6 +24,8 @@ const DashboardPage = () => {
   const [pendingInvites, setPendingInvites] = useState([]);
   
   const [isLoading, setIsLoading] = useState(true);
+  const [isAddGameModalOpen, setIsAddGameModalOpen] = useState(false);
+  const [selectedGame, setSelectedGame] = useState(null);
 
   // --- DATA FETCHING ---
   useEffect(() => {
@@ -29,31 +37,40 @@ const DashboardPage = () => {
             method: 'GET',
             headers: { 
                 'Accept': 'application/json'
-            }
-            // Thanks to Vite proxy and cookies, you don't need to add anything else here
+            }            
         };
 
-        const [statsRes, nextSessionRes, invitesRes, gamesRes] = await Promise.all([
+        const [statsRes, invitesRes, sessionsData, gamesData] = await Promise.all([
             fetch("/api/dashboard/stats", fetchOptions),
-            fetch("/api/sessions/next", fetchOptions),
             fetch("/api/invitations/pending", fetchOptions),
-            fetch("/api/games/recent", fetchOptions)
+            getSessions(),
+            getGames()
         ]);
 
-        // Simple error handling - if API fails, use empty data/zeros
         const statsData = statsRes.ok ? await statsRes.json() : {};
-        const nextSessionData = nextSessionRes.ok ? await nextSessionRes.json() : null;
         const invitesData = invitesRes.ok ? await invitesRes.json() : [];
-        const gamesData = gamesRes.ok ? await gamesRes.json() : [];
+
+        const now = new Date();
+        const endOfWeek = new Date(now);
+        endOfWeek.setDate(now.getDate() + (7 - now.getDay()));
+        endOfWeek.setHours(23, 59, 59, 999);
+
+        const futureSessions = (sessionsData ?? [])
+            .filter(s => s.date && new Date(s.date) > now)
+            .sort((a, b) => new Date(a.date) - new Date(b.date));
+
+        const nextSessionData = futureSessions.find(s => new Date(s.date) <= endOfWeek)
+            ?? futureSessions[0]
+            ?? null;
 
         setStats({
-            upcomingSessionsCount: statsData.upcomingSessionsCount || 0,
-            userGamesCount: statsData.userGamesCount || 0,
+            upcomingSessionsCount: futureSessions.length,
+            userGamesCount: (gamesData ?? []).length,
             hoursPlayed: statsData.hoursPlayed || 0
         });
         setNextSession(nextSessionData);
         setPendingInvites(invitesData);
-        setRecentGames(gamesData);
+        setRecentGames((gamesData ?? []).slice(0, 4));
 
       } catch (err) {
         console.error("Dashboard fetch error:", err);
@@ -68,6 +85,34 @@ const DashboardPage = () => {
   }, [user]);
 
   // --- HANDLERS ---
+  const handleUpdateGame = async (gameId, newGameData) => {
+    try {
+      await updateGame(gameId, newGameData);
+      setRecentGames(prev => prev.map(g => g.id === gameId ? { ...g, ...newGameData } : g));
+    } catch (error) {
+      console.error("Failed to update game:", error);
+    } finally {
+      setSelectedGame(null);
+    }
+  };
+
+  const handleAddGameSubmit = async (newGameData) => {
+    try {
+      let createdGame;
+      if (newGameData.action === 'BGG') {
+        createdGame = await importBggGame(newGameData.data);
+      } else if (newGameData.action === 'CUSTOM') {
+        createdGame = await addGame(newGameData.data);
+      }
+      if (createdGame) {
+        setRecentGames(prev => [...prev, createdGame].slice(0, 4));
+      }
+      setIsAddGameModalOpen(false);
+    } catch (error) {
+      console.error("Failed to add game:", error);
+    }
+  };
+
   const handleInviteAction = async (inviteId, action) => {
     try {
         const response = await fetch(`/api/invitations/${inviteId}/${action}`, {
@@ -100,41 +145,44 @@ const DashboardPage = () => {
 
   // --- MAIN CONTENT (WITHOUT NAVBARS) ---
   return (
-    // Container limits content width and centers it, but has no own background/bars
+    <>
     <div className="w-full max-w-7xl mx-auto space-y-8 p-6">
       
       {/* 1. WELCOME AND STATS SECTION */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <div className="md:col-span-4 mb-2">
-           <h2 className="text-2xl font-display font-bold text-text-main dark:text-white">
-               {t("dashboard.welcomeUser", { name: user?.fullName || user?.username })}
-           </h2>
-           <p className="text-text-muted">{t("dashboard.intro")}</p>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h2 className="text-2xl font-display font-bold text-text-main dark:text-white">
+            {t("dashboard.welcomeUser", { name: user?.fullName || user?.username })}
+          </h2>
+          <p className="text-text-muted">{t("dashboard.intro")}</p>
         </div>
-        
-        <StatCard 
-            label={t("dashboard.stats.upcomingSessions")} 
-            value={stats.upcomingSessionsCount} 
-            icon={<CalendarIcon className="w-6 h-6 text-primary" />} 
-        />
-        <StatCard 
-            label={t("dashboard.stats.yourGames")} 
-            value={stats.userGamesCount} 
-            icon={<DiceIcon className="w-6 h-6 text-secondary" />} 
-        />
-        <StatCard 
-            label={t("dashboard.stats.hoursPlayed")} 
-            value={`${stats.hoursPlayed}h`} 
-            icon={<ClockIcon className="w-6 h-6 text-blue-500" />} 
-        />
+        <button
+          onClick={() => navigate('/sessions', { state: { openCreate: true } })}
+          className="shrink-0 bg-gradient-to-r from-primary to-fuchsia-500 hover:from-primary-hover hover:to-fuchsia-600 text-white px-5 py-2.5 rounded-xl text-sm font-medium transition-all shadow-lg shadow-primary/30 active:scale-95"
+        >
+          {t("dashboard.newSessionCard.createButton")}
+        </button>
+      </div>
 
-         <div className="bg-gradient-to-br from-primary to-purple-700 p-6 rounded-2xl shadow-lg text-white flex flex-col justify-center items-start transform transition-transform hover:scale-[1.02] cursor-pointer">
-            <p className="font-bold text-lg mb-1">{t("dashboard.newSessionCard.title")}</p>
-            <p className="text-white/80 text-xs mb-3">{t("dashboard.newSessionCard.subtitle")}</p>
-            <button className="bg-white/20 hover:bg-white/30 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
-              {t("dashboard.newSessionCard.createButton")}
-            </button>
-        </div>
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+        <StatCard
+            label={t("dashboard.stats.upcomingSessions")}
+            value={stats.upcomingSessionsCount}
+            icon={<CalendarIcon className="w-6 h-6 text-primary" />}
+            accent="violet"
+        />
+        <StatCard
+            label={t("dashboard.stats.yourGames")}
+            value={stats.userGamesCount}
+            icon={<CollectionIcon className="w-6 h-6 text-secondary" />}
+            accent="amber"
+        />
+        <StatCard
+            label={t("dashboard.stats.hoursPlayed")}
+            value={`${stats.hoursPlayed}h`}
+            icon={<ClockIcon className="w-6 h-6 text-blue-500" />}
+            accent="blue"
+        />
       </div>
 
       {/* 2. MAIN GRID */}
@@ -151,50 +199,33 @@ const DashboardPage = () => {
             </div>
             
             {nextSession ? (
-                <div className="group relative overflow-hidden rounded-3xl bg-white dark:bg-surface-card shadow-sm border border-gray-100 dark:border-gray-800">
-                  <div className="absolute inset-0 h-32 bg-gray-200">
-                    <img 
-                        src={nextSession.imageUrl || "https://images.unsplash.com/photo-1610890716171-6b1f9f257a07?q=80&w=600&auto=format&fit=crop"} 
-                        alt="Session bg" 
-                        className="w-full h-full object-cover opacity-80 group-hover:scale-105 transition-transform duration-700" 
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent"></div>
-                  </div>
-
-                  <div className="relative pt-20 px-6 pb-6">
-                    <span className="inline-block bg-secondary text-white text-xs font-bold px-2 py-1 rounded-md mb-2 shadow-sm uppercase tracking-wide">
-                      {nextSession.systemName || t("dashboard.systemRpg")}
-                    </span>
-                    <h4 className="text-white text-3xl font-display font-bold mb-1 drop-shadow-md">
-                        {nextSession.title}
-                    </h4>
-                    
-                    <div className="mt-6 flex flex-col sm:flex-row gap-6 bg-white dark:bg-surface-card/95 dark:backdrop-blur-md rounded-xl p-4 border border-gray-100 dark:border-gray-700 shadow-sm">
-                       <div className="flex-1 space-y-2">
-                          <div className="flex items-center gap-2 text-sm text-text-muted dark:text-gray-300">
-                            <CalendarIcon className="w-4 h-4 text-primary" />
-                            <span className="font-medium">{new Date(nextSession.scheduledAt).toLocaleString([], {weekday: 'long', day:'numeric', month: 'long', hour: '2-digit', minute:'2-digit'})}</span>
-                          </div>
-                          <div className="flex items-center gap-2 text-sm text-text-muted dark:text-gray-300">
-                            <MapPinIcon className="w-4 h-4 text-primary" />
-                            <span>{nextSession.location || "Online"}</span>
-                          </div>
-                       </div>
-
-                       <div className="flex items-center justify-between sm:justify-end gap-4">
-                  <Button className="bg-primary hover:bg-primary-hover text-white px-6 w-full sm:w-auto">{t("dashboard.sessionDetails")}</Button>
-                       </div>
+                <div className="group relative overflow-hidden rounded-3xl bg-gradient-to-b from-violet-50 to-white dark:from-violet-900/30 dark:to-surface-card shadow-md border border-gray-200 dark:border-gray-700/50 p-6">
+                  <h4 className="text-xl font-display font-bold text-text-main dark:text-white mb-4">
+                      {nextSession.title}
+                  </h4>
+                  <div className="flex flex-col sm:flex-row gap-6">
+                    <div className="flex-1 space-y-2">
+                      <div className="flex items-center gap-2 text-sm text-text-muted dark:text-gray-300">
+                        <CalendarIcon className="w-4 h-4 text-primary" />
+                        <span className="font-medium">{new Date(nextSession.date).toLocaleString([], { weekday: 'long', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' })}</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-sm text-text-muted dark:text-gray-300">
+                        <MapPinIcon className="w-4 h-4 text-primary" />
+                        <span>{nextSession.location || "Online"}</span>
+                      </div>
+                    </div>
+                    <div className="flex items-center sm:justify-end">
+                      <Button onClick={() => navigate(`/sessions/${nextSession.id}`)} className="bg-primary hover:bg-primary-hover text-white px-6 w-full sm:w-auto">{t("dashboard.sessionDetails")}</Button>
                     </div>
                   </div>
                 </div>
             ) : (
-                <div className="bg-white dark:bg-surface-card p-10 rounded-3xl text-center border-2 border-dashed border-gray-200 dark:border-gray-700">
+                <div className="bg-white dark:bg-surface-card p-10 rounded-3xl text-center shadow-md border-2 border-dashed border-gray-200 dark:border-gray-700">
                     <div className="w-16 h-16 bg-gray-50 dark:bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-4 text-gray-400">
                         <CalendarIcon className="w-8 h-8" />
                     </div>
                       <p className="text-text-main dark:text-white font-bold text-lg">{t("dashboard.noSessionsTitle")}</p>
-                      <p className="text-text-muted mb-6">{t("dashboard.noSessionsSubtitle")}</p>
-                      <Button variant="outline">{t("dashboard.planGame")}</Button>
+                      <p className="text-text-muted">{t("dashboard.noSessionsSubtitle")}</p>
                 </div>
             )}
           </section>
@@ -205,12 +236,12 @@ const DashboardPage = () => {
              {recentGames.length > 0 ? (
                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                     {recentGames.map((game) => (
-                      <div key={game.id} className="aspect-[2/3] bg-gray-200 dark:bg-gray-800 rounded-xl relative overflow-hidden group cursor-pointer border border-gray-200 dark:border-gray-700 hover:border-primary hover:shadow-lg transition-all">
-                        {game.coverUrl ? (
-                            <img src={game.coverUrl} alt={game.title} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
+                      <div key={game.id} onClick={() => setSelectedGame(game)} className="aspect-[2/3] bg-gray-200 dark:bg-gray-800 rounded-xl relative overflow-hidden group cursor-pointer border border-gray-200 dark:border-gray-700 hover:border-primary hover:shadow-lg transition-all">
+                        {game.imageUrl ? (
+                            <img src={game.imageUrl} alt={game.title} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
                         ) : (
                             <div className="w-full h-full flex flex-col items-center justify-center p-2 text-center">
-                                <DiceIcon className="w-8 h-8 text-gray-400 mb-2" />
+                                <CollectionIcon className="w-8 h-8 text-gray-400 mb-2" />
                                 <span className="text-xs font-bold text-text-muted">{game.title}</span>
                             </div>
                         )}
@@ -220,13 +251,18 @@ const DashboardPage = () => {
                       </div>
                     ))}
                     
-                    {/* "Add game" placeholder */}
-                    <div className="aspect-[2/3] bg-gray-50 dark:bg-surface-card/50 rounded-xl border-2 border-dashed border-gray-200 dark:border-gray-700 flex flex-col items-center justify-center cursor-pointer hover:border-primary hover:text-primary transition-colors text-text-muted group">
+                    {/* "Add game" placeholder — visible only when fewer than 4 games */}
+                    {recentGames.length < 4 && (
+                      <div
+                        onClick={() => setIsAddGameModalOpen(true)}
+                        className="aspect-[2/3] bg-gray-50 dark:bg-surface-card/50 rounded-xl border-2 border-dashed border-gray-200 dark:border-gray-700 flex flex-col items-center justify-center cursor-pointer hover:border-primary hover:text-primary transition-colors text-text-muted group"
+                      >
                         <div className="w-10 h-10 rounded-full bg-white dark:bg-gray-800 flex items-center justify-center shadow-sm mb-2 group-hover:scale-110 transition-transform">
-                            <span className="text-xl font-bold">+</span>
+                          <span className="text-xl font-bold">+</span>
                         </div>
-                      <span className="text-xs font-medium">{t("dashboard.addTitle")}</span>
-                    </div>
+                        <span className="text-xs font-medium">{t("dashboard.addTitle")}</span>
+                      </div>
+                    )}
                  </div>
              ) : (
                    <p className="text-text-muted text-sm">{t("dashboard.emptyLibrary")}</p>
@@ -238,7 +274,7 @@ const DashboardPage = () => {
         <div className="space-y-8">
           
           {/* INVITATIONS */}
-          <div className="bg-white dark:bg-surface-card p-6 rounded-3xl shadow-sm border border-gray-100 dark:border-gray-800">
+          <div className="bg-white dark:bg-surface-card p-6 rounded-3xl shadow-md border border-gray-200 dark:border-gray-700/50">
             <div className="flex items-center justify-between mb-4">
                 <h3 className="font-bold text-lg text-text-main dark:text-white">{t("dashboard.invitationsTitle")}</h3>
                 {pendingInvites.length > 0 && <span className="bg-primary text-white text-xs font-bold px-2 py-0.5 rounded-full">{pendingInvites.length}</span>}
@@ -278,43 +314,62 @@ const DashboardPage = () => {
             </div>
           </div>
 
-          {/* SYSTEM STATUS */}
-          <div className="bg-gradient-to-b from-primary/5 to-transparent dark:from-white/5 p-6 rounded-3xl border border-primary/10 dark:border-gray-700">
-              <h3 className="font-bold text-lg mb-2 text-text-main dark:text-white">{t("dashboard.systemStatusTitle")}</h3>
-              <div className="flex items-center gap-2 mb-4">
-                <span className="relative flex h-3 w-3">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
-                </span>
-                <span className="text-sm font-medium text-green-600 dark:text-green-400">{t("dashboard.allSystemsOperational")}</span>
-              </div>
-              <p className="text-xs text-text-muted leading-relaxed">
-                  {t("dashboard.systemStatusText", { version: "1.0.2" })} <a href="#" className="text-primary hover:underline font-medium">{t("dashboard.reportSuggestion")}</a>.
-              </p>
-          </div>
-
         </div>
       </div>
     </div>
+
+    {selectedGame && (
+      <GameModal
+        game={selectedGame}
+        onClose={() => setSelectedGame(null)}
+        onUpdate={handleUpdateGame}
+        onDelete={async (id) => { await deleteGame(id); setRecentGames(prev => prev.filter(g => g.id !== id)); setSelectedGame(null); }}
+      />
+    )}
+    {isAddGameModalOpen && (
+      <AddGameModal
+        onClose={() => setIsAddGameModalOpen(false)}
+        onGameAdded={handleAddGameSubmit}
+      />
+    )}
+    </>
   );
 };
 
 // --- SUB-COMPONENTS (StatCard and Icons) ---
 
-const StatCard = ({ label, value, icon }) => (
-    <div className="bg-white dark:bg-surface-card p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 flex items-center gap-4 transition-transform hover:-translate-y-1 duration-300">
-        <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-xl text-text-main dark:text-white">
+const STAT_ACCENT = {
+  violet: {
+    card:   "from-violet-100 to-white dark:from-violet-900/50 dark:to-surface-card",
+    iconBg: "bg-violet-200/70 dark:bg-violet-800/50",
+  },
+  amber: {
+    card:   "from-amber-100 to-white dark:from-amber-900/50 dark:to-surface-card",
+    iconBg: "bg-amber-200/70 dark:bg-amber-800/50",
+  },
+  blue: {
+    card:   "from-blue-100 to-white dark:from-blue-900/50 dark:to-surface-card",
+    iconBg: "bg-blue-200/70 dark:bg-blue-800/50",
+  },
+};
+
+const StatCard = ({ label, value, icon, accent = "violet" }) => {
+  const { card, iconBg } = STAT_ACCENT[accent];
+  return (
+    <div className={`bg-gradient-to-b ${card} p-6 rounded-2xl shadow-md border border-gray-200 dark:border-gray-700/50 flex items-center gap-4 transition-all hover:-translate-y-1 hover:shadow-lg duration-300`}>
+        <div className={`p-3 ${iconBg} rounded-xl`}>
             {icon}
         </div>
-        <div>
+        <div className="flex-1 text-center">
             <p className="text-3xl font-bold font-display text-slate-900 dark:text-white">{value}</p>
             <p className="text-sm text-text-muted font-medium">{label}</p>
         </div>
     </div>
-);
+  );
+};
 
 // --- SVG ICONS ---
-const DiceIcon = (props) => (<svg {...props} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 20m7-10V5a2 2 0 00-2-2h-.095c-.5 0-.905.405-.905.905 0 .714-.211 1.412-.608 2.006L7 11v9m7-10h-2M7 20H5a2 2 0 01-2-2v-6a2 2 0 012-2h2.5" /></svg>);
+const CollectionIcon = (props) => (<svg {...props} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" /></svg>);
 const CalendarIcon = (props) => (<svg {...props} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>);
 const UsersIcon = (props) => (<svg {...props} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" /></svg>);
 const MapPinIcon = (props) => (<svg {...props} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>);

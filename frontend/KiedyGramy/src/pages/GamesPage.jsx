@@ -169,10 +169,10 @@ const GamesPage = () => {
             ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                     {games.map((game) => (
-                        <div key={game.id} className="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700 overflow-hidden flex flex-col hover:shadow-lg transition-all relative group">
+                        <div key={game.id} className="bg-white dark:bg-slate-800 rounded-2xl shadow-md border border-slate-200 dark:border-slate-700 overflow-hidden flex flex-col hover:shadow-xl transition-all relative group">
                             
                             {/* Top section - Cover */}
-                            <div className="h-48 bg-slate-100 dark:bg-slate-700 relative">
+                            <div className="h-48 bg-slate-100 dark:bg-slate-700 relative cursor-pointer" onClick={() => handleDetailsClick(game)}>
                                 {game.imageUrl ? (
                                     <img src={game.imageUrl} alt={game.title} className="w-full h-full object-cover" />
                                 ) : (
@@ -216,7 +216,7 @@ const GamesPage = () => {
                             </div>
 
                             {/* Bottom section - Game information */}
-                            <div className="p-5 flex-1 flex flex-col cursor-pointer" onClick={() => handleDetailsClick(game)}>
+                            <div className="p-5 flex-1 flex flex-col cursor-pointer bg-gradient-to-b from-white to-amber-50 dark:from-slate-800 dark:to-amber-900/20" onClick={() => handleDetailsClick(game)}>
                                 <h3 className="font-bold text-lg text-slate-900 dark:text-white mb-1 line-clamp-1">
                                     {game.localTitle || game.title}
                                 </h3>
@@ -237,10 +237,11 @@ const GamesPage = () => {
 
             {/* EDIT MODAL */}
             {selectedGame && (
-                <GameModal 
-                    game={selectedGame} 
-                    onClose={() => setSelectedGame(null)} 
+                <GameModal
+                    game={selectedGame}
+                    onClose={() => setSelectedGame(null)}
                     onUpdate={handleUpdateGame}
+                    onDelete={(id) => { handleDeleteClick(id); setSelectedGame(null); }}
                 />
             )}
 

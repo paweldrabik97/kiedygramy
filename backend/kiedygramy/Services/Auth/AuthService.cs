@@ -129,7 +129,9 @@ namespace kiedygramy.Services.Auth
             var result = await _userManager.ConfirmEmailAsync(user, encodedToken);
 
             if (!result.Succeeded)
-                return Errors.Auth.UnableToConfirm(); 
+                return Errors.Auth.UnableToConfirm();
+
+            await _signInManager.SignInAsync(user, isPersistent: true);
 
             return null;
         }

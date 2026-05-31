@@ -68,10 +68,15 @@ export const AuthProvider = ({ children }) => {
     await apiDiscordLogin(code, language);
     const userData = await me();
     setUser(userData);
-};
+  };
+
+  const refreshUser = async () => {
+    const userData = await me();
+    setUser(userData);
+  };
 
   return (
-    <AuthContext.Provider value={{ user, login, register, logout, loading, googleLogin, discordLogin }}>
+    <AuthContext.Provider value={{ user, login, register, logout, loading, googleLogin, discordLogin, refreshUser }}>
       {!loading && children}
     </AuthContext.Provider>
   );

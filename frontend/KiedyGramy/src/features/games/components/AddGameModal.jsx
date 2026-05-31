@@ -153,7 +153,7 @@ const AddGameModal = ({ onClose, onGameAdded }) => {
       <div className="bg-white dark:bg-slate-900 w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]" onClick={e => e.stopPropagation()}>
         
         {/* HEADER */}
-        <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center">
+        <div className="p-6 shadow-sm flex justify-between items-center bg-gradient-to-r from-violet-100/60 to-slate-50 dark:from-violet-900/30 dark:to-slate-800/60">
           <h2 className="text-xl font-bold font-display text-slate-900 dark:text-white">
             {step === 'SEARCH' && t('featureComponents.games.addGameModal.headers.search')}
             {step === 'EDIT' && t('featureComponents.games.addGameModal.headers.edit')}
@@ -305,7 +305,7 @@ const AddGameModal = ({ onClose, onGameAdded }) => {
                    </button>
                    <button 
                         type="submit"
-                        className="flex-1 py-3 bg-violet-600 hover:bg-violet-700 text-white rounded-xl font-bold dark:shadow-[0_0_20px_rgba(124,58,237,0.4)] dark:hover:shadow-[0_0_30px_rgba(124,58,237,0.6)] transition-all"
+                        className="flex-1 py-3 bg-gradient-to-r from-primary to-fuchsia-500 hover:from-primary-hover hover:to-fuchsia-600 text-white rounded-xl font-bold shadow-lg shadow-primary/30 transition-all active:scale-95"
                    >
                        {t('featureComponents.games.addGameModal.edit.addToLibrary')}
                    </button>
@@ -385,7 +385,7 @@ const AddGameModal = ({ onClose, onGameAdded }) => {
                    </button>
                    <button 
                         type="submit"
-                        className="flex-1 py-3 bg-violet-600 hover:bg-violet-700 text-white rounded-xl font-bold transition-all"
+                        className="flex-1 py-3 bg-gradient-to-r from-primary to-fuchsia-500 hover:from-primary-hover hover:to-fuchsia-600 text-white rounded-xl font-bold shadow-lg shadow-primary/30 transition-all active:scale-95"
                    >
                        {t('featureComponents.games.addGameModal.custom.addManualGame')}
                    </button>

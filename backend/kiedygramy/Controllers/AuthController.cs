@@ -109,7 +109,7 @@ namespace kiedygramy.Controllers
             {
                 var settings = new GoogleJsonWebSignature.ValidationSettings()
                 {
-                    Audience = new List<string>() { _configuration["Google:ClientId"] }
+                    Audience = new List<string>() { _configuration["Google:ClientId"]! }
                 };
 
                 var payload = await GoogleJsonWebSignature.ValidateAsync(request.Credential, settings);
