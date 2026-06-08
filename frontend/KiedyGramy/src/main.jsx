@@ -8,10 +8,11 @@ import { GoogleOAuthProvider } from "@react-oauth/google";
 import "./index.css";
 import "./i18n.js";
 import App from "./App.jsx";
+import { DiceProvider } from "./context/DiceContext.jsx";
 
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 
-console.log("Client ID:", GOOGLE_CLIENT_ID)
+console.log("Client ID:", GOOGLE_CLIENT_ID);
 
 createRoot(document.getElementById("root")).render(
   <StrictMode>
@@ -20,11 +21,13 @@ createRoot(document.getElementById("root")).render(
         <BrowserRouter>
           <ThemeProvider>
             <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
-              <App />
+              <DiceProvider>
+                <App />
+              </DiceProvider>
             </GoogleOAuthProvider>
           </ThemeProvider>
         </BrowserRouter>
       </NotificationsProvider>
     </AuthProvider>
-  </StrictMode>
+  </StrictMode>,
 );
