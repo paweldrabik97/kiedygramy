@@ -44,8 +44,10 @@ const Layout = () => {
   const displayName = user?.fullName || user?.username || t('layout.userFallback');
   const displayEmail = user?.email || t('layout.emailFallback');
 
+  const isGuest = user?.isGuest === true;
+
   // Navigation links list
-  const navItems = [
+  const navItems = isGuest ? [] : [
     { name: t('layout.nav.home'), path: '/dashboard', icon: <HomeIcon /> },
     { name: t('layout.nav.myGames'), path: '/games', icon: <GamepadIcon /> },
     { name: t('layout.nav.mySessions'), path: '/sessions', icon: <CalendarIcon /> },
@@ -160,52 +162,69 @@ const Layout = () => {
               )}
             </button>
 
-            <Link to="/notifications">
-              <NotificationBell />
-            </Link>
+            {!isGuest && (
+              <Link to="/notifications">
+                <NotificationBell />
+              </Link>
+            )}
 
-            {/* Avatar */}
-            <button 
-                onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
-                className="flex items-center space-x-2 focus:outline-none"
-            >
-              {/* Avatar background on primary */}
-                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-fuchsia-500 text-white flex items-center justify-center font-bold text-lg font-display hover:ring-2 hover:ring-primary-light transition-all shadow-md">
-                    {getInitials(displayName)}
+            {isGuest ? (
+              /* Guest badge + logout */
+              <div className="flex items-center gap-3">
+                <div className="flex flex-col items-end">
+                  <span className="text-xs font-bold text-primary">Gość</span>
+                  <span className="text-xs text-text-muted font-mono">{user?.guestCode}</span>
                 </div>
-            </button>
+                <button
+                  onClick={handleLogout}
+                  className="text-xs font-bold text-red-500 hover:text-red-600 bg-red-50 dark:bg-red-900/20 hover:bg-red-100 dark:hover:bg-red-900/40 px-3 py-1.5 rounded-lg transition-colors"
+                >
+                  Wyjdź
+                </button>
+              </div>
+            ) : (
+              <>
+                {/* Avatar */}
+                <button
+                  onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
+                  className="flex items-center space-x-2 focus:outline-none"
+                >
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-fuchsia-500 text-white flex items-center justify-center font-bold text-lg font-display hover:ring-2 hover:ring-primary-light transition-all shadow-md">
+                    {getInitials(displayName)}
+                  </div>
+                </button>
 
-            {/* Dropdown Menu */}
-            {isUserMenuOpen && (
-                <>
-                    <div 
-                        className="fixed inset-0 z-30" 
-                        onClick={() => setIsUserMenuOpen(false)}
+                {/* Dropdown Menu */}
+                {isUserMenuOpen && (
+                  <>
+                    <div
+                      className="fixed inset-0 z-30"
+                      onClick={() => setIsUserMenuOpen(false)}
                     ></div>
-                    
                     <div className="absolute right-0 top-12 mt-2 w-56 bg-gradient-to-b from-white to-slate-50 dark:from-slate-800 dark:to-slate-900 border border-gray-200 dark:border-gray-700 rounded-xl shadow-xl z-40 py-2 animate-fade-in-down">
-                        <div className="px-4 py-3 border-b border-gray-100 dark:border-gray-700">
-                            <p className="text-sm font-bold text-text-main dark:text-text-inverse font-display">{displayName}</p>
-                            <p className="text-xs text-text-muted">{displayEmail}</p>
-                        </div>
-                        
-                        <div className="py-1">
-                            <Link 
-                                to="/profile" 
-                                className="block w-full px-4 py-2 text-sm text-text-main dark:text-text-inverse hover:bg-surface-light dark:hover:bg-gray-700 transition-colors"
-                                onClick={() => setIsUserMenuOpen(false)}
-                            >
-                              {t('layout.menu.profileSettings')}
-                            </Link>
-                            <button 
-                                onClick={handleLogout}
-                                className="block w-full px-4 py-2 text-sm text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
-                            >
-                              {t('layout.menu.logout')}
-                            </button>
-                        </div>
+                      <div className="px-4 py-3 border-b border-gray-100 dark:border-gray-700">
+                        <p className="text-sm font-bold text-text-main dark:text-text-inverse font-display">{displayName}</p>
+                        <p className="text-xs text-text-muted">{displayEmail}</p>
+                      </div>
+                      <div className="py-1">
+                        <Link
+                          to="/profile"
+                          className="block w-full px-4 py-2 text-sm text-text-main dark:text-text-inverse hover:bg-surface-light dark:hover:bg-gray-700 transition-colors"
+                          onClick={() => setIsUserMenuOpen(false)}
+                        >
+                          {t('layout.menu.profileSettings')}
+                        </Link>
+                        <button
+                          onClick={handleLogout}
+                          className="block w-full px-4 py-2 text-sm text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                        >
+                          {t('layout.menu.logout')}
+                        </button>
+                      </div>
                     </div>
-                </>
+                  </>
+                )}
+              </>
             )}
           </div>
         </header>

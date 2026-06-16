@@ -245,7 +245,7 @@ namespace kiedygramy.Services.Sessions
                 .Include(p => p.User)
                 .Select(p => new SessionParticipantDto(
                      p.UserId,
-                     p.User.UserName!,
+                     p.User.IsGuest ? (p.User.FullName ?? p.User.UserName!) : p.User.UserName!,
                      p.Role,
                      p.Status
                 ))
@@ -291,7 +291,7 @@ namespace kiedygramy.Services.Sessions
                 .Include(p => p.User)
                 .Select(p => new SessionParticipantDto(
                      p.UserId,
-                     p.User.UserName!,
+                     p.User.IsGuest ? (p.User.FullName ?? p.User.UserName!) : p.User.UserName!,
                      p.Role,
                      p.Status
                 ))

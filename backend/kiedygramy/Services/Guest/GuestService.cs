@@ -73,13 +73,15 @@ namespace kiedygramy.Services.Guest
                 if (!link.Session.IsOpen)
                     return (Errors.Session.SessionIsClosed(), null);
 
+                var guestCode = await GenerateUniqueGuestCodeAsync();
+
                 var user = new User
                 {
-
-                    UserName = guestName,
+                    UserName = guestCode,
+                    FullName = guestName,
                     Email = $"guest_{Guid.NewGuid()}@guest.local",
                     IsGuest = true,
-                    GuestCode = GenerateGuestCode(),
+                    GuestCode = guestCode,
                     GuestToken = GenerateGuestToken(),
                     EmailConfirmed = true
                 };
@@ -157,15 +159,32 @@ namespace kiedygramy.Services.Guest
             return null;
         }
         
+        private async Task<string> GenerateUniqueGuestCodeAsync()
+        {
+            const int maxAttempts = 10;
+            for (int i = 0; i < maxAttempts; i++)
+            {
+                var code = GenerateGuestCode();
+                if (await _userManager.FindByNameAsync(code) is null)
+                    return code;
+            }
+            throw new InvalidOperationException("Nie udało się wygenerować unikalnego kodu gościa.");
+        }
+
         public static string GenerateGuestCode()
         {
-            string[] animalsNames = ["Wolf", "Cat", "Dog", "Rabbit", "Turtle"];
+            string[] animalNames =
+            [
+                "Wolf", "Cat", "Dog", "Rabbit", "Turtle",
+                "Bear", "Fox", "Lynx", "Deer", "Hawk",
+                "Owl", "Crow", "Frog", "Mole", "Otter",
+                "Panda", "Bison", "Crane", "Viper", "Moose"
+            ];
 
-            var animal = animalsNames[Random.Shared.Next(animalsNames.Length)];
-            var Digit = Random.Shared.Next(1000, 9999);
+            var animal = animalNames[Random.Shared.Next(animalNames.Length)];
+            var digit  = Random.Shared.Next(1000, 99999);
 
-            return $"{animal}-{Digit}";
-
+            return $"{animal}-{digit}";
         }
 
         public static string GenerateGuestToken()

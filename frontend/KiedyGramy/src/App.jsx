@@ -14,6 +14,7 @@ import { ProtectedRoute } from "./features/auth/components/ProtectedRoute.jsx";
 import  ProfilePage from "./pages/ProfilePage.jsx";
 import DiscordCallback from "./features/auth/components/DiscordCallback.jsx";
 import ConfirmEmailPage from "./pages/ConfirmEmailPage.jsx";
+import JoinPage from "./pages/JoinPage.jsx";
 
 function App() {
   return (
@@ -24,6 +25,7 @@ function App() {
         <Route path="/auth" element={<AuthPage />} />
         <Route path="/auth/discord/callback" element={<DiscordCallback />} />
         <Route path="/confirm-email" element={<ConfirmEmailPage />} />
+        <Route path="/join" element={<JoinPage />} />
         <Route 
           path="/*" 
           element={ 
