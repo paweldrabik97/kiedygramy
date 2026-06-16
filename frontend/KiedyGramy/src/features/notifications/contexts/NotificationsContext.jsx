@@ -17,38 +17,32 @@ export const NotificationsProvider = ({ children }) => {
   const { user } = useAuth();
 
     useEffect(() => {
-
         if (!user) {
             setNotifications([]);
             setUnreadCount(0);
             return;
         }
-        
+
         const conn = createNotificationConnection();
 
-            conn.on("NotificationUpserted", (n) => {
-                setNotifications((prev) => {
+        const handleNotificationUpserted = (n) => {
+            setNotifications((prev) => {
                 const idx = prev.findIndex(x => x.id === n.id);
-
-    
                 if (idx === -1) {
-                    return [n, ...prev].sort((a, b) =>
-                    a.updatedAt < b.updatedAt ? 1 : -1
-                );
-            }
-
-        
+                    return [n, ...prev].sort((a, b) => a.updatedAt < b.updatedAt ? 1 : -1);
+                }
                 const copy = [...prev];
                 copy[idx] = n;
-                return copy.sort((a, b) =>
-                    a.updatedAt < b.updatedAt ? 1 : -1
-                );
+                return copy.sort((a, b) => a.updatedAt < b.updatedAt ? 1 : -1);
             });
-        });
+        };
 
-        conn.on("UnreadCountUpdated", ({ unreadCount }) => {
+        const handleUnreadCountUpdated = ({ unreadCount }) => {
             setUnreadCount(unreadCount);
-        });
+        };
+
+        conn.on("NotificationUpserted", handleNotificationUpserted);
+        conn.on("UnreadCountUpdated", handleUnreadCountUpdated);
 
         (async () => {
             setNotifications(await getMyNotifications());
@@ -58,8 +52,13 @@ export const NotificationsProvider = ({ children }) => {
         conn.start()
             .then(() => console.log("SignalR connected"))
             .catch(err => console.error("SignalR error:", err));
-        return () => conn.stop();
-        }, [user]);
+
+        return () => {
+            conn.off("NotificationUpserted", handleNotificationUpserted);
+            conn.off("UnreadCountUpdated", handleUnreadCountUpdated);
+            conn.stop();
+        };
+    }, [user]);
 
     const markRead = async (id) => {
         await markAsRead(id);

@@ -2,12 +2,13 @@ import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { useAuth } from '../features/auth/contexts/AuthContext.jsx';
 import { Button } from '../components/ui/Button.jsx';
-import { 
-    getSession, getSessionParticipants, inviteUser, respondToSession, 
-    getMyAvailability, updateAvailability, getAvailabilitySummary, 
+import {
+    getSession, getSessionParticipants, inviteUser, respondToSession,
+    getMyAvailability, updateAvailability, getAvailabilitySummary,
     ParticipantStatus,
     removeUserFromSession
 } from '../features/sessions/services/sessions';
+import { generateInviteLink } from '../features/sessions/services/guest.ts';
 import { SessionChat } from '../features/sessions/components/SessionChat.jsx';
 import { useTranslation } from 'react-i18next';
 
@@ -43,9 +44,15 @@ const SessionDetailsPage = () => {
     const [isTeamMenuOpen, setIsTeamMenuOpen] = useState(false);
     const [isKickMode, setIsKickMode] = useState(false);
 
+    // --- INVITE LINK STATE ---
+    const [inviteLink, setInviteLink] = useState(null);
+    const [inviteLinkExpiry, setInviteLinkExpiry] = useState(null);
+    const [isGeneratingLink, setIsGeneratingLink] = useState(false);
+    const [linkCopied, setLinkCopied] = useState(false);
+
     const isOrganizer = session?.ownerId === user?.id;
     const myParticipantData = participants.find(p => p.userId === user?.id);
-    const isAccepted = myParticipantData?.status === ParticipantStatus.Accepted;
+    const isAccepted = user?.isGuest || myParticipantData?.status === ParticipantStatus.Accepted;
 
     // --- DATA LOADING ---
     const fetchData = async () => {
@@ -102,9 +109,10 @@ const SessionDetailsPage = () => {
     const handleRespond = async (statusBool) => {
         try {
             await respondToSession(id, statusBool);
-            fetchData(); 
         } catch (error) {
             console.error(error);
+        } finally {
+            fetchData();
         }
     };
 
@@ -161,6 +169,26 @@ const SessionDetailsPage = () => {
             alert(t('sessionDetails.errors.kickPlayerFailed'));
             console.error(error);
         }
+    };
+
+    const handleGenerateInviteLink = async () => {
+        setIsGeneratingLink(true);
+        try {
+            const result = await generateInviteLink(id);
+            const url = `${window.location.origin}/join?token=${encodeURIComponent(result.token)}&sessionId=${id}`;
+            setInviteLink(url);
+            setInviteLinkExpiry(result.expiresAt);
+        } catch (err) {
+            console.error("Failed to generate invite link:", err);
+        } finally {
+            setIsGeneratingLink(false);
+        }
+    };
+
+    const handleCopyInviteLink = () => {
+        navigator.clipboard.writeText(inviteLink);
+        setLinkCopied(true);
+        setTimeout(() => setLinkCopied(false), 2000);
     };
 
     if (loading) return <div className="p-10 text-center">{t('sessionDetails.loadingSession')}</div>;
@@ -285,7 +313,7 @@ const SessionDetailsPage = () => {
                                             {session.games.map(game => (
                                                 <div key={game.id} className="flex items-center gap-4 bg-gradient-to-r from-amber-50 to-white dark:from-gray-800 dark:to-gray-800/80 p-4 rounded-xl border border-amber-100 dark:border-gray-700 shadow-sm">
                                                     {game.imageUrl ? (
-                                                        <img src={game.imageUrl} className="w-12 h-12 rounded object-cover" />
+                                                        <img src={game.imageUrl} alt={game.title} className="w-12 h-12 rounded object-cover" />
                                                     ) : (
                                                         <div className="w-12 h-12 bg-gray-200 rounded flex items-center justify-center">🎲</div>
                                                     )}
@@ -443,20 +471,53 @@ const SessionDetailsPage = () => {
                         </ul>
 
                         {isOrganizer && (
-                            <div className="pt-4 border-t border-gray-100 dark:border-gray-700">
-                                <p className="text-xs font-bold text-gray-400 uppercase mb-2">{t('sessionDetails.inviteFriend')}</p>
-                                <form onSubmit={handleInvite} className="flex gap-2">
-                                    <input 
-                                        type="text" 
-                                        placeholder={t('sessionDetails.invitePlaceholder')} 
-                                        className="flex-1 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary/20 outline-none transition-all"
-                                        value={inviteQuery}
-                                        onChange={e => setInviteQuery(e.target.value)}
-                                    />
-                                    <button type="submit" className="bg-gradient-to-r from-primary to-fuchsia-500 hover:from-primary-hover hover:to-fuchsia-600 text-white px-3 py-2 rounded-lg text-sm font-bold shadow-md shadow-primary/30 transition-all active:scale-95">
-                                        +
-                                    </button>
-                                </form>
+                            <div className="pt-4 border-t border-gray-100 dark:border-gray-700 space-y-4">
+                                <div>
+                                    <p className="text-xs font-bold text-gray-400 uppercase mb-2">{t('sessionDetails.inviteFriend')}</p>
+                                    <form onSubmit={handleInvite} className="flex gap-2">
+                                        <input
+                                            type="text"
+                                            placeholder={t('sessionDetails.invitePlaceholder')}
+                                            className="flex-1 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                                            value={inviteQuery}
+                                            onChange={e => setInviteQuery(e.target.value)}
+                                        />
+                                        <button type="submit" className="bg-gradient-to-r from-primary to-fuchsia-500 hover:from-primary-hover hover:to-fuchsia-600 text-white px-3 py-2 rounded-lg text-sm font-bold shadow-md shadow-primary/30 transition-all active:scale-95">
+                                            +
+                                        </button>
+                                    </form>
+                                </div>
+
+                                <div>
+                                    <p className="text-xs font-bold text-gray-400 uppercase mb-2">{t('sessionDetails.inviteLink', 'Link zaproszenia')}</p>
+                                    {inviteLink ? (
+                                        <div className="space-y-2">
+                                            <div className="flex items-center gap-2 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2">
+                                                <span className="flex-1 text-xs text-text-muted truncate font-mono">{inviteLink}</span>
+                                                <button
+                                                    onClick={handleCopyInviteLink}
+                                                    className="shrink-0 text-xs font-bold text-primary hover:text-primary-hover transition-colors"
+                                                >
+                                                    {linkCopied ? "✓" : t('sessionDetails.copyLink', 'Kopiuj')}
+                                                </button>
+                                            </div>
+                                            {inviteLinkExpiry && (
+                                                <p className="text-xs text-text-muted">
+                                                    Wygasa: {new Date(inviteLinkExpiry).toLocaleDateString()}
+                                                </p>
+                                            )}
+                                        </div>
+                                    ) : (
+                                        <button
+                                            onClick={handleGenerateInviteLink}
+                                            disabled={isGeneratingLink}
+                                            className="w-full bg-gradient-to-r from-primary to-fuchsia-500 hover:from-primary-hover hover:to-fuchsia-600 text-white rounded-lg py-2 text-xs font-bold shadow-md shadow-primary/30 transition-all active:scale-95 disabled:opacity-60 flex items-center justify-center gap-1.5"
+                                        >
+                                            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" /></svg>
+                                            {isGeneratingLink ? "Generuję..." : t('sessionDetails.generateLink', 'Generuj link zaproszenia')}
+                                        </button>
+                                    )}
+                                </div>
                             </div>
                         )}
                     </section>

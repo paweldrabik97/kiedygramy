@@ -197,10 +197,15 @@ const DashboardPage = () => {
               <h3 className="font-bold text-lg text-text-main dark:text-white">{t("dashboard.upcomingSessionTitle")}</h3>
               <a href="/calendar" className="text-sm text-primary hover:underline font-medium">{t("dashboard.calendarLink")}</a>
             </div>
-            
+
             {nextSession ? (
-                <div className="group relative overflow-hidden rounded-3xl bg-gradient-to-b from-violet-50 to-white dark:from-violet-900/30 dark:to-surface-card shadow-md border border-gray-200 dark:border-gray-700/50 p-6">
-                  <h4 className="text-xl font-display font-bold text-text-main dark:text-white mb-4">
+                <div className="group relative overflow-hidden rounded-3xl bg-gradient-to-b from-violet-50 to-white dark:from-violet-900/30 dark:to-surface-card border border-violet-300 dark:border-violet-600/60 shadow-[0_0_24px_rgba(139,92,246,0.25)] dark:shadow-[0_0_28px_rgba(139,92,246,0.35)] p-8 transition-shadow duration-300 hover:shadow-[0_0_36px_rgba(139,92,246,0.4)] dark:hover:shadow-[0_0_40px_rgba(139,92,246,0.5)]">
+                  {/* NEXT UP badge */}
+                  <div className="absolute top-4 right-4 flex items-center gap-1.5 bg-primary/10 dark:bg-primary/20 border border-primary/30 text-primary text-xs font-bold px-3 py-1 rounded-full">
+                    <span className="w-2 h-2 rounded-full bg-primary animate-pulse"></span>
+                    NEXT UP
+                  </div>
+                  <h4 className="text-xl font-display font-bold text-text-main dark:text-white mb-4 pr-24">
                       {nextSession.title}
                   </h4>
                   <div className="flex flex-col sm:flex-row gap-6">

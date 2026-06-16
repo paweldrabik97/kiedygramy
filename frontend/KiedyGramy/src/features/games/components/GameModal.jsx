@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 
 const GameModal = ({ game, onClose, onUpdate, onDelete }) => {
-    const [isEditing, setIsEditing] = useState(false);
-    
+    const [editingGameId, setEditingGameId] = useState(null);
+    const isEditing = editingGameId === game?.id;
+
     const [formData, setFormData] = useState({
         localTitle: '',
         title: '',
@@ -22,7 +23,6 @@ const GameModal = ({ game, onClose, onUpdate, onDelete }) => {
                 maxPlayers: game.maxPlayers || '',
                 playTime: game.playTime || ''
             });
-            setIsEditing(false); 
         }
     }, [game]);
 
@@ -42,12 +42,12 @@ const GameModal = ({ game, onClose, onUpdate, onDelete }) => {
             minPlayers: parseInt(formData.minPlayers, 10) || 1,
             maxPlayers: parseInt(formData.maxPlayers, 10) || 4
         };
-        onUpdate(game.id, payload); 
-        setIsEditing(false);
+        onUpdate(game.id, payload);
+        setEditingGameId(null);
     };
 
     const handleCancel = () => {
-        setIsEditing(false);
+        setEditingGameId(null);
         setFormData({
             localTitle: game.localTitle || game.title || '',
             title: game.title || '',
@@ -91,7 +91,7 @@ const GameModal = ({ game, onClose, onUpdate, onDelete }) => {
                     <div className="flex items-center gap-2">
                         {!isEditing && (
                             <button 
-                                onClick={() => setIsEditing(true)}
+                                onClick={() => setEditingGameId(game?.id)}
                                 className="p-2 text-slate-400 hover:text-violet-600 dark:hover:text-violet-400 transition-colors rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800"
                                 title="Edit game"
                             >

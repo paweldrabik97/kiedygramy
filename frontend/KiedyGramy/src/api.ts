@@ -23,9 +23,16 @@ const BASE_URL = (import.meta as any).env.VITE_API_URL || "";
 
 export async function api<T>(url: string, options: RequestInit = {}): Promise<T> {
   const fullUrl = `${BASE_URL}${url}`;
+  const guestToken = localStorage.getItem("kiedygramy_guest_token");
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+    ...(options.headers as Record<string, string> || {}),
+  };
+  if (guestToken) headers["Authorization"] = `Bearer ${guestToken}`;
+
   const res = await fetch(fullUrl, {
     ...options,
-    headers: { "Content-Type": "application/json", ...(options.headers || {}) },
+    headers,
     credentials: "include",
   });
 

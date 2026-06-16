@@ -47,16 +47,14 @@ const Layout = () => {
     user?.fullName || user?.username || t("layout.userFallback");
   const displayEmail = user?.email || t("layout.emailFallback");
 
+  const isGuest = user?.isGuest === true;
+
   // Navigation links list
-  const navItems = [
-    { name: t("layout.nav.home"), path: "/dashboard", icon: <HomeIcon /> },
-    { name: t("layout.nav.myGames"), path: "/games", icon: <GamepadIcon /> },
-    {
-      name: t("layout.nav.mySessions"),
-      path: "/sessions",
-      icon: <CalendarIcon />,
-    },
-    { name: t("layout.nav.stats"), path: "/stats", icon: <ChartIcon /> },
+  const navItems = isGuest ? [] : [
+    { name: t('layout.nav.home'), path: '/dashboard', icon: <HomeIcon /> },
+    { name: t('layout.nav.myGames'), path: '/games', icon: <GamepadIcon /> },
+    { name: t('layout.nav.mySessions'), path: '/sessions', icon: <CalendarIcon /> },
+    { name: t('layout.nav.stats'), path: '/stats', icon: <ChartIcon /> },
   ];
 
   return (
@@ -159,92 +157,86 @@ const Layout = () => {
 
           {/* Topbar right side */}
           <div className="relative flex items-center gap-4">
-            <Link to="/notifications">
-              <NotificationBell />
-            </Link>
 
-            {/* Avatar */}
+            {/* Theme toggle */}
             <button
-              onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
-              className="flex items-center space-x-2 focus:outline-none"
+              onClick={toggleTheme}
+              title={t('layout.menu.changeTheme')}
+              className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-fuchsia-500 text-secondary flex items-center justify-center hover:ring-2 hover:ring-primary-light transition-all shadow-md"
             >
-              {/* Avatar background on primary */}
-              <div className="w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center font-bold text-lg font-display hover:ring-2 hover:ring-primary-light transition-all shadow-md">
-                {getInitials(displayName)}
-              </div>
+              {theme === 'light' ? (
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                </svg>
+              ) : (
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+                </svg>
+              )}
             </button>
 
-            {/* Dropdown Menu */}
-            {isUserMenuOpen && (
-              <>
-                <div
-                  className="fixed inset-0 z-30"
-                  onClick={() => setIsUserMenuOpen(false)}
-                ></div>
+            {!isGuest && (
+              <Link to="/notifications">
+                <NotificationBell />
+              </Link>
+            )}
 
-                <div className="absolute right-0 top-12 mt-2 w-56 bg-white dark:bg-surface-card border border-gray-200 dark:border-gray-700 rounded-xl shadow-xl z-40 py-2 animate-fade-in-down">
-                  <div className="px-4 py-3 border-b border-gray-100 dark:border-gray-700">
-                    <p className="text-sm font-bold text-text-main dark:text-text-inverse font-display">
-                      {displayName}
-                    </p>
-                    <p className="text-xs text-text-muted">{displayEmail}</p>
-                  </div>
-
-                  <div className="py-1">
-                    <Link
-                      to="/profile"
-                      className="block w-full px-4 py-2 text-sm text-text-main dark:text-text-inverse hover:bg-surface-light dark:hover:bg-gray-700 transition-colors"
-                      onClick={() => setIsUserMenuOpen(false)}
-                    >
-                      {t("layout.menu.profileSettings")}
-                    </Link>
-                    {/* Theme toggle button */}
-                    <button
-                      onClick={toggleTheme}
-                      // CHANGE: Using secondary color (Gold) for sun/moon icons
-                      className="p-2 rounded-full text-secondary hover:bg-primary/5 transition-colors"
-                      title={t("layout.menu.changeTheme")}
-                    >
-                      {theme === "light" ? (
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          className="h-6 w-6"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"
-                          />
-                        </svg>
-                      ) : (
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          className="h-6 w-6"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"
-                          />
-                        </svg>
-                      )}
-                    </button>
-                    <button
-                      onClick={handleLogout}
-                      className="block w-full px-4 py-2 text-sm text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
-                    >
-                      {t("layout.menu.logout")}
-                    </button>
-                  </div>
+            {isGuest ? (
+              /* Guest badge + logout */
+              <div className="flex items-center gap-3">
+                <div className="flex flex-col items-end">
+                  <span className="text-xs font-bold text-primary">Gość</span>
+                  <span className="text-xs text-text-muted font-mono">{user?.guestCode}</span>
                 </div>
+                <button
+                  onClick={handleLogout}
+                  className="text-xs font-bold text-red-500 hover:text-red-600 bg-red-50 dark:bg-red-900/20 hover:bg-red-100 dark:hover:bg-red-900/40 px-3 py-1.5 rounded-lg transition-colors"
+                >
+                  Wyjdź
+                </button>
+              </div>
+            ) : (
+              <>
+                {/* Avatar */}
+                <button
+                  onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
+                  className="flex items-center space-x-2 focus:outline-none"
+                >
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-fuchsia-500 text-white flex items-center justify-center font-bold text-lg font-display hover:ring-2 hover:ring-primary-light transition-all shadow-md">
+                    {getInitials(displayName)}
+                  </div>
+                </button>
+
+                {/* Dropdown Menu */}
+                {isUserMenuOpen && (
+                  <>
+                    <div
+                      className="fixed inset-0 z-30"
+                      onClick={() => setIsUserMenuOpen(false)}
+                    ></div>
+                    <div className="absolute right-0 top-12 mt-2 w-56 bg-gradient-to-b from-white to-slate-50 dark:from-slate-800 dark:to-slate-900 border border-gray-200 dark:border-gray-700 rounded-xl shadow-xl z-40 py-2 animate-fade-in-down">
+                      <div className="px-4 py-3 border-b border-gray-100 dark:border-gray-700">
+                        <p className="text-sm font-bold text-text-main dark:text-text-inverse font-display">{displayName}</p>
+                        <p className="text-xs text-text-muted">{displayEmail}</p>
+                      </div>
+                      <div className="py-1">
+                        <Link
+                          to="/profile"
+                          className="block w-full px-4 py-2 text-sm text-text-main dark:text-text-inverse hover:bg-surface-light dark:hover:bg-gray-700 transition-colors"
+                          onClick={() => setIsUserMenuOpen(false)}
+                        >
+                          {t('layout.menu.profileSettings')}
+                        </Link>
+                        <button
+                          onClick={handleLogout}
+                          className="block w-full px-4 py-2 text-sm text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                        >
+                          {t('layout.menu.logout')}
+                        </button>
+                      </div>
+                    </div>
+                  </>
+                )}
               </>
             )}
           </div>
