@@ -1,16 +1,18 @@
-import React, { useState, useEffect } from 'react';
-import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
-import { useTheme } from '../context/ThemeContext';
-import { useAuth } from '../features/auth/contexts/AuthContext';
-import NotificationBell from '../features/notifications/components/NotificationBell';
-import { useTranslation } from 'react-i18next';
+import React, { useState, useEffect } from "react";
+import { Outlet, Link, useLocation, useNavigate } from "react-router-dom";
+import { useTheme } from "../context/ThemeContext";
+import { useAuth } from "../features/auth/contexts/AuthContext";
+import NotificationBell from "../features/notifications/components/NotificationBell";
+import { useTranslation } from "react-i18next";
+import DiceArena3D from "../features/layout/components/DiceArena3D";
+import DiceFabMenu from "../features/layout/components/DiceFabMenu";
 
 const Layout = () => {
   const navigate = useNavigate();
   const { t, i18n } = useTranslation();
   // Sidebar state (expanded?)
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
-  
+
   // User menu state (expanded?)
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
 
@@ -25,24 +27,25 @@ const Layout = () => {
 
   useEffect(() => {
     if (user?.preferredLanguage && user.preferredLanguage !== i18n.language) {
-        i18n.changeLanguage(user.preferredLanguage);
+      i18n.changeLanguage(user.preferredLanguage);
     }
   }, [user, i18n]);
 
   const handleLogout = () => {
     logout();
-    navigate('/');
+    navigate("/");
   };
 
   // Helper function for initials (e.g. Jan Kowalski -> JK, User -> U)
   const getInitials = (name) => {
-    if (!name) return '?';
+    if (!name) return "?";
     return name.charAt(0).toUpperCase();
   };
 
   // Safe display name fallback (if username/fullName is missing)
-  const displayName = user?.fullName || user?.username || t('layout.userFallback');
-  const displayEmail = user?.email || t('layout.emailFallback');
+  const displayName =
+    user?.fullName || user?.username || t("layout.userFallback");
+  const displayEmail = user?.email || t("layout.emailFallback");
 
   const isGuest = user?.isGuest === true;
 
@@ -56,40 +59,41 @@ const Layout = () => {
 
   return (
     // CHANGE: font-sans (Outfit) for the whole app, surface-light/dark background colors
-    <div className="flex h-screen bg-surface-light dark:bg-surface-dark font-sans text-text-main dark:text-text-inverse overflow-hidden transition-colors duration-300">      
-      
+    <div className="flex h-screen bg-surface-light dark:bg-surface-dark font-sans text-text-main dark:text-text-inverse overflow-hidden transition-colors duration-300">
       {/* --- SIDEBAR (LEFT PANEL) --- */}
       <aside
         className={`${
-          isSidebarOpen ? 'w-64' : 'w-20'
-        } bg-gradient-to-b from-white to-slate-50 dark:from-slate-800 dark:to-slate-900 shadow-lg transition-all duration-300 ease-in-out flex flex-col relative z-20`}
+          isSidebarOpen ? "w-64" : "w-20"
+        } bg-white dark:bg-surface-card border-r border-gray-200 dark:border-gray-700 transition-all duration-300 ease-in-out flex flex-col relative z-20`}
       >
         {/* Sidebar collapse/expand button */}
         <button
-            onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-            className="absolute -right-3 top-9 bg-white dark:bg-surface-card border border-gray-200 dark:border-gray-700 rounded-full p-1 shadow-sm hover:bg-gray-100 dark:hover:bg-gray-700 z-50 text-text-muted hover:text-primary transition-colors"
-          title={isSidebarOpen ? t('layout.sidebar.collapse') : t('layout.sidebar.expand')}
+          onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+          className="absolute -right-3 top-9 bg-white dark:bg-surface-card border border-gray-200 dark:border-gray-700 rounded-full p-1 shadow-sm hover:bg-gray-100 dark:hover:bg-gray-700 z-50 text-text-muted hover:text-primary transition-colors"
+          title={
+            isSidebarOpen
+              ? t("layout.sidebar.collapse")
+              : t("layout.sidebar.expand")
+          }
         >
-            {isSidebarOpen ? <ChevronLeftIcon /> : <ChevronRightIcon />}
+          {isSidebarOpen ? <ChevronLeftIcon /> : <ChevronRightIcon />}
         </button>
 
         {/* Sidebar logo */}
-        <div className="h-16 flex items-center justify-center overflow-hidden">
-            <div className="flex items-center gap-3">
-                
-          {/* Logo (D20 die) - always visible */}
-                <MiniLogo />
+        <div className="h-16 flex items-center justify-center border-b border-gray-200 dark:border-gray-700 overflow-hidden">
+          <div className="flex items-center gap-3">
+            {/* Logo (D20 die) - always visible */}
+            <MiniLogo />
 
-          {/* Text - visible only when sidebar is open */}
-                <span 
-                    className={`font-display font-bold text-xl tracking-tight text-text-main dark:text-text-inverse whitespace-nowrap transition-opacity duration-200 ${
-                        isSidebarOpen ? 'opacity-100' : 'opacity-0 hidden'
-                    }`}
-                >
-                    KiedyGramy<span className="text-primary">.</span>
-                </span>
-
-            </div>
+            {/* Text - visible only when sidebar is open */}
+            <span
+              className={`font-display font-bold text-xl tracking-tight text-text-main dark:text-text-inverse whitespace-nowrap transition-opacity duration-200 ${
+                isSidebarOpen ? "opacity-100" : "opacity-0 hidden"
+              }`}
+            >
+              KiedyGramy<span className="text-primary">.</span>
+            </span>
+          </div>
         </div>
 
         {/* Navigation links */}
@@ -100,29 +104,40 @@ const Layout = () => {
               <Link
                 key={item.path}
                 to={item.path}
-                className={`flex items-center px-3 py-3 rounded-xl transition-all group ${
-                    isActive
-                    ? 'bg-primary/10 text-primary font-semibold shadow-sm shadow-primary/20'
-                    : 'text-text-muted hover:bg-primary/5 dark:hover:bg-primary/10 hover:text-primary'
-                }`}
-                title={!isSidebarOpen ? item.name : ''}
-              >
-                  {/* Icon */}
-                <span className={`shrink-0 p-2 rounded-lg transition-all ${
+                className={`flex items-center px-3 py-3 rounded-lg transition-all group ${
                   isActive
-                    ? 'bg-primary/15 text-primary'
-                    : 'bg-gray-100 dark:bg-gray-700/60 text-text-muted group-hover:bg-primary/10 group-hover:text-primary'
-                }`}>
-                    {item.icon}
-                </span>
-                
-                  {/* Text */}
-                <span 
-                    className={`ml-3 transition-opacity duration-200 whitespace-nowrap ${
-                        isSidebarOpen ? 'opacity-100' : 'opacity-0 hidden'
-                    }`}
+                    ? "bg-primary/10 text-primary font-semibold" // Active: light violet background + strong text
+                    : "text-text-muted hover:bg-surface-light dark:hover:bg-gray-700 hover:text-primary" // Inactive
+                }`}
+                title={!isSidebarOpen ? item.name : ""}
+              >
+                {/* Icon */}
+                <span
+                  className={`shrink-0 p-2 rounded-lg transition-all ${
+                    isActive
+                      ? "bg-primary/15 text-primary"
+                      : "bg-gray-100 dark:bg-gray-700/60 text-text-muted group-hover:bg-primary/10 group-hover:text-primary"
+                  }`}
                 >
-                    {item.name}
+                  {item.icon}
+                </span>
+
+                {/* Text */}
+                <span
+                  className={`ml-3 transition-opacity duration-200 whitespace-nowrap ${
+                    isSidebarOpen ? "opacity-100" : "opacity-0 hidden"
+                  }`}
+                >
+                  {item.icon}
+                </span>
+
+                {/* Text */}
+                <span
+                  className={`ml-3 transition-opacity duration-200 whitespace-nowrap ${
+                    isSidebarOpen ? "opacity-100" : "opacity-0 hidden"
+                  }`}
+                >
+                  {item.name}
                 </span>
               </Link>
             );
@@ -130,19 +145,17 @@ const Layout = () => {
         </nav>
       </aside>
 
-
       {/* --- MAIN CONTENT (RIGHT SIDE) --- */}
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-        
         {/* --- TOPBAR --- */}
-        <header className="h-16 bg-gradient-to-b from-white to-slate-50 dark:from-slate-800 dark:to-slate-900 flex items-center justify-between px-6 shadow-md z-10 transition-colors">
-          
-           {/* Page title */}
+        <header className="h-16 bg-white dark:bg-surface-card border-b border-gray-200 dark:border-gray-700 flex items-center justify-between px-6 shadow-sm z-10 transition-colors">
+          {/* Page title */}
           <h2 className="text-xl font-bold font-display text-text-main dark:text-text-inverse">
-             {navItems.find(item => item.path === location.pathname)?.name || t('layout.nav.panel')}
+            {navItems.find((item) => item.path === location.pathname)?.name ||
+              t("layout.nav.panel")}
           </h2>
 
-           {/* Topbar right side */}
+          {/* Topbar right side */}
           <div className="relative flex items-center gap-4">
 
             {/* Theme toggle */}
@@ -229,12 +242,22 @@ const Layout = () => {
           </div>
         </header>
 
-
         {/* --- PAGE CONTENT --- */}
-        <main className="flex-1 overflow-y-auto bg-app-light dark:bg-app-dark p-6 transition-colors">
-            <Outlet /> 
+        <main className="flex-1 overflow-y-auto bg-surface-light dark:bg-surface-dark p-6 transition-colors">
+          <Outlet />
         </main>
+      </div>
 
+      {/* --- FLOATING DICE INTERFACE --- */}
+
+      {/* DICE ARENA */}
+      <div className="fixed inset-0 pointer-events-none z-40">
+        <DiceArena3D isRolling={true} />
+      </div>
+
+      {/* DICE BUTTON & MENU */}
+      <div className="fixed bottom-6 left-6 z-50">
+        <DiceFabMenu />
       </div>
     </div>
   );
@@ -242,36 +265,116 @@ const Layout = () => {
 
 // Icons (unchanged)
 const HomeIcon = () => (
-  <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg>
+  <svg
+    className="w-6 h-6"
+    fill="none"
+    viewBox="0 0 24 24"
+    stroke="currentColor"
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={2}
+      d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
+    />
+  </svg>
 );
 const GamepadIcon = () => (
-    <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z" /></svg>
+  <svg
+    className="w-6 h-6"
+    fill="none"
+    viewBox="0 0 24 24"
+    stroke="currentColor"
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={2}
+      d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z"
+    />
+  </svg>
 );
 const ChartIcon = () => (
-    <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>
+  <svg
+    className="w-6 h-6"
+    fill="none"
+    viewBox="0 0 24 24"
+    stroke="currentColor"
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={2}
+      d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+    />
+  </svg>
 );
 const CalendarIcon = () => (
-    <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+  <svg
+    className="w-6 h-6"
+    fill="none"
+    viewBox="0 0 24 24"
+    stroke="currentColor"
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={2}
+      d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+    />
+  </svg>
 );
 const ChevronLeftIcon = () => (
-    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
+  <svg
+    className="w-4 h-4"
+    fill="none"
+    viewBox="0 0 24 24"
+    stroke="currentColor"
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={2}
+      d="M15 19l-7-7 7-7"
+    />
+  </svg>
 );
 const ChevronRightIcon = () => (
-    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+  <svg
+    className="w-4 h-4"
+    fill="none"
+    viewBox="0 0 24 24"
+    stroke="currentColor"
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={2}
+      d="M9 5l7 7-7 7"
+    />
+  </svg>
 );
 const MiniLogo = () => (
   <>
     <div className="w-8 h-8 shrink-0 bg-primary rounded-lg flex items-center justify-center text-white relative shadow-md">
-          {/* D20 SVG */}
-        <svg className="w-5 h-5" viewBox="0 0 100 100" fill="none" stroke="currentColor" strokeWidth="8" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M50 5 L93 28 V72 L50 95 L7 72 V28 Z" />
-            <path d="M50 5 L20 40 L80 40 Z" />
-            <path d="M20 40 L50 85 L80 40" />
-            <path d="M20 40 L7 72" />
-            <path d="M80 40 L93 72" />
-        </svg>
-        {/* Gold dot (Secondary Color) */}
-        <div className="absolute -top-1 -right-1 w-3 h-3 bg-secondary rounded-full border-2 border-white dark:border-surface-card"></div>
+      {/* D20 SVG */}
+      <svg
+        className="w-5 h-5"
+        viewBox="0 0 100 100"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="8"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <path d="M50 5 L93 28 V72 L50 95 L7 72 V28 Z" />
+        <path d="M50 5 L20 40 L80 40 Z" />
+        <path d="M20 40 L50 85 L80 40" />
+        <path d="M20 40 L7 72" />
+        <path d="M80 40 L93 72" />
+      </svg>
+      {/* Gold dot (Secondary Color) */}
+      <div className="absolute -top-1 -right-1 w-3 h-3 bg-secondary rounded-full border-2 border-white dark:border-surface-card"></div>
     </div>
   </>
 );
