@@ -325,7 +325,7 @@ namespace kiedygramy.Services.Sessions
             session.AvailabilityTo = toDate;
             session.AvailabilityDeadline = deadline;
 
-            var existingAvailabilites = _db.SessionAvailabilities
+            var existingAvailabilites = await _db.SessionAvailabilities
                 .Where(a => a.SessionId == sessionId)
                 .ExecuteDeleteAsync();
 
@@ -379,7 +379,7 @@ namespace kiedygramy.Services.Sessions
 
             if (normalizedDates.Count > 0)
             {
-                var newAvailabilities = normalizedDates
+                var newAvailabilities =  normalizedDates
                     .Select(date => new SessionAvailability
                     {
                         SessionId = sessionId,
