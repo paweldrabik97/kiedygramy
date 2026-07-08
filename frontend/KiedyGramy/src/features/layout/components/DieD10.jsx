@@ -1,12 +1,12 @@
 import React, { useEffect, useMemo, useRef } from "react";
 import { useGLTF } from "@react-three/drei";
 import { RigidBody } from "@react-three/rapier";
-import { getDiceResult, D6_NORMALS } from "../utils/diceUtils";
+import { getDiceResult, D10_NORMALS } from "../utils/diceUtils";
 import { useDice } from "../../../context/DiceContext";
 import { useFrame } from "@react-three/fiber";
 
-const DieD6 = ({ position, onResult }) => {
-  const { nodes, materials } = useGLTF("/assets/d6.glb");
+const DieD10 = ({ position, onResult }) => {
+  const { nodes, materials } = useGLTF("/assets/d10.glb");
   const rigidBodyRef = useRef();
   const meshRef = useRef();
 
@@ -46,7 +46,7 @@ const DieD6 = ({ position, onResult }) => {
     if (!rigidBodyRef.current || hasReported.current) return;
 
     const finalRotation = rigidBodyRef.current.rotation();
-    const result = getDiceResult(finalRotation, D6_NORMALS);
+    const result = getDiceResult(finalRotation, D10_NORMALS);
 
     hasReported.current = true;
     reportResult(result);
@@ -95,6 +95,6 @@ const DieD6 = ({ position, onResult }) => {
   );
 };
 
-useGLTF.preload("/assets/d6.glb");
+useGLTF.preload("/assets/d10.glb");
 
-export default DieD6;
+export default DieD10;

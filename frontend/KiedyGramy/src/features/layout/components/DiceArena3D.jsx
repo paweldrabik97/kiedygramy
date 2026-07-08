@@ -2,7 +2,12 @@ import React, { Suspense, useState, useEffect } from "react";
 import { Canvas } from "@react-three/fiber";
 import { Physics, RigidBody, CuboidCollider } from "@react-three/rapier";
 import { Environment, ContactShadows } from "@react-three/drei";
+import DieD4 from "./DieD4";
+import DieD6 from "./DieD6";
 import DieD8 from "./DieD8";
+import DieD10 from "./DieD10";
+import DieD12 from "./DieD12";
+import DieD20 from "./DieD20";
 import { useDice } from "../../../context/DiceContext";
 
 const ArenaWalls = () => {
@@ -64,10 +69,64 @@ const DiceArena3D = () => {
                 5 + index,
                 0,
               ];
-
+              if (die.type === "D4") {
+                return (
+                  <DieD4
+                    key={die.id}
+                    position={startPosition}
+                    onResult={(result) =>
+                      console.log(`Wynik z ${die.id}: ${result}`)
+                    }
+                  />
+                );
+              }
+              if (die.type === "D6") {
+                return (
+                  <DieD6
+                    key={die.id}
+                    position={startPosition}
+                    onResult={(result) =>
+                      console.log(`Wynik z ${die.id}: ${result}`)
+                    }
+                  />
+                );
+              }
               if (die.type === "D8") {
                 return (
                   <DieD8
+                    key={die.id}
+                    position={startPosition}
+                    onResult={(result) =>
+                      console.log(`Wynik z ${die.id}: ${result}`)
+                    }
+                  />
+                );
+              }
+              if (die.type === "D10") {
+                return (
+                  <DieD10
+                    key={die.id}
+                    position={startPosition}
+                    onResult={(result) =>
+                      console.log(`Wynik z ${die.id}: ${result}`)
+                    }
+                  />
+                );
+              }
+              if (die.type === "D12") {
+                return (
+                  <DieD12
+                    key={die.id}
+                    position={startPosition}
+                    onResult={(result) =>
+                      console.log(`Wynik z ${die.id}: ${result}`)
+                    }
+                  />
+                );
+              }
+              if (die.type === "D20") {
+                return (
+                  <DieD20
                     key={die.id}
                     position={startPosition}
                     onResult={(result) =>

@@ -9,7 +9,7 @@ const DiceFabMenu = () => {
 
   const { rollDice, rollResult, showResult } = useDice();
 
-  const availableDice = ["D4", "D6", "D8", "D10", "D12", "D20", "D100"];
+  const availableDice = ["D4", "D6", "D8", "D10", "D12", "D20"];
 
   const addDice = (type) => {
     setDicePool((prev) => ({
@@ -34,7 +34,6 @@ const DiceFabMenu = () => {
 
     rollDice(arrayToRoll);
 
-    // Optional: clear pool after rolling, or keep it if you want to allow quick re-rolls
     clearPool();
 
     setIsOpen(false);
@@ -154,7 +153,6 @@ const DiceFabMenu = () => {
         )}
       </button>
       <div
-        // 2. ZMIANA: top-1/2 i -translate-y-1/2 idealnie centrują dymek w pionie względem przycisku
         className={`absolute left-full top-1/2 ml-4 whitespace-nowrap bg-primary text-white font-display font-bold px-6 py-3 rounded-2xl shadow-xl transition-all duration-500 ease-out z-40 ${
           showResult
             ? "opacity-100 translate-x-0 -translate-y-1/2"

@@ -1,12 +1,12 @@
 import React, { useEffect, useMemo, useRef } from "react";
 import { useGLTF } from "@react-three/drei";
 import { RigidBody } from "@react-three/rapier";
-import { getDiceResult, D6_NORMALS } from "../utils/diceUtils";
+import { getDiceResult, D20_NORMALS } from "../utils/diceUtils";
 import { useDice } from "../../../context/DiceContext";
 import { useFrame } from "@react-three/fiber";
 
-const DieD6 = ({ position, onResult }) => {
-  const { nodes, materials } = useGLTF("/assets/d6.glb");
+const DieD20 = ({ position, onResult }) => {
+  const { nodes, materials } = useGLTF("/assets/d20.glb");
   const rigidBodyRef = useRef();
   const meshRef = useRef();
 
@@ -23,15 +23,15 @@ const DieD6 = ({ position, onResult }) => {
     const timer = setTimeout(() => {
       if (rigidBodyRef.current) {
         const torque = {
-          x: (Math.random() - 0.5) * 5,
-          y: (Math.random() - 0.5) * 5,
-          z: (Math.random() - 0.5) * 5,
+          x: (Math.random() - 0.5) * 12,
+          y: (Math.random() - 0.5) * 12,
+          z: (Math.random() - 0.5) * 12,
         };
 
         const impulse = {
-          x: (Math.random() - 0.5) * 10,
-          y: Math.random() * 10 + 10,
-          z: (Math.random() - 0.5) * 10,
+          x: (Math.random() - 0.5) * 20,
+          y: Math.random() * 20 + 10,
+          z: (Math.random() - 0.5) * 20,
         };
 
         rigidBodyRef.current.applyTorqueImpulse(torque, true);
@@ -46,7 +46,7 @@ const DieD6 = ({ position, onResult }) => {
     if (!rigidBodyRef.current || hasReported.current) return;
 
     const finalRotation = rigidBodyRef.current.rotation();
-    const result = getDiceResult(finalRotation, D6_NORMALS);
+    const result = getDiceResult(finalRotation, D20_NORMALS);
 
     hasReported.current = true;
     reportResult(result);
@@ -78,10 +78,10 @@ const DieD6 = ({ position, onResult }) => {
       ref={rigidBodyRef}
       position={position}
       colliders="hull"
-      restitution={0.5}
+      restitution={0.8}
       friction={0.6}
-      linearDamping={0.9}
-      angularDamping={0.9}
+      linearDamping={0.5}
+      angularDamping={0.5}
       onSleep={handleSleep}
     >
       <mesh
@@ -95,6 +95,6 @@ const DieD6 = ({ position, onResult }) => {
   );
 };
 
-useGLTF.preload("/assets/d6.glb");
+useGLTF.preload("/assets/d20.glb");
 
-export default DieD6;
+export default DieD20;
