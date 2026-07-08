@@ -6,7 +6,7 @@ import { useDice } from "../../../context/DiceContext";
 import { useFrame } from "@react-three/fiber";
 
 const DieD10 = ({ position, onResult }) => {
-  const { nodes, materials } = useGLTF("/assets/d10.glb");
+  const { nodes, materials } = useGLTF("/d10.glb");
   const rigidBodyRef = useRef();
   const meshRef = useRef();
 
