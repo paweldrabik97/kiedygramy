@@ -6,7 +6,9 @@ import { useDice } from "../../../context/DiceContext";
 import { useFrame } from "@react-three/fiber";
 
 const DieD4 = ({ position, onResult }) => {
-  const { nodes, materials } = useGLTF("/assets/d4.glb");
+  const { nodes, materials } = useGLTF(
+    "https://raw.githubusercontent.com/paweldrabik97/kiedygramy/refs/heads/main/frontend/KiedyGramy/assets/d4.glb",
+  );
   const rigidBodyRef = useRef();
   const meshRef = useRef();
 
@@ -95,6 +97,8 @@ const DieD4 = ({ position, onResult }) => {
   );
 };
 
-useGLTF.preload("/assets/d4.glb");
+useGLTF.preload(
+  "https://raw.githubusercontent.com/paweldrabik97/kiedygramy/refs/heads/main/frontend/KiedyGramy/assets/d4.glb",
+);
 
 export default DieD4;
